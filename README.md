@@ -1,4 +1,4 @@
 zappyk-python
 =============
 
-Zappyk Python Source
+Zappyk's python project

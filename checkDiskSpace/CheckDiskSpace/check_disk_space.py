@@ -10,7 +10,9 @@ from lib_zappyk._os_disk import _os_disk
 from lib_zappyk._email   import _email
 from lib_zappyk._manip   import _bytes_human_manip
 
+_version = '0.1'
 _version = '0.2'
+_version = '0.2-1'
 
 _project = 'CheckDiskSpace'
 
@@ -71,7 +73,7 @@ def _sendmail(args):
     emailAuthUser = None
     emailAuthPswd = None
     email__from__ =  args.mail_from
-    email___to___ =  args.mail_to
+    email___to___ = [args.mail_to]
     email___cc___ = [args.mail_cc]
     email___ccn__ = []
     email_attachs = []

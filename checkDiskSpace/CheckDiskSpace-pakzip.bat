@@ -2,11 +2,13 @@
 
 set PATH_BUILD=build
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-set PATH_PROGRAM=CheckDiskSpace-0.1
-set PATH_PROGRAM=CheckDiskSpace-0.2
-set PATH_COMPILE=exe.win32-32bit_WindowsPE-python-3.3.5
-set NAME_PAK_ZIP=%PATH_PROGRAM%-win32
+set VERS_PROGRAM=0.1
+set VERS_PROGRAM=0.2
+set VERS_PROGRAM=0.2-1
 set NAME_EXE_BAT=CheckDiskSpace-launch.bat
+set PATH_PROGRAM=CheckDiskSpace-%VERS_PROGRAM%
+set NAME_PAK_ZIP=%PATH_PROGRAM%-win32
+set PATH_COMPILE=exe.win32-32bit_WindowsPE-python-3.3.5
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 set ZIP="C:\Program Files (x86)\WinZip\WINZIP32.EXE"
 

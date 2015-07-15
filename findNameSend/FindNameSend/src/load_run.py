@@ -18,6 +18,7 @@ tag_path_last = conf.get       ("ConfigPaths", "tag_path_last", fallback=tag_pat
 end_grep_regx = conf.get       ("ConfigPaths", "end_grep_regx", fallback=end_grep_regx)
 end_grep_ifno = conf.get       ("ConfigPaths", "end_grep_ifno", fallback=end_grep_ifno)
 end_line_back = conf.getint    ("ConfigPaths", "end_line_back", fallback=end_line_back)
+tag_name_exte = conf.get       ("ConfigPaths", "tag_name_exte", fallback=tag_name_exte)
 tag_name_regx = conf.get       ("ConfigPaths", "tag_name_regx", fallback=tag_name_regx)
 tag_grep_regx = conf.get       ("ConfigPaths", "tag_grep_regx", fallback=tag_grep_regx)
 tag_line_regx = conf.get       ("ConfigPaths", "tag_line_regx", fallback=tag_line_regx)
@@ -76,7 +77,8 @@ def main():
                 logs.info(LINE_SEPARATOR)
                 logs.info("Read path: [%s]" % path_find)
 
-            list_last = get_list_last(path_find)
+        #CZ#list_last = get_list_last_name_regx(path_find)
+            list_last = get_list_last_name_exte(path_find)
 
             if args.verbose and tag_find_last:
                 file_last = None
@@ -131,7 +133,7 @@ def main():
     sys.exit(0)
 
 ###############################################################################
-def get_list_last(path_find):
+def get_list_last_name_regx(path_find):
     list_last = []
     time_last = 0
 
@@ -143,15 +145,19 @@ def get_list_last(path_find):
 
             if tag_find_last:
                 # read time file creation
-                stm_time = os.stat(file_find).st_mtime
-                stc_time = os.stat(file_find).st_ctime # ...for Windows
+            #CZ#sta_time = os.stat(file_find).st_atime # st_atime = time of most recent access
+                stm_time = os.stat(file_find).st_mtime # st_mtime = time of most recent content modification
+            #CZ#stc_time = os.stat(file_find).st_ctime # st_ctime = platform dependent: time of most recent metadata change on Unix,
+                                                       #                         or the time of creation on Windows
 
                 # get max time
                 max_time = 0
+            #CZ#if sta_time > max_time:
+            #CZ#    max_time = sta_time
                 if stm_time > max_time:
                     max_time = stm_time
-                if stc_time > max_time:
-                    max_time = stc_time
+            #CZ#if stc_time > max_time:
+            #CZ#    max_time = stc_time
 
                 # get max file
                 if max_time > time_last:
@@ -159,9 +165,23 @@ def get_list_last(path_find):
                         list_last.append(file_find)
                     else:
                         list_last[0] = file_find
-                    time_last    = max_time
+                    time_last = max_time
             else:
                 list_last.append(file_find)
+
+    return(list_last)
+
+###############################################################################
+def get_list_last_name_exte(path_find):
+    list_last = []
+
+    import glob
+
+#CZ#file_find = max(glob.iglob(os.path.join(path_find, tag_name_exte)), key=os.path.getatime)
+    file_find = max(glob.iglob(os.path.join(path_find, tag_name_exte)), key=os.path.getmtime)
+#CZ#file_find = max(glob.iglob(os.path.join(path_find, tag_name_exte)), key=os.path.getctime)
+
+    list_last.append(file_find)
 
     return(list_last)
 

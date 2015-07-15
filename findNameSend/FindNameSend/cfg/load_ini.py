@@ -13,6 +13,7 @@ end_grep_regx = 'ETL FINITO REGOLARMENTE'
 end_grep_ifno = '!!! ATTENZIONE, ETL NON REGOLARMENTE FINITO, STRINGA "' + end_grep_regx + '" NON TROVATA !!!'
 end_line_back = 20
 ###############################################################################
+tag_name_exte = '*.log'
 tag_name_regx = '(.log|.LOG)$'
 tag_grep_regx = 'ERROR |failed|false'
 tag_line_regx = 'ERROR '

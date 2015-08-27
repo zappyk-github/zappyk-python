@@ -3,6 +3,7 @@ __author__ = 'zappyk'
 
 import os
 import sys
+import csv
 import json
 import pickle
 import traceback
@@ -20,18 +21,23 @@ args = parser_args().args
 conf = parser_conf().conf
 logs = logger_conf().logs
 
-savejson = conf.get("Base"       , "savejson", fallback=savejson)
-username = conf.get("Login"      , "username", fallback=username)
-password = conf.get("Login"      , "password", fallback=password)
-p_encode = conf.get("Login"      , "p_encode", fallback=p_encode)
-servicej = conf.get("Login"      , "servicej", fallback=servicej)
-accountj = conf.get("Login"      , "accountj", fallback=accountj)
-urlscope = conf.get("Login"      , "urlscope", fallback=urlscope)
-tknstore = conf.get("Login"      , "tknstore", fallback=tknstore)
-openname = conf.get("Spreadsheet", "openname", fallback=openname)
-open_key = conf.get("Spreadsheet", "open_key", fallback=open_key)
-open_url = conf.get("Spreadsheet", "open_url", fallback=open_url)
-wks_name = conf.get("Worksheet"  , "wks_name", fallback=wks_name)
+savejson           = conf.get("Base"       , "savejson"          , fallback=savejson)
+username           = conf.get("Login"      , "username"          , fallback=username)
+password           = conf.get("Login"      , "password"          , fallback=password)
+p_encode           = conf.get("Login"      , "p_encode"          , fallback=p_encode)
+servicej           = conf.get("Login"      , "servicej"          , fallback=servicej)
+accountj           = conf.get("Login"      , "accountj"          , fallback=accountj)
+urlscope           = conf.get("Login"      , "urlscope"          , fallback=urlscope)
+tknstore           = conf.get("Login"      , "tknstore"          , fallback=tknstore)
+openname           = conf.get("Spreadsheet", "openname"          , fallback=openname)
+open_key           = conf.get("Spreadsheet", "open_key"          , fallback=open_key)
+open_url           = conf.get("Spreadsheet", "open_url"          , fallback=open_url)
+wks_name           = conf.get("Worksheet"  , "wks_name"          , fallback=wks_name)
+csv_file_name      = conf.get("InputOutput", "csv_file_name"     , fallback=csv_file_name)
+csv_delimiter      = conf.get("InputOutput", "csv_delimiter"     , fallback=csv_delimiter)
+csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_quotechar)
+csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
+csv_lineterminator = conf.get("InputOutput", "csv_lineterminator", fallback=csv_lineterminator)
 
 servicej = os.path.sep.join([savejson, servicej]) if servicej is not None else servicej
 accountj = os.path.sep.join([savejson, accountj]) if accountj is not None else accountj
@@ -40,6 +46,11 @@ tknstore = os.path.sep.join([savejson, tknstore]) if tknstore is not None else t
 login_credential_servicej = False if servicej is None else True
 login_credential_accountj = False if accountj is None else not(login_credential_servicej)
 login_credential          = True  if (servicej or accountj) else False
+
+csv_delimiter      = ';'               if csv_delimiter      is None else csv_delimiter
+csv_quotechar      = '"'               if csv_quotechar      is None else csv_quotechar
+csv_quoting        = csv.QUOTE_MINIMAL if csv_quoting        is None else csv_quoting
+csv_lineterminator = '\n'              if csv_lineterminator is None else csv_lineterminator
 
 if args.debug >= 1:
     logs.info('servicej                   = %s' % servicej)
@@ -50,6 +61,13 @@ if args.debug >= 1:
 
 ###############################################################################
 def main():
+    if login_credential_servicej:
+        if not os.path.isfile(servicej):
+            logs.error('File %s not exist!' % servicej)
+    if login_credential_accountj:
+        if not os.path.isfile(accountj):
+            logs.error('File %s not exist!' % accountj)
+
     try:
         if args.verbose:
             logs.info(LINE_SEPARATOR)
@@ -208,11 +226,43 @@ def main():
                 logs.info(LINE_SEPARATOR)
         #######################################################################
 
+        if wks is not None:
+            wks_values = wks.get_all_values()
+
+            if args.debug >= 1:
+                logs.info('wks_values=\n[%s]' % wks_values)
+
+            fileout = None
+            std_out = False
+            if csv_file_name == CHAR_STD_INOUT:
+                fileout = sys.stdout
+                std_out = True
+                logs.info('Write csv rows on STDOUT:')
+            else:
+                try:
+                    fileout = open(csv_file_name, 'w')
+                    logs.info('Write to file csv: %s' % csv_file_name)
+                except:
+                    fileout = sys.stdout
+                    std_out = True
+                    logs.info('File csv not set, write on STDOUT:')
+
+            if std_out:
+                logs.info(LINE_PARTITION)
+            #file_csv_writer = csv.writer(fileout)
+            #file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
+            #file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, lineterminator=csv_lineterminator)
+            #file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter, lineterminator=csv_lineterminator)
+            file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter)
+            file_csv_writer.writerows(wks_values)
+            if std_out:
+                logs.info(LINE_PARTITION)
+
     except:
         logs.warning("(*** USCITA ANOMALA ***) o_O")
         exc_type, exc_value, exc_traceback = sys.exc_info()
         logs.traceback(exc_traceback)
-        if args.verbose:
+        if args.debug >= 0:
             logs.warning(exc_value)
             logs.warning(LINE_SEPARATOR)
             traceback.print_exc()

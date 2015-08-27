@@ -17,7 +17,7 @@ urlscope = 'https://docs.google.com/feeds'
 urlscope = 'https://www.googleapis.com/auth/drive'
 urlscope = 'https://spreadsheets.google.com/feeds'
 ##########
-tknstore = 'sysop_sheets-tokern_store_id_credential.data'
+tknstore = 'sysop_sheets-token_store_the_credential.data'
 ###############################################################################
 openname = None
 open_key = None

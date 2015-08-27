@@ -4,14 +4,13 @@ __author__ = 'zappyk'
 import os
 import sys
 import json
+import pickle
 import traceback
 import webbrowser
 
 from lib_external                     import gspread
 from lib_external.oauth2client.client import SignedJwtAssertionCredentials
 from lib_external.oauth2client.client import OAuth2WebServerFlow
-from lib_external.oauth2client.client import Storage
-
 
 from GoogleSheets.cfg.load_cfg  import parser_args, parser_conf, logger_conf
 from GoogleSheets.cfg.load_ini  import *
@@ -38,16 +37,16 @@ servicej = os.path.sep.join([savejson, servicej]) if servicej is not None else s
 accountj = os.path.sep.join([savejson, accountj]) if accountj is not None else accountj
 tknstore = os.path.sep.join([savejson, tknstore]) if tknstore is not None else tknstore
 
-login_credentials_servicej = False if servicej is None else True
-login_credentials_accountj = False if accountj is None else not(login_credentials_servicej)
-login_credentials          = True  if (servicej or accountj) else False
+login_credential_servicej = False if servicej is None else True
+login_credential_accountj = False if accountj is None else not(login_credential_servicej)
+login_credential          = True  if (servicej or accountj) else False
 
-if args.verbose:
+if args.debug >= 1:
     logs.info('servicej                   = %s' % servicej)
     logs.info('accountj                   = %s' % accountj)
-    logs.info('login_credentials_servicej = %s' % login_credentials_servicej)
-    logs.info('login_credentials_accountj = %s' % login_credentials_accountj)
-    logs.info('login_credentials          = %s' % login_credentials)
+    logs.info('login_credentials_servicej = %s' % login_credential_servicej)
+    logs.info('login_credentials_accountj = %s' % login_credential_accountj)
+    logs.info('login_credentials          = %s' % login_credential)
 
 ###############################################################################
 def main():
@@ -57,62 +56,71 @@ def main():
         #######################################################################
 
         gc = None
-        if login_credentials:
+        if login_credential:
 
-            credentials = None
-            if login_credentials_servicej and servicej is not None:
+            credential = None
+            if login_credential_servicej and servicej is not None:
                 if args.verbose:
                     logs.info('Create credential by json file... (%s)' % servicej)
                 json_keys = json.load(open(servicej))
                 json_keys_account = json_keys['client_email']
                 json_keys_private = json_keys['private_key']
-                credentials = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), urlscope)
+                credential = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), urlscope)
                 if args.verbose:
                     logs.info('Create credential by json file ok (client_email=%s)' % json_keys_account)
 
-            if login_credentials_accountj and accountj is not None:
-                if args.verbose:
-                    logs.info('Create credential by json file... (%s)' % accountj)
-                json_keys = json.load(open(accountj))
-                json_keys_account  = json_keys['installed']['client_id']
-                json_keys_private  = json_keys['installed']['client_secret']
-                json_keys_redirect = json_keys['installed']['redirect_uris'][0]
-                credentials_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), urlscope, redirect_uri=json_keys_redirect)
-                credentials_auth_uri = credentials_flow.step1_get_authorize_url()
-
-                logs.info(LINE_PARTITION)
-                step1_question_rows = ['Go to the following link in your browser:', '%s']
-                step1_question_text = make_question(step1_question_rows)
-                print(step1_question_text % credentials_auth_uri)
-                #
-                #webbrowser.open_new_tab(credentials_auth_uri)
-                #
-                step2_question_rows = ['Enter verification code: ']
-                step2_question_text = make_question(step2_question_rows)
-                credentials_code = input(step2_question_text).strip()
-                logs.info(LINE_PARTITION)
-
-                credentials = credentials_flow.step2_exchange(credentials_code)
-                '''
-                storage = Storage()
-                storage.put(credentials)
-                credentials_store = credentials.store(tknstore)
-                credentials.set_store(storage)
-                credentials.store()
-                '''
-                if args.verbose:
-                    logs.info('Confirm enter code is [ %s ]' % credentials_code)
+            if login_credential_accountj and accountj is not None:
+                try:
+                    with open(tknstore, 'rb') as file:
+                        credential = pickle.load(file)
+                    logs.info('The credential file was read, through authorize access login...')
+                except:
+                    logs.info("The credential file can't be read, try the authenticate flow...")
 
                 if args.verbose:
-                    logs.info('Create credential by json file ok (client_id=%s)' % json_keys_account)
+                    logs.info(LINE_SEPARATOR)
 
-            if credentials is not None:
+                if credential is None:
+                    if args.verbose:
+                        logs.info('Create credential by json file... (%s)' % accountj)
+                    json_keys = json.load(open(accountj))
+                    json_keys_account  = json_keys['installed']['client_id']
+                    json_keys_private  = json_keys['installed']['client_secret']
+                    json_keys_redirect = json_keys['installed']['redirect_uris'][0]
+                    credential_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), urlscope, redirect_uri=json_keys_redirect)
+                    credential_auth_uri = credential_flow.step1_get_authorize_url()
+
+                    logs.info(LINE_PARTITION)
+                    step1_question_rows = ['Go to the following link in your browser:', '%s']
+                    step1_question_text = make_question(step1_question_rows)
+                    print(step1_question_text % credential_auth_uri)
+                    #
+                    #webbrowser.open_new_tab(credentials_auth_uri)
+                    #
+                    step2_question_rows = ['Enter verification code: ']
+                    step2_question_text = make_question(step2_question_rows)
+                    credentials_code = input(step2_question_text).strip()
+                    logs.info(LINE_PARTITION)
+
+                    credential = credential_flow.step2_exchange(credentials_code)
+
+                    if args.verbose:
+                        logs.info('Create credential by json file ok (client_id=%s)' % json_keys_account)
+
+                    try:
+                        with open(tknstore, 'wb') as file:
+                            pickle.dump(credential, file, pickle.HIGHEST_PROTOCOL)
+                        logs.info('The credential file was save :-)')
+                    except:
+                        logs.info("The credential file can't be saved :-(")
+
+            if credential is not None:
                 if args.verbose:
                     logs.info('Login Google...')
                 # Login with your Google account
-                gc = gspread.authorize(credentials)
+                gc = gspread.authorize(credential)
                 if args.verbose:
-                    logs.info('Login Google ok (by json credentials)')
+                    logs.info('Login Google ok (by json credential)')
         else:
             if username is not None and password is not None:
                 if args.verbose:
@@ -164,8 +172,7 @@ def main():
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open Spreadsheet by Url not found!")
 
-        #if sht is None:
-        if args.verbose:
+        if args.debug >= 2:
             try:
                 if args.verbose:
                     logs.info('Try open all Spreadsheet...')
@@ -174,7 +181,6 @@ def main():
                 if args.verbose:
                     logs.info('Try open all Spreadsheet ok :-)')
                     logs.info('Spreadsheet = [%s]' % sht_all)
-                    #sht = None
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open all Spreadsheet not found anything!")
 

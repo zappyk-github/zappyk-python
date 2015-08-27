@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-import os
 import sys
 import csv
 import json
@@ -12,6 +11,8 @@ import webbrowser
 from lib_external                     import gspread
 from lib_external.oauth2client.client import SignedJwtAssertionCredentials
 from lib_external.oauth2client.client import OAuth2WebServerFlow
+from lib_zappyk._os                   import _os
+from lib_zappyk._os_file              import _os_file
 
 from GoogleSheets.cfg.load_cfg  import parser_args, parser_conf, logger_conf
 from GoogleSheets.cfg.load_ini  import *
@@ -39,9 +40,12 @@ csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_
 csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
 csv_lineterminator = conf.get("InputOutput", "csv_lineterminator", fallback=csv_lineterminator)
 
-servicej = os.path.sep.join([savejson, servicej]) if servicej is not None else servicej
-accountj = os.path.sep.join([savejson, accountj]) if accountj is not None else accountj
-tknstore = os.path.sep.join([savejson, tknstore]) if tknstore is not None else tknstore
+wks_read  = True if args.action == 'r' else False
+wks_write = True if args.action == 'w' else False
+
+servicej = _os_file._pathJoin([savejson, servicej]) if servicej is not None else servicej
+accountj = _os_file._pathJoin([savejson, accountj]) if accountj is not None else accountj
+tknstore = _os_file._pathJoin([savejson, tknstore]) if tknstore is not None else tknstore
 
 login_credential_servicej = False if servicej is None else True
 login_credential_accountj = False if accountj is None else not(login_credential_servicej)
@@ -61,102 +65,144 @@ if args.debug >= 1:
 
 ###############################################################################
 def main():
-    if login_credential_servicej:
-        if not os.path.isfile(servicej):
-            logs.error('File %s not exist!' % servicej)
-    if login_credential_accountj:
-        if not os.path.isfile(accountj):
-            logs.error('File %s not exist!' % accountj)
+    init_check()
 
     try:
-        if args.verbose:
-            logs.info(LINE_SEPARATOR)
-        #######################################################################
+        gc = exec_login()
 
-        gc = None
-        if login_credential:
+        wks = exec_spreadsheet(gc)
 
-            credential = None
-            if login_credential_servicej and servicej is not None:
-                if args.verbose:
-                    logs.info('Create credential by json file... (%s)' % servicej)
-                json_keys = json.load(open(servicej))
-                json_keys_account = json_keys['client_email']
-                json_keys_private = json_keys['private_key']
-                credential = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), urlscope)
-                if args.verbose:
-                    logs.info('Create credential by json file ok (client_email=%s)' % json_keys_account)
+        if wks is not None:
 
-            if login_credential_accountj and accountj is not None:
-                try:
-                    with open(tknstore, 'rb') as file:
-                        credential = pickle.load(file)
-                    logs.info('The credential file was read, through authorize access login...')
-                except:
-                    logs.info("The credential file can't be read, try the authenticate flow...")
+            if wks_read:
+                wks_values = wks.get_all_values()
+                exec_csv_write(wks_values)
 
-                if args.verbose:
-                    logs.info(LINE_SEPARATOR)
+            if wks_write:
+                csv_values = exec_csv_read()
+                exec_wks_insert(wks, csv_values)
 
-                if credential is None:
-                    if args.verbose:
-                        logs.info('Create credential by json file... (%s)' % accountj)
-                    json_keys = json.load(open(accountj))
-                    json_keys_account  = json_keys['installed']['client_id']
-                    json_keys_private  = json_keys['installed']['client_secret']
-                    json_keys_redirect = json_keys['installed']['redirect_uris'][0]
-                    credential_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), urlscope, redirect_uri=json_keys_redirect)
-                    credential_auth_uri = credential_flow.step1_get_authorize_url()
-
-                    logs.info(LINE_PARTITION)
-                    step1_question_rows = ['Go to the following link in your browser:', '%s']
-                    step1_question_text = make_question(step1_question_rows)
-                    print(step1_question_text % credential_auth_uri)
-                    #
-                    #webbrowser.open_new_tab(credentials_auth_uri)
-                    #
-                    step2_question_rows = ['Enter verification code: ']
-                    step2_question_text = make_question(step2_question_rows)
-                    credentials_code = input(step2_question_text).strip()
-                    logs.info(LINE_PARTITION)
-
-                    credential = credential_flow.step2_exchange(credentials_code)
-
-                    if args.verbose:
-                        logs.info('Create credential by json file ok (client_id=%s)' % json_keys_account)
-
-                    try:
-                        with open(tknstore, 'wb') as file:
-                            pickle.dump(credential, file, pickle.HIGHEST_PROTOCOL)
-                        logs.info('The credential file was save :-)')
-                    except:
-                        logs.info("The credential file can't be saved :-(")
-
-            if credential is not None:
-                if args.verbose:
-                    logs.info('Login Google...')
-                # Login with your Google account
-                gc = gspread.authorize(credential)
-                if args.verbose:
-                    logs.info('Login Google ok (by json credential)')
-        else:
-            if username is not None and password is not None:
-                if args.verbose:
-                    logs.info('Login Google...')
-                # Login with your Google account
-                gc = gspread.login(username, password)
-                if args.verbose:
-                    logs.info('Login Google ok (by username %s)' % username)
-
-        if gc is None:
+    except:
+        logs.warning("(*** USCITA ANOMALA ***) o_O")
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logs.traceback(exc_traceback)
+        if args.debug >= 0:
+            logs.warning(exc_value)
             logs.warning(LINE_SEPARATOR)
-            logs.warning('Something on Login did not work! :-(')
+            traceback.print_exc()
+            logs.warning(LINE_SEPARATOR)
+            logs.error("LastError: %s" % exc_value)
         else:
+            logs.error(exc_value)
+        sys.exit(1)
+
+    sys.exit(0)
+
+###############################################################################
+def init_check():
+    if login_credential_servicej:
+        if not _os_file._fileExist(servicej):
+            logs.error('File %s not exist!' % servicej)
+    if login_credential_accountj:
+        if not _os_file._fileExist(accountj):
+            logs.error('File %s not exist!' % accountj)
+
+###############################################################################
+def exec_login():
+    if args.verbose:
+        logs.info(LINE_SEPARATOR)
+    #--------------------------------------------------------------------------
+
+    gc = None
+    if login_credential:
+
+        credential = None
+        if login_credential_servicej and servicej is not None:
+            if args.verbose:
+                logs.info('Create credential by json file... (%s)' % servicej)
+            json_keys = json.load(open(servicej))
+            json_keys_account = json_keys['client_email']
+            json_keys_private = json_keys['private_key']
+            credential = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), urlscope)
+            if args.verbose:
+                logs.info('Create credential by json file ok (client_email=%s)' % json_keys_account)
+
+        if login_credential_accountj and accountj is not None:
+            try:
+                with open(tknstore, 'rb') as file:
+                    credential = pickle.load(file)
+                logs.info('The credential file was read, through authorize access login...')
+            except:
+                logs.info("The credential file can't be read, try the authenticate flow...")
+
             if args.verbose:
                 logs.info(LINE_SEPARATOR)
-        #######################################################################
 
-        sht = None
+            if credential is None:
+                if args.verbose:
+                    logs.info('Create credential by json file... (%s)' % accountj)
+                json_keys = json.load(open(accountj))
+                json_keys_account  = json_keys['installed']['client_id']
+                json_keys_private  = json_keys['installed']['client_secret']
+                json_keys_redirect = json_keys['installed']['redirect_uris'][0]
+                credential_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), urlscope, redirect_uri=json_keys_redirect)
+                credential_auth_uri = credential_flow.step1_get_authorize_url()
+
+                logs.info(LINE_PARTITION)
+                step1_question_rows = ['Go to the following link in your browser:', '%s']
+                step1_question_text = make_question(step1_question_rows)
+                print(step1_question_text % credential_auth_uri)
+                #
+                #webbrowser.open_new_tab(credentials_auth_uri)
+                #
+                step2_question_rows = ['Enter verification code: ']
+                step2_question_text = make_question(step2_question_rows)
+                credentials_code = input(step2_question_text).strip()
+                logs.info(LINE_PARTITION)
+
+                credential = credential_flow.step2_exchange(credentials_code)
+
+                if args.verbose:
+                    logs.info('Create credential by json file ok (client_id=%s)' % json_keys_account)
+
+                try:
+                    with open(tknstore, 'wb') as file:
+                        pickle.dump(credential, file, pickle.HIGHEST_PROTOCOL)
+                    logs.info('The credential file was save :-)')
+                except:
+                    logs.info("The credential file can't be saved :-(")
+
+        if credential is not None:
+            if args.verbose:
+                logs.info('Login Google...')
+            # Login with your Google account
+            gc = gspread.authorize(credential)
+            if args.verbose:
+                logs.info('Login Google ok (by json credential)')
+    else:
+        if username is not None and password is not None:
+            if args.verbose:
+                logs.info('Login Google...')
+            # Login with your Google account
+            gc = gspread.login(username, password)
+            if args.verbose:
+                logs.info('Login Google ok (by username %s)' % username)
+
+    if gc is None:
+        logs.warning(LINE_SEPARATOR)
+        logs.warning('Something on Login did not work! :-(')
+    else:
+        if args.verbose:
+            logs.info(LINE_SEPARATOR)
+    #--------------------------------------------------------------------------
+
+    return(gc)
+
+###############################################################################
+def exec_spreadsheet(gc):
+    sht = None
+    wks = None
+    if gc is not None:
         if sht is None and openname is not None:
             try:
                 if args.verbose:
@@ -208,79 +254,119 @@ def main():
         else:
             if args.verbose:
                 logs.info(LINE_SEPARATOR)
-        #######################################################################
+        #----------------------------------------------------------------------
 
-        wks = None
         if sht is not None:
-            if args.verbose:
-                logs.info('Try read Worksheet... (%s)' % wks_name)
-            wks = sht.get_worksheet(wks_name)
-            if args.verbose:
-                logs.info('Try read Worksheet ok :-)')
+            if wks_read:
+                if args.verbose:
+                    logs.info('Try read Worksheet... (%s)' % wks_name)
+                wks = sht.get_worksheet(wks_name)
+                if args.verbose:
+                    logs.info('Try read Worksheet ok :-)')
+            if wks_write:
+                if args.verbose:
+                    logs.info('Try write Worksheet... (%s)' % wks_name)
+                wks = sht.add_worksheet(title=str(wks_name), rows=1, cols=1)
+                if args.verbose:
+                    logs.info('Try write Worksheet ok :-)')
 
         if wks is None:
             logs.warning(LINE_SEPARATOR)
-            logs.warning('Something read Worksheet did not work! :-(')
+            logs.warning('Something read/write Worksheet did not work! :-(')
         else:
             if args.verbose:
                 logs.info(LINE_SEPARATOR)
-        #######################################################################
+        #----------------------------------------------------------------------
 
-        if wks is not None:
-            wks_values = wks.get_all_values()
-
-            if args.debug >= 1:
-                logs.info('wks_values=\n[%s]' % wks_values)
-
-            fileout = None
-            std_out = False
-            if csv_file_name == CHAR_STD_INOUT:
-                fileout = sys.stdout
-                std_out = True
-                logs.info('Write csv rows on STDOUT:')
-            else:
-                try:
-                    fileout = open(csv_file_name, 'w')
-                    logs.info('Write to file csv: %s' % csv_file_name)
-                except:
-                    fileout = sys.stdout
-                    std_out = True
-                    logs.info('File csv not set, write on STDOUT:')
-
-            if std_out:
-                logs.info(LINE_PARTITION)
-            #file_csv_writer = csv.writer(fileout)
-            #file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
-            #file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, lineterminator=csv_lineterminator)
-            #file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter, lineterminator=csv_lineterminator)
-            file_csv_writer = csv.writer(fileout, delimiter=csv_delimiter)
-            file_csv_writer.writerows(wks_values)
-            if std_out:
-                logs.info(LINE_PARTITION)
-
-    except:
-        logs.warning("(*** USCITA ANOMALA ***) o_O")
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logs.traceback(exc_traceback)
-        if args.debug >= 0:
-            logs.warning(exc_value)
-            logs.warning(LINE_SEPARATOR)
-            traceback.print_exc()
-            logs.warning(LINE_SEPARATOR)
-            logs.error("LastError: %s" % exc_value)
-        else:
-            logs.error(exc_value)
-        sys.exit(1)
-
-    sys.exit(0)
+    return(wks)
 
 ###############################################################################
-def open_file(file):
-#CZ#return(open(file))
-#CZ#return(open(file, 'r', encoding="ascii"     , errors="surrogateescape"))
-#CZ#return(open(file, 'r', encoding="ascii"     , errors="replace"))
-#CZ#return(open(file, 'r', encoding="utf-8"     , errors="replace"))
-    return(open(file, 'r', encoding="iso-8859-1", errors="replace"))
+def exec_csv_write(wks_values):
+    if args.debug >= 1:
+        logs.info('wks values=')
+        for values in wks_values:
+            logs.info(values)
+
+    fileout = None
+    std_out = False
+    if csv_file_name == CHAR_STD_INOUT:
+        fileout = sys.stdout
+        std_out = True
+        logs.info('Write csv rows on STDOUT:')
+    else:
+        try:
+            fileout = open(csv_file_name, 'w')
+            logs.info('Write to file csv: %s' % csv_file_name)
+        except:
+            fileout = sys.stdout
+            std_out = True
+            logs.info('File csv not set, write on STDOUT:')
+
+    if std_out:
+        logs.info(LINE_PARTITION)
+    #csv_values = csv.writer(fileout)
+    #csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
+    #csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, lineterminator=csv_lineterminator)
+    #csv_values = csv.writer(fileout, delimiter=csv_delimiter, lineterminator=csv_lineterminator)
+    csv_values = csv.writer(fileout, delimiter=csv_delimiter)
+    csv_values.writerows(wks_values)
+    if std_out:
+        logs.info(LINE_PARTITION)
+
+###############################################################################
+def exec_csv_read():
+    filein = None
+    std_in = False
+    if csv_file_name == CHAR_STD_INOUT:
+        filein = sys.stdin
+        std_in = True
+        logs.info('Read csv rows on STDIN:')
+    else:
+        try:
+            filein = open(csv_file_name, 'r')
+            logs.info('Read to file csv: %s' % csv_file_name)
+        except:
+            filein = sys.stdin
+            std_in = True
+            logs.info('File csv not set, read on STDIN:')
+
+    if std_in:
+        logs.info(LINE_PARTITION)
+    #csv_values = csv.reader(filein)
+    #csv_values = csv.reader(filein, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
+    #csv_values = csv.reader(filein, delimiter=csv_delimiter, quotechar=csv_quotechar, lineterminator=csv_lineterminator)
+    #csv_values = csv.reader(filein, delimiter=csv_delimiter, lineterminator=csv_lineterminator)
+    csv_values = list(csv.reader(filein, delimiter=csv_delimiter))
+    if std_in:
+        logs.info(LINE_PARTITION)
+
+    if args.debug >= 1:
+        logs.info('csv values=')
+        for values in csv_values:
+            logs.info(values)
+
+    return(csv_values)
+
+###############################################################################
+def exec_wks_insert(wks, csv_values):
+    if wks is not None:
+        #--------------------------------------------------------------
+        #rows = len(csv_values)
+        #cols = 0
+        #for line_values in csv_values:
+        #    cols = len(line_values)
+        #    break
+        #wks.resize(rows, cols)
+        #--------------------------------------------------------------
+        row = 0
+        col = 0
+        for row_values in csv_values:
+            if row == 0:
+                col = len(row_values)
+            row += 1
+            print("...insert csv row %5s on spreadsheet..." % row)
+            wks.insert_row(row_values, row)
+        wks.resize(row, col)
 
 ###############################################################################
 def make_question(rows):
@@ -289,3 +375,11 @@ def make_question(rows):
     rows.insert(0, rive)
     text = "\n".join(rows)
     return(text)
+
+###############################################################################
+def open_file(file):
+#CZ#return(open(file))
+#CZ#return(open(file, 'r', encoding="ascii"     , errors="surrogateescape"))
+#CZ#return(open(file, 'r', encoding="ascii"     , errors="replace"))
+#CZ#return(open(file, 'r', encoding="utf-8"     , errors="replace"))
+    return(open(file, 'r', encoding="iso-8859-1", errors="replace"))

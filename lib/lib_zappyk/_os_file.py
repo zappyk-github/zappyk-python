@@ -32,4 +32,7 @@ class _os_file:
         return(files)
     ###########################################################################
     def _pathJoin(path_name, file_name):
-        return(path.sep.join(path_name, file_name))
+        return(path.sep.join([path_name, file_name]))
+    ###########################################################################
+    def _pathJoin(list_path_name_file):
+        return(path.sep.join(list_path_name_file))

@@ -3,6 +3,7 @@ __author__ = 'zappyk'
 
 import sys
 import csv
+import time
 import json
 import pickle
 import traceback
@@ -51,10 +52,11 @@ login_credential_servicej = False if servicej is None else True
 login_credential_accountj = False if accountj is None else not(login_credential_servicej)
 login_credential          = True  if (servicej or accountj) else False
 
-csv_delimiter      = ';'               if csv_delimiter      is None else csv_delimiter
-csv_quotechar      = '"'               if csv_quotechar      is None else csv_quotechar
-csv_quoting        = csv.QUOTE_MINIMAL if csv_quoting        is None else csv_quoting
-csv_lineterminator = '\n'              if csv_lineterminator is None else csv_lineterminator
+#csv_delimiter     = ','               if csv_delimiter      is None else csv_delimiter
+#csv_quotechar     = '"'               if csv_quotechar      is None else csv_quotechar
+#csv_quoting       = csv.QUOTE_MINIMAL if csv_quoting        is None else csv_quoting
+csv_quoting        = csv.QUOTE_NONE    if csv_quoting        is None else csv_quoting
+#csv_lineterminator= "\r\n"            if csv_lineterminator is None else csv_lineterminator
 
 if args.debug >= 1:
     logs.info('servicej                   = %s' % servicej)
@@ -257,16 +259,31 @@ def exec_spreadsheet(gc):
         #----------------------------------------------------------------------
 
         if sht is not None:
+            str_name = str(wks_name)
             if wks_read:
                 if args.verbose:
-                    logs.info('Try read Worksheet... (%s)' % wks_name)
-                wks = sht.get_worksheet(wks_name)
+                    logs.info('Try read Worksheet... (%s)' % str_name)
+                if type(wks_name) is int:
+                    wks = sht.get_worksheet(wks_name)
+                else:
+                    wks = sht.worksheet(str_name)
                 if args.verbose:
                     logs.info('Try read Worksheet ok :-)')
             if wks_write:
                 if args.verbose:
-                    logs.info('Try write Worksheet... (%s)' % wks_name)
-                wks = sht.add_worksheet(title=str(wks_name), rows=1, cols=1)
+                    logs.info('Try write Worksheet... (name "%s")' % str_name)
+                try:
+                    logs.info('...try get', '')
+                    wks = sht.worksheet(str_name)
+                    logs.info('...try del', '')
+                    sht.del_worksheet(wks)
+                except:
+                    logs.info(' => ', '')
+                    pass
+                finally:
+                    logs.info('...try add', '')
+                    wks = sht.add_worksheet(title=str_name, rows=1, cols=1)
+                    logs.info('...ok!')
                 if args.verbose:
                     logs.info('Try write Worksheet ok :-)')
 
@@ -304,11 +321,8 @@ def exec_csv_write(wks_values):
 
     if std_out:
         logs.info(LINE_PARTITION)
-    #csv_values = csv.writer(fileout)
-    #csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
-    #csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, lineterminator=csv_lineterminator)
-    #csv_values = csv.writer(fileout, delimiter=csv_delimiter, lineterminator=csv_lineterminator)
-    csv_values = csv.writer(fileout, delimiter=csv_delimiter)
+    #csv_values= csv.writer(fileout)
+    csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
     csv_values.writerows(wks_values)
     if std_out:
         logs.info(LINE_PARTITION)
@@ -324,7 +338,7 @@ def exec_csv_read():
     else:
         try:
             filein = open(csv_file_name, 'r')
-            logs.info('Read to file csv: %s' % csv_file_name)
+            logs.info('Read on file csv: %s' % csv_file_name)
         except:
             filein = sys.stdin
             std_in = True
@@ -332,10 +346,8 @@ def exec_csv_read():
 
     if std_in:
         logs.info(LINE_PARTITION)
-    #csv_values = csv.reader(filein)
-    #csv_values = csv.reader(filein, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
-    #csv_values = csv.reader(filein, delimiter=csv_delimiter, quotechar=csv_quotechar, lineterminator=csv_lineterminator)
-    #csv_values = csv.reader(filein, delimiter=csv_delimiter, lineterminator=csv_lineterminator)
+    #csv_values= list(csv.reader(filein)
+    #csv_values= list(csv.reader(filein, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator))
     csv_values = list(csv.reader(filein, delimiter=csv_delimiter))
     if std_in:
         logs.info(LINE_PARTITION)
@@ -360,11 +372,21 @@ def exec_wks_insert(wks, csv_values):
         #--------------------------------------------------------------
         row = 0
         col = 0
+        rof = len(csv_values)
+        rln = len(str(rof))
+        log = 'Insert %' + str(rln) + 's/%s'
+        if args.debug >= 1:
+            log = log + ' %s'
+        else:
+            log = log + 'row on spreadsheet ...'
         for row_values in csv_values:
             if row == 0:
                 col = len(row_values)
             row += 1
-            print("...insert csv row %5s on spreadsheet..." % row)
+            if args.debug >= 1:
+                logs.info(log % (row, rof, row_values))
+            else:
+                logs.info(log % (row, rof))
             wks.insert_row(row_values, row)
         wks.resize(row, col)
 

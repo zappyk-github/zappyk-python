@@ -27,7 +27,7 @@ wks_name = 0
 ###############################################################################
 csv_file_name      = None
 csv_delimiter      = ';'
-csv_quotechar      = ''
+csv_quotechar      = None
 csv_quoting        = None
-csv_lineterminator = None
+csv_lineterminator = "\n"
 ###############################################################################

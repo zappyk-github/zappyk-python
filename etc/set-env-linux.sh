@@ -28,3 +28,6 @@ export PYTHONIOENCODING
 
 echo "export PYTHONPATH=$PYTHONPATH"
 export PYTHONPATH
+
+echo "alias pyinstaller=$PROJECTDIR/bin/pyinstaller/pyinstaller.py"
+alias pyinstaller=$PROJECTDIR/bin/pyinstaller/pyinstaller.py

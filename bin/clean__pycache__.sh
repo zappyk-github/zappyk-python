@@ -5,6 +5,6 @@
 #command='ls -d'
  command=${*:-ls -d}
 
-find ./ -name "__pycache__" | xargs $command
+find ./ -name "__pycache__" | grep -v "/src_external" | xargs $command
 
 exit

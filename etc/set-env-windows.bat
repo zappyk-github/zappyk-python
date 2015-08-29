@@ -11,10 +11,7 @@ set PYTHONPATH=^
 %PROJECTDIR%\lib;^
 %PROJECTDIR%\lib\lib_external;^
 %PROJECTDIR%\lib\lib_zappyk;^
-%PROJECTDIR%\getRunSend;^
-%PROJECTDIR%\switchOnOff;^
-%PROJECTDIR%\runCmdServer;^
-%PROJECTDIR%\findNameSend;^
+%PROJECTDIR%\src\src_zappyk;^
 .
 
 

@@ -9,8 +9,7 @@ import traceback
 import webbrowser
 
 from lib_external                     import gspread
-from lib_external.oauth2client.client import SignedJwtAssertionCredentials
-from lib_external.oauth2client.client import OAuth2WebServerFlow
+from lib_external.oauth2client.client import SignedJwtAssertionCredentials, OAuth2WebServerFlow, AccessTokenRefreshError
 from lib_zappyk._os_file              import _pathJoin, _fileExist
 
 from googleSheets.GoogleSheets.cfg.load_cfg  import parser_args, parser_conf, logger_conf
@@ -175,8 +174,13 @@ def exec_login():
         if credential is not None:
             if args.verbose:
                 logs.info('Login Google...')
-            # Login with your Google account
-            gc = gspread.authorize(credential)
+            try:
+                # Login with your Google account
+                gc = gspread.authorize(credential)
+            except AccessTokenRefreshError as atre:
+                logs.warning(atre)
+                logs.warning("Try again by clearing the credentials file! :-|")
+                pass
             if args.verbose:
                 logs.info('Login Google ok (by json credential)')
     else:
@@ -189,8 +193,9 @@ def exec_login():
                 logs.info('Login Google ok (by username %s)' % username)
 
     if gc is None:
-        logs.warning(LINE_SEPARATOR)
-        logs.warning('Something on Login did not work! :-(')
+        if args.verbose:
+            logs.warning(LINE_SEPARATOR)
+        logs.warning('Something on Login did not work! :-/')
     else:
         if args.verbose:
             logs.info(LINE_SEPARATOR)

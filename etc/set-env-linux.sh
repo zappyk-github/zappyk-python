@@ -11,10 +11,11 @@ PYTHONPATH="\
 $PROJECTDIR/lib:\
 $PROJECTDIR/lib/lib_external:\
 $PROJECTDIR/lib/lib_zappyk:\
-$PROJECTDIR/getRunSend:\
-$PROJECTDIR/switchOnOff:\
-$PROJECTDIR/runCmdServer:\
-$PROJECTDIR/findNameSend:\
+$PROJECTDIR/src/src_zappyk/getRunSend:\
+$PROJECTDIR/src/src_zappyk/switchOnOff:\
+$PROJECTDIR/src/src_zappyk/runCmdServer:\
+$PROJECTDIR/src/src_zappyk/findNameSend:\
+$PROJECTDIR/src/src_zappyk/googleSheets:\
 .\
 "
 
@@ -31,3 +32,8 @@ export PYTHONPATH
 
 echo "alias pyinstaller=$PROJECTDIR/bin/pyinstaller/pyinstaller.py"
 alias pyinstaller=$PROJECTDIR/bin/pyinstaller/pyinstaller.py
+
+echo "alias cx_freeze=$PROJECTDIR/bin/cx_freeze/cxfreeze"
+echo "alias cx_freeze_quickstart=$PROJECTDIR/bin/cx_freeze/cxfreeze-quickstart"
+alias cx_freeze=$PROJECTDIR/bin/cx_freeze/cxfreeze
+alias cx_freeze_quickstart=$PROJECTDIR/bin/cx_freeze/cxfreeze-quickstart

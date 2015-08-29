@@ -1,0 +1,10 @@
+#!/bin/env bash
+
+PATH_NAME=$(dirname "$0")
+FILE_NAME=$(basename "$0" '.make-source')
+
+_COMMAND_="$PATH_NAME/$FILE_NAME.sh"
+TEMP_FILE="$FILE_NAME.load-source"
+
+"$_COMMAND_" >"$TEMP_FILE"
+echo "source \"$TEMP_FILE\""

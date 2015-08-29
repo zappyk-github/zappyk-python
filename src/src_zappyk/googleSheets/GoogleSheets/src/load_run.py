@@ -271,17 +271,22 @@ def exec_spreadsheet(gc):
                 if args.verbose:
                     logs.info('Try write Worksheet... (name "%s")' % str_name)
                 try:
-                    logs.info('...try get', '')
+                    if args.debug >= 2:
+                        logs.info('...try get', '')
                     wks = sht.worksheet(str_name)
-                    logs.info('...try del', '')
+                    if args.debug >= 2:
+                        logs.info('...try del', '')
                     sht.del_worksheet(wks)
                 except:
-                    logs.info(' => ', '')
+                    if args.debug >= 2:
+                        logs.info(' => ', '')
                     pass
                 finally:
-                    logs.info('...try add', '')
+                    if args.debug >= 2:
+                        logs.info('...try add', '')
                     wks = sht.add_worksheet(title=str_name, rows=1, cols=1)
-                    logs.info('...ok!')
+                    if args.debug >= 2:
+                        logs.info('...ok!')
                 if args.verbose:
                     logs.info('Try write Worksheet ok :-)')
 
@@ -386,6 +391,7 @@ def exec_wks_insert(wks, csv_values):
             else:
                 logs.info(log % (row, rof))
             wks.insert_row(row_values, row)
+        logs.info('Insert done!')
         wks.resize(row, col)
 
 ###############################################################################

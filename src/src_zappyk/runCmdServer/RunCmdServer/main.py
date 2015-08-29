@@ -4,8 +4,8 @@ __author__ = 'zappyk'
 
 import sys
 
-from runCmdServer.RunCmdServer.src import load_run
-from runCmdServer.RunCmdServer.cfg import load_cfg
+from RunCmdServer.src import load_run
+from RunCmdServer.cfg import load_cfg
 
 #args= load_cfg.parser_args()
 conf = load_cfg.parser_conf()

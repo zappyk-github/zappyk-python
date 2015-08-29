@@ -6,7 +6,7 @@ import argparse, configparser
 from lib_zappyk._log     import _log
 from lib_zappyk._os_file import _pathAbs, _pathJoin, _fileExist, _pathSep, _pathExpanduser
 
-from googleSheets.GoogleSheets import *
+from GoogleSheets import *
 
 _project_     = get_project()
 _description_ = get_description()

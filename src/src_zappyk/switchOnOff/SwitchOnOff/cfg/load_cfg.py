@@ -6,8 +6,8 @@ import argparse, configparser
 from lib_zappyk._log     import _log
 from lib_zappyk._os_file import _pathAbs, _pathJoin, _fileExist, _pathSep, _pathExpanduser
 
-from switchOnOff.SwitchOnOff.src.constants  import *
 from switchOnOff.SwitchOnOff                import *
+from switchOnOff.SwitchOnOff.src.constants  import *
 
 _project_     = get_project()
 _description_ = get_description()

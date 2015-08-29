@@ -4,8 +4,8 @@ __author__ = 'zappyk'
 
 import sys
 
-from getRunSend.GetRunSend.src import load_run
-from getRunSend.GetRunSend.cfg import load_cfg
+from GetRunSend.src import load_run
+from GetRunSend.cfg import load_cfg
 
 #args= load_cfg.parser_args()
 conf = load_cfg.parser_conf()

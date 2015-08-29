@@ -12,8 +12,8 @@ from lib_zappyk._os_file import _fileExist, _copy2
 from lib_zappyk._string  import _removeFirstEmptyLine, _stringToList
 from lib_zappyk._wget    import _wgetFile
 
-from getRunSend.GetRunSend.cfg.load_cfg import parser_args, parser_conf, logger_conf
-from getRunSend.GetRunSend.cfg.load_ini import *
+from GetRunSend.cfg.load_cfg import parser_args, parser_conf, logger_conf
+from GetRunSend.cfg.load_ini import *
 
 args = parser_args().args
 conf = parser_conf().conf

@@ -20,5 +20,5 @@ def get_description():
 #   return(get_version(*arg, **kwargs))
 ###########################################################
 def get_version():
-    from src.version import get_version
+    from GoogleSheets.src.version import get_version
     return(get_version())

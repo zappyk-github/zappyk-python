@@ -4,8 +4,8 @@ __author__ = 'zappyk'
 
 import sys
 
-from switchOnOff.SwitchOnOff.src import load_run
-from switchOnOff.SwitchOnOff.cfg import load_cfg
+from SwitchOnOff.src import load_run
+from SwitchOnOff.cfg import load_cfg
 
 #args= load_cfg.parser_args()
 conf = load_cfg.parser_conf()

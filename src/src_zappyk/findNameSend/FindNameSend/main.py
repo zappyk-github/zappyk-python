@@ -4,8 +4,8 @@ __author__ = 'zappyk'
 
 import sys
 
-from findNameSend.FindNameSend.src import load_run
-from findNameSend.FindNameSend.cfg import load_cfg
+from FindNameSend.src import load_run
+from FindNameSend.cfg import load_cfg
 
 #args= load_cfg.parser_args()
 conf = load_cfg.parser_conf()

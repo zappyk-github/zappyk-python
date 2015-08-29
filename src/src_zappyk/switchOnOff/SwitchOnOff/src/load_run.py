@@ -10,9 +10,9 @@ from lib_zappyk._string  import _removeFirstEmptyLine, _stringToList
 from lib_external import pymysql
 from lib_external import postgresql
 
-from switchOnOff.SwitchOnOff.cfg.load_cfg  import parser_args, parser_conf, logger_conf
-from switchOnOff.SwitchOnOff.cfg.load_ini  import *
-from switchOnOff.SwitchOnOff.src.constants import *
+from SwitchOnOff.cfg.load_cfg  import parser_args, parser_conf, logger_conf
+from SwitchOnOff.cfg.load_ini  import *
+from SwitchOnOff.src.constants import *
 
 args = parser_args().args
 conf = parser_conf().conf

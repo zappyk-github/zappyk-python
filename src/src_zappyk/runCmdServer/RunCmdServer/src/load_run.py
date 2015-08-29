@@ -6,11 +6,11 @@ import json
 import socket
 import datetime
 
-from lib_zappyk._os      import _os
+from lib_zappyk._os import _command
 
-from runCmdServer.RunCmdServer.cfg.load_cfg  import parser_args, parser_conf, logger_conf
-from runCmdServer.RunCmdServer.cfg.load_ini  import *
-from runCmdServer.RunCmdServer.src.constants import *
+from RunCmdServer.cfg.load_cfg  import parser_args, parser_conf, logger_conf
+from RunCmdServer.cfg.load_ini  import *
+from RunCmdServer.src.constants import *
 
 args = parser_args().args
 conf = parser_conf().conf
@@ -153,7 +153,7 @@ def main():
 def _run_command(command_exec):
     _log_noty("Execute command:")
     (command_exit
-    ,command_logs) = _os._command(command_exec)
+    ,command_logs) = _command(command_exec)
     _log_noty("Execute command done [%s]" % command_exit)
     return(command_exit, command_logs)
 

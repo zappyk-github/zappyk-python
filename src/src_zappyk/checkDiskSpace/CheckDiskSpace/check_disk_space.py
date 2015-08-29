@@ -6,7 +6,7 @@ import os, sys
 import argparse #, configparser
 
 from lib_zappyk._os      import _os_host_type, _os_host_name
-from lib_zappyk._os_disk import _os_disk
+from lib_zappyk._os_disk import _disk_usage
 from lib_zappyk._email   import _email
 from lib_zappyk._manip   import _bytes_human_manip
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
     (space_b_total
     ,space_b_used
-    ,space_b_free) = _os_disk._disk_usage(path_base)
+    ,space_b_free) = _disk_usage(path_base)
 
     space_h_total = space_b_total
     space_h_used  = space_b_used

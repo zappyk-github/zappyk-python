@@ -4,8 +4,8 @@ __author__ = 'zappyk'
 
 import sys
 
-from googleSheets.GoogleSheets.src import load_run
-from googleSheets.GoogleSheets.cfg import load_cfg
+from GoogleSheets.src import load_run
+from GoogleSheets.cfg import load_cfg
 
 #args= load_cfg.parser_args()
 conf = load_cfg.parser_conf()

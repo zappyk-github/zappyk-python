@@ -12,6 +12,6 @@ executables = [
 
 setup(name='GoogleSheets',
       version = '1.0',
-      description = 'Google Spreadsheet Read/Write to CSV',
+      description = 'Google Spreadsheet Read/Write (more?) manipulation',
       options = dict(build_exe = buildOptions),
       executables = executables)

@@ -5,9 +5,9 @@ from lib_zappyk._email   import _email
 from lib_zappyk._os_file import _nameListDir
 from lib_zappyk._string  import _removeFirstEmptyLine, _stringToList, _search
 
-from findNameSend.FindNameSend.cfg.load_cfg  import parser_args, parser_conf, logger_conf
-from findNameSend.FindNameSend.cfg.load_ini  import *
-from findNameSend.FindNameSend.src.constants import *
+from FindNameSend.cfg.load_cfg  import parser_args, parser_conf, logger_conf
+from FindNameSend.cfg.load_ini  import *
+from FindNameSend.src.constants import *
 
 args = parser_args().args
 conf = parser_conf().conf

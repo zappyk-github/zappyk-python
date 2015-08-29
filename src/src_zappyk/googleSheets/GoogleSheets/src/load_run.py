@@ -12,9 +12,9 @@ from lib_external                     import gspread
 from lib_external.oauth2client.client import SignedJwtAssertionCredentials, OAuth2WebServerFlow, AccessTokenRefreshError
 from lib_zappyk._os_file              import _pathJoin, _fileExist
 
-from googleSheets.GoogleSheets.cfg.load_cfg  import parser_args, parser_conf, logger_conf
-from googleSheets.GoogleSheets.cfg.load_ini  import *
-from googleSheets.GoogleSheets.src.constants import *
+from GoogleSheets.cfg.load_cfg  import parser_args, parser_conf, logger_conf
+from GoogleSheets.cfg.load_ini  import *
+from GoogleSheets.src.constants import *
 
 args = parser_args().args
 conf = parser_conf().conf

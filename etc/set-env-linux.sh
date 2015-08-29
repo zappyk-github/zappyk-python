@@ -11,11 +11,7 @@ PYTHONPATH="\
 $PROJECTDIR/lib:\
 $PROJECTDIR/lib/lib_external:\
 $PROJECTDIR/lib/lib_zappyk:\
-$PROJECTDIR/src/src_zappyk/getRunSend:\
-$PROJECTDIR/src/src_zappyk/switchOnOff:\
-$PROJECTDIR/src/src_zappyk/runCmdServer:\
-$PROJECTDIR/src/src_zappyk/findNameSend:\
-$PROJECTDIR/src/src_zappyk/googleSheets:\
+$PROJECTDIR/src/src_zappyk:\
 .\
 "
 

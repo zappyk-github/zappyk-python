@@ -38,8 +38,12 @@ csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_
 csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
 csv_lineterminator = conf.get("InputOutput", "csv_lineterminator", fallback=csv_lineterminator)
 
-wks_read  = True if args.action == 'r' else False
-wks_write = True if args.action == 'w' else False
+wks_read   = True if args.action == 'r' else False
+wks_write  = True if args.action == 'w' else False
+wks_update = True if args.action == 'u' else False
+#wks_read   = False
+#wks_write  = False
+#wks_update = True
 
 servicej = _pathJoin([savejson, servicej]) if servicej is not None else servicej
 accountj = _pathJoin([savejson, accountj]) if accountj is not None else accountj
@@ -67,19 +71,24 @@ def main():
     init_check()
 
     try:
-        gc = exec_login()
+        if wks_update:
 
-        wks = exec_spreadsheet(gc)
+            load_file()
 
-        if wks is not None:
+        else:
+            glc = exec_login()
 
-            if wks_read:
-                wks_values = wks.get_all_values()
-                exec_csv_write(wks_values)
+            wks = exec_spreadsheet(glc)
 
-            if wks_write:
-                csv_values = exec_csv_read()
-                exec_wks_insert(wks, csv_values)
+            if wks is not None:
+
+                if wks_read:
+                    wks_values = wks.get_all_values()
+                    exec_csv_write(wks_values)
+
+                if wks_write:
+                    csv_values = exec_csv_read()
+                    exec_wks_insert(wks, csv_values)
 
     except:
         logs.warning("(*** USCITA ANOMALA ***) o_O")
@@ -99,6 +108,10 @@ def main():
 
 ###############################################################################
 def init_check():
+    if args.verbose:
+        logs.info(LINE_SEPARATOR)
+    #--------------------------------------------------------------------------
+
     if login_credential_servicej:
         if not _fileExist(servicej):
             logs.error('File %s not exist!' % servicej)
@@ -107,69 +120,106 @@ def init_check():
             logs.error('File %s not exist!' % accountj)
 
 ###############################################################################
-def exec_login():
-    if args.verbose:
-        logs.info(LINE_SEPARATOR)
+def make_credential():
+    credential = None
+    if login_credential_servicej and servicej is not None:
+        if args.verbose:
+            logs.info('Create credential by json file... (%s)' % servicej)
+        json_keys = json.load(open(servicej))
+        json_keys_account = json_keys['client_email']
+        json_keys_private = json_keys['private_key']
+        credential = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), urlscope)
+        if args.verbose:
+            logs.info('Create credential by json file ok (client_email=%s)' % json_keys_account)
+
+    if login_credential_accountj and accountj is not None:
+        try:
+            with open(tknstore, 'rb') as file:
+                credential = pickle.load(file)
+            logs.info('The credential file was read, through authorize access login...')
+        except:
+            logs.info("The credential file can't be read, try the authenticate flow...")
+
+        if args.verbose:
+            logs.info(LINE_SEPARATOR)
+
+        if credential is None:
+            if args.verbose:
+                logs.info('Create credential by json file... (%s)' % accountj)
+            json_keys = json.load(open(accountj))
+            json_keys_account  = json_keys['installed']['client_id']
+            json_keys_private  = json_keys['installed']['client_secret']
+            json_keys_redirect = json_keys['installed']['redirect_uris'][0]
+            credential_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), urlscope, redirect_uri=json_keys_redirect)
+            credential_auth_uri = credential_flow.step1_get_authorize_url()
+
+            logs.info(LINE_PARTITION)
+            step1_question_rows = ['Go to the following link in your browser:', '%s']
+            step1_question_text = make_question(step1_question_rows)
+            print(step1_question_text % credential_auth_uri)
+            #
+            #webbrowser.open_new_tab(credentials_auth_uri)
+            #
+            step2_question_rows = ['Enter verification code: ']
+            step2_question_text = make_question(step2_question_rows)
+            credentials_code = input(step2_question_text).strip()
+            logs.info(LINE_PARTITION)
+
+            credential = credential_flow.step2_exchange(credentials_code)
+
+            if args.verbose:
+                logs.info('Create credential by json file ok (client_id=%s)' % json_keys_account)
+
+            try:
+                with open(tknstore, 'wb') as file:
+                    pickle.dump(credential, file, pickle.HIGHEST_PROTOCOL)
+                logs.info('The credential file was save :-)')
+            except:
+                logs.info("The credential file can't be saved :-(")
+
+    if credential is None:
+        logs.warning(LINE_SEPARATOR)
+        logs.warning('Something on Credential did not work! :-/')
+    else:
+        if args.verbose:
+            logs.info(LINE_SEPARATOR)
     #--------------------------------------------------------------------------
 
+    return(credential)
+
+###############################################################################
+def load_file():
+    print('...DEVELOP FOR UPLOAD FILE CSV...')
+    print('=================================')
+
+    from pydrive.auth import GoogleAuth
+    from pydrive.drive import GoogleDrive
+
+    #credential = make_credential()
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+
+    drive = GoogleDrive(gauth)
+
+    file1 = drive.CreateFile({'title': 'Hello.txt'})
+    file1.SetContentString('Hello')
+    file1.Upload() # Files.insert()
+
+    file2 = drive.CreateFile()
+    file2.SetContentFile(csv_file_name)
+    file2.Upload()
+    print('Created file %s with mimeType %s' % (file2['title'], file2['mimeType']))
+    # Created file hello.png with mimeType image/png
+
+    print('=================================')
+    print('...DEVELOP FOR UPLOAD FILE CSV...')
+
+###############################################################################
+def exec_login():
     gc = None
     if login_credential:
 
-        credential = None
-        if login_credential_servicej and servicej is not None:
-            if args.verbose:
-                logs.info('Create credential by json file... (%s)' % servicej)
-            json_keys = json.load(open(servicej))
-            json_keys_account = json_keys['client_email']
-            json_keys_private = json_keys['private_key']
-            credential = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), urlscope)
-            if args.verbose:
-                logs.info('Create credential by json file ok (client_email=%s)' % json_keys_account)
-
-        if login_credential_accountj and accountj is not None:
-            try:
-                with open(tknstore, 'rb') as file:
-                    credential = pickle.load(file)
-                logs.info('The credential file was read, through authorize access login...')
-            except:
-                logs.info("The credential file can't be read, try the authenticate flow...")
-
-            if args.verbose:
-                logs.info(LINE_SEPARATOR)
-
-            if credential is None:
-                if args.verbose:
-                    logs.info('Create credential by json file... (%s)' % accountj)
-                json_keys = json.load(open(accountj))
-                json_keys_account  = json_keys['installed']['client_id']
-                json_keys_private  = json_keys['installed']['client_secret']
-                json_keys_redirect = json_keys['installed']['redirect_uris'][0]
-                credential_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), urlscope, redirect_uri=json_keys_redirect)
-                credential_auth_uri = credential_flow.step1_get_authorize_url()
-
-                logs.info(LINE_PARTITION)
-                step1_question_rows = ['Go to the following link in your browser:', '%s']
-                step1_question_text = make_question(step1_question_rows)
-                print(step1_question_text % credential_auth_uri)
-                #
-                #webbrowser.open_new_tab(credentials_auth_uri)
-                #
-                step2_question_rows = ['Enter verification code: ']
-                step2_question_text = make_question(step2_question_rows)
-                credentials_code = input(step2_question_text).strip()
-                logs.info(LINE_PARTITION)
-
-                credential = credential_flow.step2_exchange(credentials_code)
-
-                if args.verbose:
-                    logs.info('Create credential by json file ok (client_id=%s)' % json_keys_account)
-
-                try:
-                    with open(tknstore, 'wb') as file:
-                        pickle.dump(credential, file, pickle.HIGHEST_PROTOCOL)
-                    logs.info('The credential file was save :-)')
-                except:
-                    logs.info("The credential file can't be saved :-(")
+        credential = make_credential()
 
         if credential is not None:
             if args.verbose:
@@ -193,8 +243,7 @@ def exec_login():
                 logs.info('Login Google ok (by username %s)' % username)
 
     if gc is None:
-        if args.verbose:
-            logs.warning(LINE_SEPARATOR)
+        logs.warning(LINE_SEPARATOR)
         logs.warning('Something on Login did not work! :-/')
     else:
         if args.verbose:
@@ -204,16 +253,16 @@ def exec_login():
     return(gc)
 
 ###############################################################################
-def exec_spreadsheet(gc):
+def exec_spreadsheet(glc):
     sht = None
     wks = None
-    if gc is not None:
+    if glc is not None:
         if sht is None and openname is not None:
             try:
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Name... (%s)' % openname)
                 # You can open a spreadsheet by its title as it appears in Google Docs
-                sht = gc.open(openname)
+                sht = glc.open(openname)
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Name ok :-)')
             except gspread.SpreadsheetNotFound as snf:
@@ -224,7 +273,7 @@ def exec_spreadsheet(gc):
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Key... (%s)' % open_key)
                 # If you want to be specific, use a key (which can be extracted from the spreadsheet's url)
-                sht = gc.open_by_key(open_key)
+                sht = glc.open_by_key(open_key)
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Key ok :-)')
             except gspread.SpreadsheetNotFound as snf:
@@ -235,7 +284,7 @@ def exec_spreadsheet(gc):
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Url... (%s)' % open_url)
                 # Or, if you feel really lazy to extract that key, paste the entire url
-                sht = gc.open_by_url(open_url)
+                sht = glc.open_by_url(open_url)
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Url ok :-)')
             except gspread.SpreadsheetNotFound as snf:
@@ -246,7 +295,7 @@ def exec_spreadsheet(gc):
                 if args.verbose:
                     logs.info('Try open all Spreadsheet...')
                 # Or, if you feel really lazy to extract that key, paste the entire url
-                sht_all = gc.openall()
+                sht_all = glc.openall()
                 if args.verbose:
                     logs.info('Try open all Spreadsheet ok :-)')
                     logs.info('Spreadsheet = [%s]' % sht_all)

@@ -41,7 +41,7 @@ class parser_args(object):
     #CZ#pgroup.add_argument('-s'     , '--square'        , help='display a square of a given number', type=int)
         parser.add_argument('-d'     , '--debug'         , help='increase output debug'             , action='count'                 , default=0)
         parser.add_argument('-v'     , '--verbose'       , help='output verbosity'                  , action='store_true')
-        parser.add_argument('-a'     , '--action'        , help='action for Read/Write spreadsheet' , type=str, choices=['r','w','u'], required=True)
+        parser.add_argument('-a'     , '--action'        , help='action for Read/Write or Update'   , type=str, choices=['r','w','u'], required=True)
         parser.add_argument('-on'    , '--openname'      , help='open spreadsheet by NAME'          , type=str                       , default='')
         parser.add_argument('-ok'    , '--open_key'      , help='open spreadsheet by KEY'           , type=str                       , default='')
         parser.add_argument('-ou'    , '--open_url'      , help='open spreadsheet by URL'           , type=str                       , default='')

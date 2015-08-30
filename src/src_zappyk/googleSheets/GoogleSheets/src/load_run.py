@@ -20,13 +20,14 @@ args = parser_args().args
 conf = parser_conf().conf
 logs = logger_conf().logs
 
+gspread_scope      = GSPREAD_SCOPE
+
 savejson           = conf.get("Base"       , "savejson"          , fallback=savejson)
 username           = conf.get("Login"      , "username"          , fallback=username)
 password           = conf.get("Login"      , "password"          , fallback=password)
 p_encode           = conf.get("Login"      , "p_encode"          , fallback=p_encode)
 servicej           = conf.get("Login"      , "servicej"          , fallback=servicej)
 accountj           = conf.get("Login"      , "accountj"          , fallback=accountj)
-urlscope           = conf.get("Login"      , "urlscope"          , fallback=urlscope)
 tknstore           = conf.get("Login"      , "tknstore"          , fallback=tknstore)
 openname           = conf.get("Spreadsheet", "openname"          , fallback=openname)
 open_key           = conf.get("Spreadsheet", "open_key"          , fallback=open_key)
@@ -128,7 +129,7 @@ def make_credential():
         json_keys = json.load(open(servicej))
         json_keys_account = json_keys['client_email']
         json_keys_private = json_keys['private_key']
-        credential = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), urlscope)
+        credential = SignedJwtAssertionCredentials(json_keys_account, json_keys_private.encode(p_encode), gspread_scope)
         if args.verbose:
             logs.info('Create credential by json file ok (client_email=%s)' % json_keys_account)
 
@@ -150,7 +151,7 @@ def make_credential():
             json_keys_account  = json_keys['installed']['client_id']
             json_keys_private  = json_keys['installed']['client_secret']
             json_keys_redirect = json_keys['installed']['redirect_uris'][0]
-            credential_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), urlscope, redirect_uri=json_keys_redirect)
+            credential_flow = OAuth2WebServerFlow(json_keys_account, json_keys_private.encode(p_encode), gspread_scope, redirect_uri=json_keys_redirect)
             credential_auth_uri = credential_flow.step1_get_authorize_url()
 
             logs.info(LINE_PARTITION)

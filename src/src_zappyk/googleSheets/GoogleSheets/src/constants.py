@@ -8,3 +8,7 @@ LINE_SEPARATOR = '#' * LINE_LENGTH
 LINE_PARTITION = '=' * LINE_LENGTH
 
 CHAR_STD_INOUT = '-'
+
+GSPREAD_SCOPE = 'https://docs.google.com/feeds'
+GSPREAD_SCOPE = 'https://www.googleapis.com/auth/drive'
+GSPREAD_SCOPE = 'https://spreadsheets.google.com/feeds'

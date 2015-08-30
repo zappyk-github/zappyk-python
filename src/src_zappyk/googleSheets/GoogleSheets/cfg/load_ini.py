@@ -13,10 +13,6 @@ servicej = None
 accountj = 'sysop_sheets-oauth_client_id_credential.json'
 accountj = None
 ##########
-urlscope = 'https://docs.google.com/feeds'
-urlscope = 'https://www.googleapis.com/auth/drive'
-urlscope = 'https://spreadsheets.google.com/feeds'
-##########
 tknstore = 'sysop_sheets-token_store_the_credential.data'
 ###############################################################################
 openname = None

@@ -43,9 +43,9 @@ build_exe    = _setup._build_exe(None, name, version)
 executables = _setup._setup_Executable(file_execute
                         ,base=base
                         ,icon=file_img_ico
-                        ,appendScriptToExe=False
-                        ,appendScriptToLibrary=False
-                        ,copyDependentFiles=True
+                    #   ,appendScriptToExe=False
+                    #   ,appendScriptToLibrary=False
+                    #   ,copyDependentFiles=True
                         ,targetName=name+exte
                         )
 '''
@@ -65,11 +65,11 @@ options = {
 }
 '''
 
-buildOptions = dict(create_shared_zip=False
-                   ,compressed=True
-                   ,packages=pkgs_include
+buildOptions = dict(packages=pkgs_include
                    ,excludes=pkgs_exclude
                    ,include_files=file_include
+               #   ,create_shared_zip=False
+               #   ,compressed=True
                #   ,namespace_packages=[name]
                #   ,path=sys.path+['/path/more/modules']
                    ,build_exe=build_exe

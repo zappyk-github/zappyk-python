@@ -196,9 +196,10 @@ def load_file():
     from pydrive.auth import GoogleAuth
     from pydrive.drive import GoogleDrive
 
-    #credential = make_credential()
+    credential = make_credential()
     gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
+    gauth.credentials = credential
+#   gauth.LocalWebserverAuth()
 
     drive = GoogleDrive(gauth)
 

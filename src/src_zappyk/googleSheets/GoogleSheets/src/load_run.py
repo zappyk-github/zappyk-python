@@ -29,11 +29,11 @@ p_encode           = conf.get("Login"      , "p_encode"          , fallback=p_en
 servicej           = conf.get("Login"      , "servicej"          , fallback=servicej)
 accountj           = conf.get("Login"      , "accountj"          , fallback=accountj)
 tknstore           = conf.get("Login"      , "tknstore"          , fallback=tknstore)
-openname           = conf.get("Spreadsheet", "openname"          , fallback=openname)
-open_key           = conf.get("Spreadsheet", "open_key"          , fallback=open_key)
-open_url           = conf.get("Spreadsheet", "open_url"          , fallback=open_url)
+filename           = conf.get("Spreadsheet", "filename"          , fallback=filename)
+file_key           = conf.get("Spreadsheet", "file_key"          , fallback=file_key)
+file_url           = conf.get("Spreadsheet", "file_url"          , fallback=file_url)
 wks_name           = conf.get("Worksheet"  , "wks_name"          , fallback=wks_name)
-csv_file_name      = conf.get("InputOutput", "csv_file_name"     , fallback=csv_file_name)
+csv_filename       = conf.get("InputOutput", "csv_filename"      , fallback=csv_filename)
 csv_delimiter      = conf.get("InputOutput", "csv_delimiter"     , fallback=csv_delimiter)
 csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_quotechar)
 csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
@@ -207,7 +207,7 @@ def load_file():
     file1.Upload() # Files.insert()
 
     file2 = drive.CreateFile()
-    file2.SetContentFile(csv_file_name)
+    file2.SetContentFile(csv_filename)
     file2.Upload()
     print('Created file %s with mimeType %s' % (file2['title'], file2['mimeType']))
     # Created file hello.png with mimeType image/png
@@ -258,40 +258,46 @@ def exec_spreadsheet(glc):
     sht = None
     wks = None
     if glc is not None:
-        if sht is None and openname is not None:
+        if sht is None and filename is not None:
             try:
                 if args.verbose:
-                    logs.info('Try open Spreadsheet by Name... (%s)' % openname)
+                    logs.info('Try open Spreadsheet by Name... (%s)' % filename)
                 # You can open a spreadsheet by its title as it appears in Google Docs
-                sht = glc.open(openname)
+                sht = glc.open(filename)
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Name ok :-)')
+                else:
+                    logs.info('Read Spreadsheet name: %s' % filename)
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open Spreadsheet by Name not found!")
 
-        if sht is None and open_key is not None:
+        if sht is None and file_key is not None:
             try:
                 if args.verbose:
-                    logs.info('Try open Spreadsheet by Key... (%s)' % open_key)
+                    logs.info('Try open Spreadsheet by Key... (%s)' % file_key)
                 # If you want to be specific, use a key (which can be extracted from the spreadsheet's url)
-                sht = glc.open_by_key(open_key)
+                sht = glc.open_by_key(file_key)
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Key ok :-)')
+                else:
+                    logs.info('Read Spreadsheet key: %s' % file_key)
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open Spreadsheet by Key not found!")
 
-        if sht is None and open_url is not None:
+        if sht is None and file_url is not None:
             try:
                 if args.verbose:
-                    logs.info('Try open Spreadsheet by Url... (%s)' % open_url)
+                    logs.info('Try open Spreadsheet by Url... (%s)' % file_url)
                 # Or, if you feel really lazy to extract that key, paste the entire url
-                sht = glc.open_by_url(open_url)
+                sht = glc.open_by_url(file_url)
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Url ok :-)')
+                else:
+                    logs.info('Read Spreadsheet url: %s' % file_url)
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open Spreadsheet by Url not found!")
 
-        if args.debug >= 2:
+        if sht is None or args.debug >= 2:
             try:
                 if args.verbose:
                     logs.info('Try open all Spreadsheet...')
@@ -299,7 +305,9 @@ def exec_spreadsheet(glc):
                 sht_all = glc.openall()
                 if args.verbose:
                     logs.info('Try open all Spreadsheet ok :-)')
-                    logs.info('Spreadsheet = [%s]' % sht_all)
+                    logs.info('Try find the Spreadsheet =')
+                    for sht_all_obj in sht_all:
+                        logs.info(' => [%s]' % sht_all_obj.title)
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open all Spreadsheet not found anything!")
 
@@ -364,14 +372,14 @@ def exec_csv_write(wks_values):
 
     fileout = None
     std_out = False
-    if csv_file_name == CHAR_STD_INOUT:
+    if csv_filename == CHAR_STD_INOUT:
         fileout = sys.stdout
         std_out = True
         logs.info('Write csv rows on STDOUT:')
     else:
         try:
-            fileout = open(csv_file_name, 'w')
-            logs.info('Write to file csv: %s' % csv_file_name)
+            fileout = open(csv_filename, 'w')
+            logs.info('Write to file csv: %s' % csv_filename)
         except:
             fileout = sys.stdout
             std_out = True
@@ -389,14 +397,14 @@ def exec_csv_write(wks_values):
 def exec_csv_read():
     filein = None
     std_in = False
-    if csv_file_name == CHAR_STD_INOUT:
+    if csv_filename == CHAR_STD_INOUT:
         filein = sys.stdin
         std_in = True
         logs.info('Read csv rows on STDIN:')
     else:
         try:
-            filein = open(csv_file_name, 'r')
-            logs.info('Read on file csv: %s' % csv_file_name)
+            filein = open(csv_filename, 'r')
+            logs.info('Read on file csv: %s' % csv_filename)
         except:
             filein = sys.stdin
             std_in = True

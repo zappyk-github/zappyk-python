@@ -15,13 +15,13 @@ accountj = None
 ##########
 tknstore = 'sysop_sheets-token_store_the_credential.data'
 ###############################################################################
-openname = None
-open_key = None
-open_url = None
+filename = None
+file_key = None
+file_url = None
 ###############################################################################
 wks_name = 0
 ###############################################################################
-csv_file_name      = None
+csv_filename       = None
 csv_delimiter      = ';'
 csv_quotechar      = None
 csv_quoting        = None

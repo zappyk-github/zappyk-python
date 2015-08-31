@@ -2,7 +2,9 @@
 
 PRG_NAME='GoogleSheets'
 PRG_VERS='0.0.1b1'
+HOSTARCH='32bit_ELF'
 HOSTARCH='64bit_ELF'
+HOSTARCH="$(getconf LONG_BIT)bit_ELF"
 
 DIR_NAME=$(dirname "$0")
 DIR_BASE="$PRG_NAME-$PRG_VERS"

@@ -39,12 +39,15 @@ csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_
 csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
 csv_lineterminator = conf.get("InputOutput", "csv_lineterminator", fallback=csv_lineterminator)
 
+filename     = args.sht_filename if args.sht_filename is not None else filename
+file_key     = args.sht_file_key if args.sht_file_key is not None else file_key
+file_url     = args.sht_file_url if args.sht_file_url is not None else file_url
+wks_name     = args.wks_name     if args.wks_name     is not None else wks_name
+csv_filename = args.csv_filename if args.csv_filename is not None else csv_filename
+
 wks_read   = True if args.action == 'r' else False
 wks_write  = True if args.action == 'w' else False
 wks_update = True if args.action == 'u' else False
-#wks_read   = False
-#wks_write  = False
-#wks_update = True
 
 servicej = _pathJoin([savejson, servicej]) if servicej is not None else servicej
 accountj = _pathJoin([savejson, accountj]) if accountj is not None else accountj

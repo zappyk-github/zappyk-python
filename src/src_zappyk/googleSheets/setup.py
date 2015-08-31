@@ -32,6 +32,7 @@ pkgs_include = _setup._find_packages(exclude=pkgs_exclude)
 file_include = ['%s-config.ini' % project
                ,'%s-logger.ini' % project
                ,'%s-launch.bat' % project
+               ,'%s.pem'        % project
                ]
 
 build_exe    = None

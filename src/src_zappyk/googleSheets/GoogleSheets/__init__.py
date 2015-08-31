@@ -3,6 +3,7 @@ __author__ = 'pes0zap'
 
 PROJECT     = 'GoogleSheets'
 DESCRIPTION = 'Manage your Google Spreadsheets'
+DESCRIPTION = 'Google Spreadsheet Read/Write (more?) manipulation'
 VERSION     = (0, 0, 1, 'beta', 1)
 
 ###########################################################

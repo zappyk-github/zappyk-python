@@ -3,6 +3,7 @@ __author__ = 'zappyk'
 
 import sys
 import csv
+import time
 import json
 import pickle
 import traceback
@@ -39,11 +40,22 @@ csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_
 csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
 csv_lineterminator = conf.get("InputOutput", "csv_lineterminator", fallback=csv_lineterminator)
 
-filename     = args.sht_filename if args.sht_filename is not None else filename
-file_key     = args.sht_file_key if args.sht_file_key is not None else file_key
-file_url     = args.sht_file_url if args.sht_file_url is not None else file_url
-wks_name     = args.wks_name     if args.wks_name     is not None else wks_name
-csv_filename = args.csv_filename if args.csv_filename is not None else csv_filename
+csv_filename       = args.csv_filename       if args.csv_filename       is not None else csv_filename
+csv_delimiter      = args.csv_delimiter      if args.csv_delimiter      is not None else csv_delimiter
+csv_quotechar      = args.csv_quotechar      if args.csv_quotechar      is not None else csv_quotechar
+csv_lineterminator = args.csv_lineterminator if args.csv_lineterminator is not None else csv_lineterminator
+
+filename           = args.sht_filename       if args.sht_filename       is not None else filename
+file_key           = args.sht_file_key       if args.sht_file_key       is not None else file_key
+file_url           = args.sht_file_url       if args.sht_file_url       is not None else file_url
+wks_name           = args.wks_name           if args.wks_name           is not None else wks_name
+csv_filename       = args.csv_filename       if args.csv_filename       is not None else csv_filename
+wks_rows_resize    = args.wks_rows_resize    if args.wks_rows_resize    is not None else False
+wks_cell_update    = args.wks_cell_update    if args.wks_cell_update    is not None else False
+wks_rows_resize    = False                   if wks_cell_update                     else wks_rows_resize
+
+action_write_wait  = args.action_write_wait  if args.action_write_wait  is not None else False
+second_write_wait  = args.second_write_wait  if args.second_write_wait  is not None else None
 
 wks_read   = True if args.action == 'r' else False
 wks_write  = True if args.action == 'w' else False
@@ -62,6 +74,10 @@ login_credential          = True  if (servicej or accountj) else False
 #csv_quoting       = csv.QUOTE_MINIMAL if csv_quoting        is None else csv_quoting
 csv_quoting        = csv.QUOTE_NONE    if csv_quoting        is None else csv_quoting
 #csv_lineterminator= "\r\n"            if csv_lineterminator is None else csv_lineterminator
+
+if second_write_wait is not None:
+    (SLEEP_MULTIPLE_LINE
+    ,AFTER_MULTIPLE_LINE)= second_write_wait.split('.')
 
 if args.debug >= 1:
     logs.info('servicej                   = %s' % servicej)
@@ -271,7 +287,7 @@ def exec_spreadsheet(glc):
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Name ok :-)')
                 else:
-                    logs.info('Read Spreadsheet name: %s' % filename)
+                    logs.info('Open Spreadsheet name: %s' % filename)
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open Spreadsheet by Name not found!")
 
@@ -284,7 +300,7 @@ def exec_spreadsheet(glc):
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Key ok :-)')
                 else:
-                    logs.info('Read Spreadsheet key: %s' % file_key)
+                    logs.info('Open Spreadsheet key: %s' % file_key)
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open Spreadsheet by Key not found!")
 
@@ -297,7 +313,7 @@ def exec_spreadsheet(glc):
                 if args.verbose:
                     logs.info('Try open Spreadsheet by Url ok :-)')
                 else:
-                    logs.info('Read Spreadsheet url: %s' % file_url)
+                    logs.info('Open Spreadsheet url: %s' % file_url)
             except gspread.SpreadsheetNotFound as snf:
                 logs.info("Try open Spreadsheet by Url not found!")
 
@@ -334,6 +350,8 @@ def exec_spreadsheet(glc):
                     wks = sht.worksheet(str_name)
                 if args.verbose:
                     logs.info('Try read Worksheet ok :-)')
+                else:
+                    logs.info('Read Worksheet name: %s' % str_name)
             if wks_write:
                 if args.verbose:
                     logs.info('Try write Worksheet... (name "%s")' % str_name)
@@ -341,21 +359,26 @@ def exec_spreadsheet(glc):
                     if args.debug >= 2:
                         logs.info('...try get', '')
                     wks = sht.worksheet(str_name)
-                    if args.debug >= 2:
-                        logs.info('...try del', '')
-                    sht.del_worksheet(wks)
+                    if not wks_cell_update:
+                        if args.debug >= 2:
+                            logs.info('...try del', '')
+                        sht.del_worksheet(wks)
                 except:
-                    if args.debug >= 2:
-                        logs.info(' => ', '')
+                    if not wks_cell_update:
+                        if args.debug >= 2:
+                            logs.info(' => ', '')
                     pass
                 finally:
-                    if args.debug >= 2:
-                        logs.info('...try add', '')
-                    wks = sht.add_worksheet(title=str_name, rows=1, cols=1)
+                    if not wks_cell_update:
+                        if args.debug >= 2:
+                            logs.info('...try add', '')
+                        wks = sht.add_worksheet(title=str_name, rows=1, cols=1)
                     if args.debug >= 2:
                         logs.info('...ok!')
                 if args.verbose:
                     logs.info('Try write Worksheet ok :-)')
+                else:
+                    logs.info('Write Worksheet name: %s' % str_name)
 
         if wks is None:
             logs.warning(LINE_SEPARATOR)
@@ -433,12 +456,13 @@ def exec_csv_read():
 def exec_wks_insert(wks, csv_values):
     if wks is not None:
         #--------------------------------------------------------------
-        #rows = len(csv_values)
-        #cols = 0
-        #for line_values in csv_values:
-        #    cols = len(line_values)
-        #    break
-        #wks.resize(rows, cols)
+        #if args.wks_resize:
+        #    rows = len(csv_values)
+        #    cols = 0
+        #    for line_values in csv_values:
+        #        cols = len(line_values)
+        #        break
+        #    wks.resize(rows, cols)
         #--------------------------------------------------------------
         row = 0
         col = 0
@@ -457,9 +481,24 @@ def exec_wks_insert(wks, csv_values):
                 logs.info(log % (row, rof, row_values))
             else:
                 logs.info(log % (row, rof))
-            wks.insert_row(row_values, row)
+
+            if wks_cell_update:
+                x = row
+                y = 0
+                for cell in row_values:
+                    y += 1
+                    wks.update_cell(x, y, cell)
+            else:
+                wks.insert_row(row_values, row)
+
+            if action_write_wait:
+                if (row % AFTER_MULTIPLE_LINE) == 0:
+                    logs.info('...sleep %s seconds...' % SLEEP_MULTIPLE_LINE)
+                    wait(SLEEP_MULTIPLE_LINE)
+
         logs.info('Insert done!')
-        wks.resize(row, col)
+        if wks_rows_resize:
+            wks.resize(row, col)
 
 ###############################################################################
 def make_question(rows):
@@ -468,6 +507,11 @@ def make_question(rows):
     rows.insert(0, rive)
     text = "\n".join(rows)
     return(text)
+
+###############################################################################
+def wait(seconds):
+    import time
+    time.sleep(seconds)
 
 ###############################################################################
 def open_file(file):

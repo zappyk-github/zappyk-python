@@ -12,3 +12,6 @@ CHAR_STD_INOUT = '-'
 GSPREAD_SCOPE = 'https://docs.google.com/feeds'
 GSPREAD_SCOPE = 'https://www.googleapis.com/auth/drive'
 GSPREAD_SCOPE = 'https://spreadsheets.google.com/feeds'
+
+SLEEP_MULTIPLE_LINE = 5
+AFTER_MULTIPLE_LINE = 25

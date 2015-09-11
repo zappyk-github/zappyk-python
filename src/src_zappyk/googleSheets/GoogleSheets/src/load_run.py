@@ -49,7 +49,6 @@ filename           = args.sht_filename       if args.sht_filename       is not N
 file_key           = args.sht_file_key       if args.sht_file_key       is not None else file_key
 file_url           = args.sht_file_url       if args.sht_file_url       is not None else file_url
 wks_name           = args.wks_name           if args.wks_name           is not None else wks_name
-csv_filename       = args.csv_filename       if args.csv_filename       is not None else csv_filename
 wks_rows_resize    = args.wks_rows_resize    if args.wks_rows_resize    is not None else False
 wks_cell_update    = args.wks_cell_update    if args.wks_cell_update    is not None else False
 wks_rows_resize    = False                   if wks_cell_update                     else wks_rows_resize

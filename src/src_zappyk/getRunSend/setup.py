@@ -26,7 +26,7 @@ name_img_ico = 'gear.ico'
 file_execute = os.path.join(os.path.join(*path_execute), name_execute)
 file_img_ico = os.path.join(os.path.join(*path_img_ico), name_img_ico)
 
-pkgs_exclude = ['tkinter']
+pkgs_exclude = ['tkinter', 'PyQt4']
 #pkgs_include= _setup._find_packages('.', pkgs_exclude)
 pkgs_include = _setup._find_packages(exclude=pkgs_exclude)
 file_include = ['%s-config.ini' % project

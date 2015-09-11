@@ -472,7 +472,7 @@ def exec_wks_insert(wks, csv_values):
         if args.debug >= 1:
             log = log + ' %s'
         else:
-            log = log + 'row on spreadsheet ...'
+            log = log + 'row on spreadsheet...'
         for row_values in csv_values:
             if row == 0:
                 col = len(row_values)

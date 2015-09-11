@@ -5,6 +5,7 @@ PROJECT     = 'GoogleSheets'
 DESCRIPTION = 'Manage your Google Spreadsheets'
 DESCRIPTION = 'Google Spreadsheet Read/Write (more?) manipulation'
 VERSION     = (0, 0, 1, 'beta', 1)
+VERSION     = (0, 0, 2, 'beta', 1)
 
 ###########################################################
 def get_project():

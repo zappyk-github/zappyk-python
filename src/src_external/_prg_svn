@@ -1,12 +1,13 @@
 #!/bin/env bash
 
+CMD=$(which svn) ; [ -z $CMD ] && echo 'Install subversion(svn) and retry...' && exit 1
 URL=$1 ; shift
 DIR=$1 ; shift
 
 if [ -e "$DIR" ]; then
-    ( cd "$DIR" && svn "$@" )
+    ( cd "$DIR" && $CMD "$@" )
 else
-    svn co "$URL" "$DIR"
+    $CMD co "$URL" "$DIR"
 fi
 
 exit

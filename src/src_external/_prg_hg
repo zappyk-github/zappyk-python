@@ -1,13 +1,13 @@
 #!/bin/env bash
 
+CMD=$(which hg) ; [ -z $CMD ] && echo 'Install mercurial(hg) and retry...' && exit 1
 URL=$1 ; shift
 DIR=$1 ; shift
 
 if [ -e "$DIR" ]; then
-    ( cd "$DIR" && hg "$@" )
+    ( cd "$DIR" && $CMD "$@" )
 else
-    hg clone "$URL" "$DIR"
-    hg clone https://bitbucket.org/anthony_tuininga/cx_freeze
+    $CMD clone "$URL" "$DIR"
 fi
 
 exit

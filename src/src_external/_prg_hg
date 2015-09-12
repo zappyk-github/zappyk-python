@@ -1,0 +1,13 @@
+#!/bin/env bash
+
+URL=$1 ; shift
+DIR=$1 ; shift
+
+if [ -e "$DIR" ]; then
+    ( cd "$DIR" && hg "$@" )
+else
+    hg clone "$URL" "$DIR"
+    hg clone https://bitbucket.org/anthony_tuininga/cx_freeze
+fi
+
+exit

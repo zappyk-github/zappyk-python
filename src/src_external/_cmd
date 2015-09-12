@@ -1,0 +1,1 @@
+ls *-svn *-hg | xargs -i echo ./{} "$@"

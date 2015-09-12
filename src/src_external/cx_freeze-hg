@@ -1,0 +1,5 @@
+#!/bin/env bash
+
+./_prg_hg 'https://bitbucket.org/anthony_tuininga/cx_freeze' 'cx_freeze' "$@"
+
+exit

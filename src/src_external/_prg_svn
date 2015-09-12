@@ -1,0 +1,12 @@
+#!/bin/env bash
+
+URL=$1 ; shift
+DIR=$1 ; shift
+
+if [ -e "$DIR" ]; then
+    ( cd "$DIR" && svn "$@" )
+else
+    svn co "$URL" "$DIR"
+fi
+
+exit

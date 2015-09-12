@@ -7,7 +7,7 @@ HOSTARCH='32bit_ELF'
 HOSTARCH='64bit_ELF'
 HOSTARCH="$(getconf LONG_BIT)bit_ELF"
 PYTHON_V="3.4.2"
-PYTHON_V=($(python3 -V))
+PYTHON_V=($(python3 -V 2>&1))
 
 DIR_NAME=$(dirname "$0")
 DIR_BASE="$PRG_NAME-$PRG_VERS"

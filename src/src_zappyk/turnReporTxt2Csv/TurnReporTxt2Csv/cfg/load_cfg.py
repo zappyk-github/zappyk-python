@@ -49,6 +49,7 @@ class parser_args(object):
     #CZ#pgroup.add_argument('-s'     , '--square'            , help='display a square of a given number', type=int)
         parser.add_argument('-d'     , '--debug'             , help='increase output debug'             , action='count'                , default=0)
         parser.add_argument('-v'     , '--verbose'           , help='output verbosity'                  , action='store_true')
+        parser.add_argument('-rg'    , '--run_gui'           , help='run GUI (Graphical User Interface)', action='store_true')
         parser.add_argument('-ti'    , '--type_input'        , help='file type  input'                  , type=str, choices=list_typein , default=default_typein)
         parser.add_argument('-fi'    , '--file_input'        , help='file read  input '                 , type=str                      , default=default_stdin , required=True)
         parser.add_argument('-fo'    , '--file_output'       , help='file write output'                 , type=str                      , default=default_stdout, required=True)

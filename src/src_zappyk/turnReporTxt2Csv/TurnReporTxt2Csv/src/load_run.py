@@ -4,8 +4,12 @@ __author__ = 'zappyk'
 import re
 import sys
 import csv
+import xlsxwriter
 
-from lib_zappyk._os_file import _fileExist
+from tkinter import *
+from tkinter import ttk
+
+from lib_zappyk._os_file import _basenameNoExt, _fileExist
 from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
 
 from TurnReporTxt2Csv.cfg.load_cfg  import parser_args, parser_conf, logger_conf
@@ -25,6 +29,7 @@ csv_delimiter      = args.csv_delimiter      if args.csv_delimiter      is not N
 csv_quotechar      = args.csv_quotechar      if args.csv_quotechar      is not None else csv_quotechar
 csv_lineterminator = args.csv_lineterminator if args.csv_lineterminator is not None else csv_lineterminator
 
+run_gui            = args.run_gui
 type_input         = args.type_input
 file_input         = args.file_input
 file_output        = args.file_output
@@ -40,6 +45,7 @@ if file_input == file_output != CHAR_STD_INOUT:
     logs.error("File input '%s' can't be the same file output!" % file_input)
 
 if args.debug >= 1:
+    logs.info('run_gui            = %s' % run_gui)
     logs.info('type_input         = %s' % type_input)
     logs.info('file_input         = %s' % file_input)
     logs.info('file_output        = %s' % file_output)
@@ -48,8 +54,54 @@ if args.debug >= 1:
     logs.info('csv_quotechar      = %s' % csv_quotechar)
     logs.info('csv_lineterminator = %s' % csv_lineterminator)
 
+root = Tk()
+feet = StringVar()
+meters = StringVar()
+
+###############################################################################
+def calculate():
+    try:
+        value = float(feet.get())
+        meters.set((0.3048 * value * 10000.0 + 0.5)/10000.0)
+        print(feet.get()+' feet is equivalent to '+meters.get()+' meters')
+    except ValueError:
+        pass
+###############################################################################
+def main_gui():
+    #root = Tk()
+    root.title("Feet to Meters")
+
+    mainframe = ttk.Frame(root, padding="3 3 12 12")
+    mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+    mainframe.columnconfigure(0, weight=1)
+    mainframe.rowconfigure(0, weight=1)
+
+    #feet = StringVar()
+    #meters = StringVar()
+
+    feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
+    feet_entry.grid(column=2, row=1, sticky=(W, E))
+
+    ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
+    ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=3, sticky=W)
+
+    ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
+    ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
+    ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
+
+    for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
+
+    feet_entry.focus()
+    root.bind('<Return>', calculate)
+
+    root.mainloop()
+
 ###############################################################################
 def main():
+    if run_gui:
+        main_gui()
+        sys.exit(0)
+
     txt_lines = read_filein(file_input)
 
     dat_lines = None
@@ -58,7 +110,7 @@ def main():
     else:
         logs.error("Type input '%s' can't be configurate!" % type_input)
 
-    write_fileout(dat_lines, file_output, type_output)
+    write_fileout(dat_lines, file_output, type_output, file_input)
 
     sys.exit(0)
 
@@ -165,12 +217,13 @@ def string_to_csv(string, csv_delimiter, fld_first, length, step):
     return(string)
 
 ###############################################################################
-def write_fileout(dat_lines, out_filename, out_type):
+def write_fileout(dat_lines, out_filename, out_type, in_filename):
     fileout = None
     std_out = False
     if out_filename == CHAR_STD_INOUT:
         fileout = sys.stdout
         std_out = True
+        out_type = TYPE_OUT_csv
         logs.info('Write csv rows on STDOUT:')
     else:
         try:
@@ -181,16 +234,46 @@ def write_fileout(dat_lines, out_filename, out_type):
             std_out = True
             logs.info('File out not set, write on STDOUT:')
 
+    name_ws = 'Report'
+    if in_filename != CHAR_STD_INOUT:
+        name_ws = _basenameNoExt(in_filename)
+
     if std_out:
         logs.info(LINE_PARTITION)
     if out_type == TYPE_OUT_csv:
-        #csv_values= csv.writer(fileout)
-        csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
-        csv_values.writerows(dat_lines)
+        write_filecsv(dat_lines, fileout)
     if out_type == TYPE_OUT_xls:
-        logs.info('...implement XLS write output, sorry...')
+        write_filexls(dat_lines, out_filename, name_ws)
     if std_out:
         logs.info(LINE_PARTITION)
+
+###############################################################################
+def write_filecsv(dat_lines, fileout):
+    #csv_values= csv.writer(fileout)
+    csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
+    csv_values.writerows(dat_lines)
+
+###############################################################################
+def write_filexls(dat_lines, out_filename, name_ws='Report'):
+    workbook = xlsxwriter.Workbook(out_filename)
+    worksheet = workbook.add_worksheet(name_ws)
+
+    format_head = workbook.add_format({'bold': True, 'italic': True, 'shrink': True, 'font_color': 'white', 'bg_color': 'black'})
+
+    row = 0
+    for dat_line in dat_lines:
+        col = 0
+        for value in dat_line:
+            if (col >= 2) and value.isdigit():
+                value = float(value)
+            if (row == 0):
+                worksheet.write(row, col, value, format_head)
+            else:
+                worksheet.write(row, col, value)
+            col += 1
+        row += 1
+
+    workbook.close()
 
 ###############################################################################
 def read_filein(txt_filename):
@@ -213,7 +296,7 @@ def read_filein(txt_filename):
 
     if std_in:
         logs.info(LINE_PARTITION)
-    #txt_lines = list(csv.reader(filein, delimiter=csv_delimiter))
+    #csv_lines = list(csv.reader(filein, delimiter=csv_delimiter))
     txt_lines = filein.readlines()
     if std_in:
         logs.info(LINE_PARTITION)

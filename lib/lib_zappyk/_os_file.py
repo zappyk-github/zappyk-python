@@ -8,6 +8,21 @@ from shutil import copy2
 def _copy2(file_from, file_to):
     copy2(file_from, file_to)
 ###############################################################################
+def _basename(path_file):
+    return(path.basename(path_file))
+###############################################################################
+def _basenameNotExt(path_file):
+    return(path.splitext(path.basename(path_file))[0])
+###############################################################################
+#CZ#def _basenameGetExt(path_file):
+#CZ#    return(path.splitext(path.basename(path_file))[1])
+###############################################################################
+def _basenameGetExt(path_file):
+    return(path.splitext(path_file)[1])
+###############################################################################
+def _basenameFullPathNotExt(path_file):
+    return(path.splitext(path_file)[0])
+###############################################################################
 def _nameListDir(path_name):
 #CZ#files = [ f for f in listdir(path_name) if _os_file._fileExist(path.join(path_name, f)) ]
     names = []

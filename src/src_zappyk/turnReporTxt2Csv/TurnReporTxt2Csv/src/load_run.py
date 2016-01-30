@@ -9,7 +9,7 @@ import xlsxwriter
 from tkinter import *
 from tkinter import ttk
 
-from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _fileExist
+from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist
 from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
 
 from TurnReporTxt2Csv.cfg.load_cfg  import parser_args, parser_conf, logger_conf
@@ -35,8 +35,17 @@ file_input         = args.file_input
 file_output        = args.file_output
 type_output        = args.type_output
 
-name_output = _basenameNotExt(file_input)
-exte_output = _basenameGetExt(file_input)
+name_output        = _basenameNotExt(file_output)
+exte_output        = _basenameGetExt(file_output)
+type_output        = TYPE_OUT_csv      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_csv) else type_output
+type_output        = TYPE_OUT_xls      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_xls) else type_output
+
+file_output_csv    = _basenameFullPathNotExt(file_input)+'.'+TYPE_OUT_csv
+file_output_xls    = _basenameFullPathNotExt(file_input)+'.'+TYPE_OUT_xls
+file_output        = file_output_csv   if (file_output is None)           and (type_output     == TYPE_OUT_csv) else file_output
+file_output        = file_output_xls   if (file_output is None)           and (type_output     == TYPE_OUT_xls) else file_output
+file_output        = file_output_csv   if (file_output == CHAR_STD_INOUT) and (type_output     == TYPE_OUT_csv) else file_output
+file_output        = file_output_xls   if (file_output == CHAR_STD_INOUT) and (type_output     == TYPE_OUT_xls) else file_output
 
 #csv_delimiter     = ','               if csv_delimiter      is None else csv_delimiter
 #csv_quotechar     = '"'               if csv_quotechar      is None else csv_quotechar
@@ -261,10 +270,11 @@ def write_fileout(dat_lines):
 
     fileout = None
     std_out = False
+    typeout = type_output
     if out_filename == CHAR_STD_INOUT:
         fileout = sys.stdout
+        typeout = TYPE_OUT_csv
         std_out = True
-        out_type = TYPE_OUT_csv
         logs.info('Write csv rows on STDOUT:')
     else:
         try:
@@ -281,9 +291,9 @@ def write_fileout(dat_lines):
 
     if std_out:
         logs.info(LINE_PARTITION)
-    if out_type == TYPE_OUT_csv:
+    if typeout == TYPE_OUT_csv:
         write_filecsv(dat_lines, fileout)
-    if out_type == TYPE_OUT_xls:
+    if typeout == TYPE_OUT_xls:
         write_filexls(dat_lines, name_ws)
     if std_out:
         logs.info(LINE_PARTITION)

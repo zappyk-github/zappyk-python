@@ -24,6 +24,7 @@ default_stdin   = CHAR_STD_INOUT
 default_stdout  = CHAR_STD_INOUT
 default_typein  = TYPE_IN_av8p
 default_typeout = TYPE_OUT_csv
+default_typeout = None
 list_typein     = [TYPE_IN_av8p]
 list_typeout    = [TYPE_OUT_csv,TYPE_OUT_xls]
 
@@ -52,7 +53,7 @@ class parser_args(object):
         parser.add_argument('-rg'    , '--run_gui'           , help='run GUI (Graphical User Interface)', action='store_true')
         parser.add_argument('-ti'    , '--type_input'        , help='file type  input'                  , type=str, choices=list_typein , default=default_typein)
         parser.add_argument('-fi'    , '--file_input'        , help='file read  input '                 , type=str                      , default=default_stdin , required=True)
-        parser.add_argument('-fo'    , '--file_output'       , help='file write output'                 , type=str                      , default=default_stdout, required=True)
+        parser.add_argument('-fo'    , '--file_output'       , help='file write output'                 , type=str                      , default=default_stdout)
         parser.add_argument('-to'    , '--type_output'       , help='file type  output'                 , type=str, choices=list_typeout, default=default_typeout)
         parser.add_argument('-cdl'   , '--csv_delimiter'     , help='CSV file delimiter char fields'    , type=str                      , default=None)
         parser.add_argument('-cqc'   , '--csv_quotechar'     , help='CSV file quote char fields'        , type=str                      , default=None)

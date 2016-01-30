@@ -9,7 +9,7 @@ import xlsxwriter
 from tkinter import *
 from tkinter import ttk
 
-from lib_zappyk._os_file import _basenameNoExt, _fileExist
+from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _fileExist
 from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
 
 from TurnReporTxt2Csv.cfg.load_cfg  import parser_args, parser_conf, logger_conf
@@ -34,6 +34,9 @@ type_input         = args.type_input
 file_input         = args.file_input
 file_output        = args.file_output
 type_output        = args.type_output
+
+name_output = _basenameNotExt(file_input)
+exte_output = _basenameGetExt(file_input)
 
 #csv_delimiter     = ','               if csv_delimiter      is None else csv_delimiter
 #csv_quotechar     = '"'               if csv_quotechar      is None else csv_quotechar
@@ -102,7 +105,7 @@ def main():
         main_gui()
         sys.exit(0)
 
-    txt_lines = read_filein(file_input)
+    txt_lines = read_filein()
 
     dat_lines = None
     if type_input ==  TYPE_IN_av8p:
@@ -110,7 +113,7 @@ def main():
     else:
         logs.error("Type input '%s' can't be configurate!" % type_input)
 
-    write_fileout(dat_lines, file_output, type_output, file_input)
+    write_fileout(dat_lines)
 
     sys.exit(0)
 
@@ -217,66 +220,9 @@ def string_to_csv(string, csv_delimiter, fld_first, length, step):
     return(string)
 
 ###############################################################################
-def write_fileout(dat_lines, out_filename, out_type, in_filename):
-    fileout = None
-    std_out = False
-    if out_filename == CHAR_STD_INOUT:
-        fileout = sys.stdout
-        std_out = True
-        out_type = TYPE_OUT_csv
-        logs.info('Write csv rows on STDOUT:')
-    else:
-        try:
-            fileout = open(out_filename, 'w')
-            logs.info('Write to file out: %s' % out_filename)
-        except:
-            fileout = sys.stdout
-            std_out = True
-            logs.info('File out not set, write on STDOUT:')
+def read_filein():
+    txt_filename = file_input
 
-    name_ws = 'Report'
-    if in_filename != CHAR_STD_INOUT:
-        name_ws = _basenameNoExt(in_filename)
-
-    if std_out:
-        logs.info(LINE_PARTITION)
-    if out_type == TYPE_OUT_csv:
-        write_filecsv(dat_lines, fileout)
-    if out_type == TYPE_OUT_xls:
-        write_filexls(dat_lines, out_filename, name_ws)
-    if std_out:
-        logs.info(LINE_PARTITION)
-
-###############################################################################
-def write_filecsv(dat_lines, fileout):
-    #csv_values= csv.writer(fileout)
-    csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
-    csv_values.writerows(dat_lines)
-
-###############################################################################
-def write_filexls(dat_lines, out_filename, name_ws='Report'):
-    workbook = xlsxwriter.Workbook(out_filename)
-    worksheet = workbook.add_worksheet(name_ws)
-
-    format_head = workbook.add_format({'bold': True, 'italic': True, 'shrink': True, 'font_color': 'white', 'bg_color': 'black'})
-
-    row = 0
-    for dat_line in dat_lines:
-        col = 0
-        for value in dat_line:
-            if (col >= 2) and value.isdigit():
-                value = float(value)
-            if (row == 0):
-                worksheet.write(row, col, value, format_head)
-            else:
-                worksheet.write(row, col, value)
-            col += 1
-        row += 1
-
-    workbook.close()
-
-###############################################################################
-def read_filein(txt_filename):
     filein = None
     std_in = False
     if txt_filename == CHAR_STD_INOUT:
@@ -307,6 +253,70 @@ def read_filein(txt_filename):
             logs.info(values)
 
     return(txt_lines)
+
+###############################################################################
+def write_fileout(dat_lines):
+    txt_filename = file_input
+    out_filename = file_output
+
+    fileout = None
+    std_out = False
+    if out_filename == CHAR_STD_INOUT:
+        fileout = sys.stdout
+        std_out = True
+        out_type = TYPE_OUT_csv
+        logs.info('Write csv rows on STDOUT:')
+    else:
+        try:
+            fileout = open(out_filename, 'w')
+            logs.info('Write to file out: %s' % out_filename)
+        except:
+            fileout = sys.stdout
+            std_out = True
+            logs.info('File out not set, write on STDOUT:')
+
+    name_ws = 'Report'
+    if txt_filename != CHAR_STD_INOUT:
+        name_ws = name_output
+
+    if std_out:
+        logs.info(LINE_PARTITION)
+    if out_type == TYPE_OUT_csv:
+        write_filecsv(dat_lines, fileout)
+    if out_type == TYPE_OUT_xls:
+        write_filexls(dat_lines, name_ws)
+    if std_out:
+        logs.info(LINE_PARTITION)
+
+###############################################################################
+def write_filecsv(dat_lines, fileout):
+    #csv_values= csv.writer(fileout)
+    csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
+    csv_values.writerows(dat_lines)
+
+###############################################################################
+def write_filexls(dat_lines, name_ws='Report'):
+    out_filename = file_output
+
+    workbook = xlsxwriter.Workbook(out_filename)
+    worksheet = workbook.add_worksheet(name_ws)
+
+    format_head = workbook.add_format({'bold': True, 'italic': True, 'shrink': True, 'font_color': 'white', 'bg_color': 'black'})
+
+    row = 0
+    for dat_line in dat_lines:
+        col = 0
+        for value in dat_line:
+            if (col >= 2) and value.isdigit():
+                value = float(value)
+            if (row == 0):
+                worksheet.write(row, col, value, format_head)
+            else:
+                worksheet.write(row, col, value)
+            col += 1
+        row += 1
+
+    workbook.close()
 
 ###############################################################################
 def make_question(rows):

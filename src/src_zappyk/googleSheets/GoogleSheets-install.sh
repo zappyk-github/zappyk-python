@@ -2,7 +2,7 @@
 
 PATH_BASE="${1:-$HOME}"
 
-[ ! -d "$PATH_BASE" ] && echo "Attenzione, directory di instllazione '$PATH_BASE' inesistente..." && exit 1
+[ ! -d "$PATH_BASE" ] && echo "Attenzione, directory di installazione '$PATH_BASE' inesistente..." && exit 1
 
 PROG_NAME='GoogleSheets'
 PROG_VERS='0.0.1b1'

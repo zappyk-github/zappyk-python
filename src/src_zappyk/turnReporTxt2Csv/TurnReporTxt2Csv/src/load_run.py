@@ -6,8 +6,10 @@ import sys
 import csv
 import xlsxwriter
 
-from tkinter import *
-from tkinter import ttk
+from tkinter            import *
+from tkinter            import ttk
+from tkinter.filedialog import askopenfilename
+from tkinter.messagebox import showerror
 
 from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist
 from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
@@ -79,6 +81,18 @@ def calculate():
     except ValueError:
         pass
 ###############################################################################
+def load_file():
+    fname = askopenfilename(filetypes=(("Template files", "*.tplate"),
+                                       ("HTML files"    , "*.html;*.htm"),
+                                       ("All files"     , "*.*")
+                                       ))
+    if fname:
+        try:
+            print("""here it comes: self.settings["template"].set(fname)""")
+        except:                     # <- naked except is a bad idea
+            showerror("Open Source File", "Failed to read file\n'%s'" % fname)
+        return
+###############################################################################
 def main_gui():
     #root = Tk()
     root.title("Feet to Meters")
@@ -94,8 +108,12 @@ def main_gui():
     feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
     feet_entry.grid(column=2, row=1, sticky=(W, E))
 
+    #self.button = Button(self, text="Browse", command=self.load_file, width=10)
+    #self.button.grid(row=1, column=0, sticky=W)
+
     ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
     ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=3, sticky=W)
+    ttk.Button(mainframe, text="Browse", command=load_file).grid(column=3, row=4, sticky=W)
 
     ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
     ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)

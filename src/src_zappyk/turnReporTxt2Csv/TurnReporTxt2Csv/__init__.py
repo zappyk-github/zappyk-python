@@ -16,9 +16,9 @@ def get_description():
 #   return(VERSION)
 ###########################################################
 #def get_version(*arg, **kwargs):
-#   from GoogleSheets.src.version import get_version
+#   from TurnReporTxt2Csv.src.version import get_version
 #   return(get_version(*arg, **kwargs))
 ###########################################################
 def get_version():
-    from GoogleSheets.src.version import get_version
+    from TurnReporTxt2Csv.src.version import get_version
     return(get_version())

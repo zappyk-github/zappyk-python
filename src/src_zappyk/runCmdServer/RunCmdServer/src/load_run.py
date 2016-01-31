@@ -16,16 +16,19 @@ args = parser_args().args
 conf = parser_conf().conf
 logs = logger_conf().logs
 
-server_socket_host = conf.get       ("Server"  , "server_socket_host", fallback=server_socket_host)
-server_socket_port = conf.getint    ("Server"  , "server_socket_port", fallback=server_socket_port)
-server_chunks_recv = conf.getint    ("Server"  , "server_chunks_recv", fallback=server_chunks_recv)
-server_set_timeout = conf.getint    ("Server"  , "server_set_timeout", fallback=server_set_timeout)
-server_one_process = conf.getboolean("Server"  , "server_one_process", fallback=server_one_process)
+try:
+    server_socket_host = conf.get       ("Server"  , "server_socket_host", fallback=server_socket_host)
+    server_socket_port = conf.getint    ("Server"  , "server_socket_port", fallback=server_socket_port)
+    server_chunks_recv = conf.getint    ("Server"  , "server_chunks_recv", fallback=server_chunks_recv)
+    server_set_timeout = conf.getint    ("Server"  , "server_set_timeout", fallback=server_set_timeout)
+    server_one_process = conf.getboolean("Server"  , "server_one_process", fallback=server_one_process)
 
-client_socket_host = conf.get       ("Client"  , "client_socket_host", fallback=client_socket_host)
-client_socket_port = conf.getint    ("Client"  , "client_socket_port", fallback=client_socket_port)
-client_chunks_recv = conf.getint    ("Client"  , "client_chunks_recv", fallback=client_chunks_recv)
-client_set_timeout = conf.getint    ("Client"  , "client_set_timeout", fallback=client_set_timeout)
+    client_socket_host = conf.get       ("Client"  , "client_socket_host", fallback=client_socket_host)
+    client_socket_port = conf.getint    ("Client"  , "client_socket_port", fallback=client_socket_port)
+    client_chunks_recv = conf.getint    ("Client"  , "client_chunks_recv", fallback=client_chunks_recv)
+    client_set_timeout = conf.getint    ("Client"  , "client_set_timeout", fallback=client_set_timeout)
+except:
+    pass
 
 if args.server_host      is not None:  server_socket_host = args.server_host
 if args.server_host_port is not None:  server_socket_port = args.server_host_port

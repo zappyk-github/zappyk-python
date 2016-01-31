@@ -9,7 +9,7 @@ import xlsxwriter
 from tkinter            import *
 from tkinter            import ttk
 from tkinter.filedialog import askopenfilename
-from tkinter.messagebox import showerror
+from tkinter.messagebox import showinfo, showerror
 
 from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist
 from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
@@ -22,10 +22,13 @@ args = parser_args().args
 conf = parser_conf().conf
 logs = logger_conf().logs
 
-csv_delimiter      = conf.get("InputOutput", "csv_delimiter"     , fallback=csv_delimiter)
-csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_quotechar)
-csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
-csv_lineterminator = conf.get("InputOutput", "csv_lineterminator", fallback=csv_lineterminator)
+try:
+    csv_delimiter      = conf.get("InputOutput", "csv_delimiter"     , fallback=csv_delimiter)
+    csv_quotechar      = conf.get("InputOutput", "csv_quotechar"     , fallback=csv_quotechar)
+    csv_quoting        = conf.get("InputOutput", "csv_quoting"       , fallback=csv_quoting)
+    csv_lineterminator = conf.get("InputOutput", "csv_lineterminator", fallback=csv_lineterminator)
+except:
+    pass
 
 csv_delimiter      = args.csv_delimiter      if args.csv_delimiter      is not None else csv_delimiter
 csv_quotechar      = args.csv_quotechar      if args.csv_quotechar      is not None else csv_quotechar
@@ -37,7 +40,7 @@ file_input         = args.file_input
 file_output        = args.file_output
 type_output        = args.type_output
 
-name_output        = _basenameNotExt(file_output)
+name_input         = _basenameNotExt(file_input)
 exte_output        = _basenameGetExt(file_output)
 type_output        = TYPE_OUT_csv      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_csv) else type_output
 type_output        = TYPE_OUT_xls      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_xls) else type_output
@@ -55,6 +58,22 @@ file_output        = file_output_xls   if (file_output == CHAR_STD_INOUT) and (t
 csv_quoting        = csv.QUOTE_NONE    if csv_quoting        is None else csv_quoting
 #csv_lineterminator= "\r\n"            if csv_lineterminator is None else csv_lineterminator
 
+root           = Tk()
+root_path_file = StringVar()
+root_choose_in = StringVar()
+root_chooseext = StringVar()
+root_value_out = [('Analisi delle Vendite su 8 Periodi', TYPE_IN_av8p)
+                 ,('...another report layout...'       , 'xxxx')]
+root_combo_out = []
+for text, value in root_value_out:
+    root_combo_out.append(text)
+
+self_type_input    = StringVar(); self_type_input .set(type_input)
+self_file_input    = StringVar(); self_file_input .set(file_input)
+self_name_input    = StringVar(); self_name_input .set(name_input)
+self_file_output   = StringVar(); self_file_output.set(file_output)
+self_type_output   = StringVar(); self_type_output.set(type_output)
+
 if file_input == file_output != CHAR_STD_INOUT:
     logs.error("File input '%s' can't be the same file output!" % file_input)
 
@@ -68,61 +87,76 @@ if args.debug >= 1:
     logs.info('csv_quotechar      = %s' % csv_quotechar)
     logs.info('csv_lineterminator = %s' % csv_lineterminator)
 
-root = Tk()
-feet = StringVar()
-meters = StringVar()
-
-###############################################################################
-def calculate():
-    try:
-        value = float(feet.get())
-        meters.set((0.3048 * value * 10000.0 + 0.5)/10000.0)
-        print(feet.get()+' feet is equivalent to '+meters.get()+' meters')
-    except ValueError:
-        pass
 ###############################################################################
 def load_file():
-    fname = askopenfilename(filetypes=(("Template files", "*.tplate"),
-                                       ("HTML files"    , "*.html;*.htm"),
-                                       ("All files"     , "*.*")
-                                       ))
+    fname = askopenfilename(filetypes=(('Text files', '*.txt'),
+                                       ('All files' , '*.*'  )))
     if fname:
         try:
-            print("""here it comes: self.settings["template"].set(fname)""")
+            root_path_file.set(fname)
         except:                     # <- naked except is a bad idea
             showerror("Open Source File", "Failed to read file\n'%s'" % fname)
         return
 ###############################################################################
-def main_gui():
-    #root = Tk()
-    root.title("Feet to Meters")
+def translate():
+    file_input       = root_path_file.get()
+    type_input       = root_choose_in.get()
+    type_output      = root_chooseext.get()
 
-    mainframe = ttk.Frame(root, padding="3 3 12 12")
-    mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+    name_input       = _basenameNotExt(file_input)
+    file_output_csv  = _basenameFullPathNotExt(file_input)+'.'+TYPE_OUT_csv
+    file_output_xls  = _basenameFullPathNotExt(file_input)+'.'+TYPE_OUT_xls
+    file_output      = file_output_csv   if type_output     == TYPE_OUT_csv else CHAR_STD_INOUT
+    file_output      = file_output_xls   if type_output     == TYPE_OUT_xls else CHAR_STD_INOUT
+
+    for text, value in root_value_out:
+        if text == type_input:
+            type_input = value
+
+    self_type_input .set(type_input)
+    self_file_input .set(file_input)
+    self_name_input .set(name_input)
+    self_file_output.set(file_output)
+    self_type_output.set(type_output)
+
+    manipulate()
+
+###############################################################################
+def main_gui():
+    root.title('Manipulation Text Report')
+    root.resizable(0,0)
+    root.bind('<Return>', load_file)
+
+    mainframe = ttk.Frame(root, padding='3 3 12 12')
     mainframe.columnconfigure(0, weight=1)
     mainframe.rowconfigure(0, weight=1)
 
-    #feet = StringVar()
-    #meters = StringVar()
+    len_with = 70
 
-    feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
-    feet_entry.grid(column=2, row=1, sticky=(W, E))
+    root_path_file_entry = ttk.Entry(mainframe, width=len_with, textvariable=root_path_file)
+    root_path_file_entry.focus()
 
-    #self.button = Button(self, text="Browse", command=self.load_file, width=10)
-    #self.button.grid(row=1, column=0, sticky=W)
+    root_choose_in_entry = ttk.Combobox(mainframe, width=len_with, textvariable=root_choose_in, state='readonly')
+    root_choose_in_entry['values'] = root_combo_out
+    root_choose_in_entry.current(0)
 
-    ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
-    ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=3, sticky=W)
-    ttk.Button(mainframe, text="Browse", command=load_file).grid(column=3, row=4, sticky=W)
+    root_choosecsv_entry = ttk.Radiobutton(mainframe, text='output in CSV', value=TYPE_OUT_csv, variable=root_chooseext)
+    root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in XLS', value=TYPE_OUT_xls, variable=root_chooseext)
+    root_chooseext.set(TYPE_OUT_xls)
 
-    ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
-    ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
-    ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
+    mainframe                                                              .grid(column=0, row=0, sticky=(N, W, E, S))
+    ttk.Label (mainframe, text="Choose text file through:")                .grid(column=1, row=1, sticky=W)
+    ttk.Button(mainframe, text="  filesystem browser  ", command=load_file).grid(column=1, row=2, sticky=W)
+    ttk.Label (mainframe, text="or enter")                                 .grid(column=2, row=2, sticky=W)
+    root_path_file_entry                                                   .grid(column=3, row=2, sticky=(W, E))
+    root_choose_in_entry                                                   .grid(column=3, row=3, sticky=(W, E))
+    ttk.Label (mainframe, text="Choose type report text:")                 .grid(column=1, row=3, sticky=W)
+    root_choosecsv_entry                                                   .grid(column=3, row=4, sticky=(W, E))
+    root_choosexls_entry                                                   .grid(column=3, row=5, sticky=(W, E))
+
+    ttk.Button(mainframe, text="Translate", command=translate)             .grid(column=3, row=6, sticky=W)
 
     for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
-
-    feet_entry.focus()
-    root.bind('<Return>', calculate)
 
     root.mainloop()
 
@@ -130,19 +164,35 @@ def main_gui():
 def main():
     if run_gui:
         main_gui()
-        sys.exit(0)
-
-    txt_lines = read_filein()
-
-    dat_lines = None
-    if type_input ==  TYPE_IN_av8p:
-        dat_lines = manipulate_av8p(txt_lines)
     else:
-        logs.error("Type input '%s' can't be configurate!" % type_input)
-
-    write_fileout(dat_lines)
+        manipulate()
 
     sys.exit(0)
+
+###############################################################################
+def manipulate():
+    try:
+        txt_lines = read_filein()
+
+        dat_lines = None
+       #if type_input ==  TYPE_IN_av8p:
+        if self_type_input.get() ==  TYPE_IN_av8p:
+            dat_lines = manipulate_av8p(txt_lines)
+        else:
+           #message = "Type input '%s' can't be configurate!" % type_input
+            message = "Type input '%s' can't be configurate!" % self_type_input.get()
+            logs.error(message)
+            if run_gui:
+                showerror(message)
+
+        write_fileout(dat_lines)
+
+        if run_gui:
+            showinfo('Completed', 'Translate completed!')
+            root.destroy()
+
+    except ValueError:
+        pass
 
 ###############################################################################
 def manipulate_av8p(txt_lines):
@@ -248,7 +298,8 @@ def string_to_csv(string, csv_delimiter, fld_first, length, step):
 
 ###############################################################################
 def read_filein():
-    txt_filename = file_input
+   #txt_filename = file_input
+    txt_filename = self_file_input.get()
 
     filein = None
     std_in = False
@@ -283,12 +334,15 @@ def read_filein():
 
 ###############################################################################
 def write_fileout(dat_lines):
-    txt_filename = file_input
-    out_filename = file_output
+   #txt_filename = file_input
+   #out_filename = file_output
+    txt_filename = self_file_input.get()
+    out_filename = self_file_output.get()
 
     fileout = None
     std_out = False
-    typeout = type_output
+   #typeout = type_output
+    typeout = self_type_output.get()
     if out_filename == CHAR_STD_INOUT:
         fileout = sys.stdout
         typeout = TYPE_OUT_csv
@@ -305,7 +359,8 @@ def write_fileout(dat_lines):
 
     name_ws = 'Report'
     if txt_filename != CHAR_STD_INOUT:
-        name_ws = name_output
+       #name_ws = name_input
+        name_ws = self_name_input.get()
 
     if std_out:
         logs.info(LINE_PARTITION)
@@ -324,7 +379,8 @@ def write_filecsv(dat_lines, fileout):
 
 ###############################################################################
 def write_filexls(dat_lines, name_ws='Report'):
-    out_filename = file_output
+   #out_filename = file_output
+    out_filename = self_file_output.get()
 
     workbook = xlsxwriter.Workbook(out_filename)
     worksheet = workbook.add_worksheet(name_ws)

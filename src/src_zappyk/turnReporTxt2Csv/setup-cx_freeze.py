@@ -14,6 +14,7 @@ from cx_Freeze import setup, Executable
 buildOptions = dict(packages = [], excludes = [])
 
 base = 'Console'
+base = 'Win32GUI'
 
 executables = [
     Executable(os.path.join(name, 'main.py'), base=base, targetName=name)
@@ -21,6 +22,6 @@ executables = [
 
 setup(name=name,
       version=version,
-      description='Google Spreadsheet Read/Write (more?) manipulation',
+      description='Turn a report in TXT to a CSV file',
       options=dict(build_exe = buildOptions),
       executables=executables)

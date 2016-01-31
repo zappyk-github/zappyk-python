@@ -40,7 +40,7 @@ def _setup_Executable_base_exte():
     base = 'Console'
 
     if sys.platform == 'win32':
-    #CZ#base = 'Win32GUI'
+        base = 'Win32GUI'
         exte = '.exe'
 
     return(base, exte)

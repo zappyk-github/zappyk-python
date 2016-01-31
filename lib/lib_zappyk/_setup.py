@@ -35,10 +35,7 @@ def _setup_Executable(file_execute, **options):
     return(Executable(file_execute, **options))
 
 ###############################################################################
-def _setup_Executable_base_exte():
-    exte = ''
-    base = 'Console'
-
+def _setup_Executable_base_exte(base='Console', exte=''):
     if sys.platform == 'win32':
         base = 'Win32GUI'
         exte = '.exe'

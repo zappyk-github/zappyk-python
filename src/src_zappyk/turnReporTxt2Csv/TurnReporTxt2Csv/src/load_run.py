@@ -360,7 +360,7 @@ def read_filein():
 
     if std_in:
         logs.info(LINE_PARTITION)
-    #csv_lines = list(csv.reader(filein, delimiter=csv_delimiter))
+   #csv_lines = list(csv.reader(filein, delimiter=csv_delimiter))
     txt_lines = filein.readlines()
     if std_in:
         logs.info(LINE_PARTITION)
@@ -413,7 +413,7 @@ def write_fileout(dat_lines):
 
 ###############################################################################
 def write_filecsv(dat_lines, fileout):
-    #csv_values= csv.writer(fileout)
+   #csv_values= csv.writer(fileout)
     csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
     csv_values.writerows(dat_lines)
 

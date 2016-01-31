@@ -38,7 +38,7 @@ build_exe    = None
 build_exe    = _setup._build_exe(None, name, version)
 
 ###############################################################################
-#CZ#(base, exte) = _setup._setup_Executable_base_exte()
+(base, exte) = _setup._setup_Executable_base_exte()
 (base, exte) = _setup._setup_Executable_base_exte('Win32GUI')
 
 executables = _setup._setup_Executable(file_execute

@@ -1,0 +1,5 @@
+#!/bin/env bash
+
+./_prg_svn 'https://github.com/PySide/PySide/trunk' 'PySide' "$@"
+
+exit

@@ -79,11 +79,12 @@ if second_write_wait is not None:
     ,AFTER_MULTIPLE_LINE)= second_write_wait.split('.')
 
 if args.debug >= 1:
-    logs.info('servicej                   = %s' % servicej)
-    logs.info('accountj                   = %s' % accountj)
-    logs.info('login_credentials_servicej = %s' % login_credential_servicej)
-    logs.info('login_credentials_accountj = %s' % login_credential_accountj)
-    logs.info('login_credentials          = %s' % login_credential)
+    logs.info('servicej                   = %s' % repr(servicej))
+    logs.info('accountj                   = %s' % repr(accountj))
+    logs.info('login_credentials_servicej = %s' % repr(login_credential_servicej))
+    logs.info('login_credentials_accountj = %s' % repr(login_credential_accountj))
+    logs.info('login_credentials          = %s' % repr(login_credential))
+    logs.info('----------------------------')
 
 ###############################################################################
 def main():

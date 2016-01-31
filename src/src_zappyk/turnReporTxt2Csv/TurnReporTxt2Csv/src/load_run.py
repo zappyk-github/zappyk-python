@@ -63,11 +63,12 @@ root           = Tk()
 root_path_file = StringVar()
 root_choose_in = StringVar()
 root_chooseext = StringVar()
-root_value_out = [('Analisi delle Vendite su 8 Periodi', TYPE_IN_av8p)
+root_combo_out = [('Analisi delle Vendite su 8 Periodi', TYPE_IN_av8p)
                  ,('...another report layout...'       , 'xxxx')]
-root_combo_out = _initializeVariable()
 root_filetypes = (('Text files', '*.txt')
                  ,('All files' , '*.*'  ))
+
+self_translate_entry = _initializeVariable()
 
 self_type_input    = _initializeVariable(); self_type_input .set(type_input)
 self_file_input    = _initializeVariable(); self_file_input .set(file_input)
@@ -90,21 +91,21 @@ if args.debug >= 1:
     logs.info('--------------------')
 
 ###############################################################################
-def _root_combo_set(root_value_out):
-    root_combo_out = []
-    for text, value in root_value_out:
-        root_combo_out.append(text)
-    return(root_combo_out)
+def _root_combo_set(root_combo_out):
+    root_value_out = []
+    for text, value in root_combo_out:
+        root_value_out.append(text)
+    return(root_value_out)
 
 ###############################################################################
-def _root_combo_get(root_value_out, type_input):
-    for text, value in root_value_out:
+def _root_combo_get(root_combo_out, type_input):
+    for text, value in root_combo_out:
         if text == type_input:
             type_input = value
     return(type_input)
 
 ###############################################################################
-def load_file():
+def _root_load_file():
     filename = askopenfilename(filetypes=root_filetypes)
     if filename:
         try:
@@ -113,7 +114,7 @@ def load_file():
             logs_error('Failed to read file\n%s' % filename, 'Open Source File')
         return
 ###############################################################################
-def translate():
+def _root_translate():
     file_input       = root_path_file.get()
     type_input       = root_choose_in.get()
     type_output      = root_chooseext.get()
@@ -126,7 +127,7 @@ def translate():
     file_output      = file_output_csv   if (file_output is None) and (type_output == TYPE_OUT_csv) else file_output
     file_output      = file_output_xls   if (file_output is None) and (type_output == TYPE_OUT_xls) else file_output
 
-    type_input       = _root_combo_get(root_value_out, type_input)
+    type_input       = _root_combo_get(root_combo_out, type_input)
 
     self_type_input .set(type_input)
     self_file_input .set(file_input)
@@ -145,10 +146,17 @@ def translate():
     manipulate()
 
 ###############################################################################
+def _root_translate_entry_on_change(a, b, c):
+    if root_path_file.get() == '':
+        self_translate_entry.get().config(state=DISABLED)
+    else:
+        self_translate_entry.get().config(state=NORMAL)
+
+###############################################################################
 def main_gui():
     root.title('Manipulation Text Report')
     root.resizable(0,0)
-    root.bind('<Return>', load_file)
+    root.bind('<Return>', _root_load_file)
 
     mainframe = ttk.Frame(root, padding='3 3 12 12')
     mainframe.columnconfigure(0, weight=1)
@@ -158,26 +166,30 @@ def main_gui():
 
     root_path_file_entry = ttk.Entry(mainframe, width=len_with, textvariable=root_path_file)
     root_path_file_entry.focus()
+    root_path_file.trace('w', _root_translate_entry_on_change) # rwua
 
     root_choose_in_entry = ttk.Combobox(mainframe, width=len_with, textvariable=root_choose_in, state='readonly')
-    root_choose_in_entry['values'] = _root_combo_set(root_value_out)
+    root_choose_in_entry['values'] = _root_combo_set(root_combo_out)
     root_choose_in_entry.current(0)
 
     root_choosecsv_entry = ttk.Radiobutton(mainframe, text='output in CSV', value=TYPE_OUT_csv, variable=root_chooseext)
     root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in XLS', value=TYPE_OUT_xls, variable=root_chooseext)
     root_chooseext.set(TYPE_OUT_xls)
 
-    mainframe                                                              .grid(column=0, row=0, sticky=(N, W, E, S))
-    ttk.Label (mainframe, text="Choose text file through:")                .grid(column=1, row=1, sticky=W)
-    ttk.Button(mainframe, text="  filesystem browser  ", command=load_file).grid(column=1, row=2, sticky=W)
-    ttk.Label (mainframe, text="or enter")                                 .grid(column=2, row=2, sticky=W)
-    root_path_file_entry                                                   .grid(column=3, row=2, sticky=(W, E))
-    root_choose_in_entry                                                   .grid(column=3, row=3, sticky=(W, E))
-    ttk.Label (mainframe, text="Choose type report text:")                 .grid(column=1, row=3, sticky=W)
-    root_choosecsv_entry                                                   .grid(column=3, row=4, sticky=(W, E))
-    root_choosexls_entry                                                   .grid(column=3, row=5, sticky=(W, E))
+    root_fsbrowser_entry = ttk.Button(mainframe, text='  filesystem browser  ', command=_root_load_file)
+    root_translate_entry = ttk.Button(mainframe, text='Translate', command=_root_translate, state=DISABLED)
+    self_translate_entry.set(root_translate_entry)
 
-    ttk.Button(mainframe, text="Translate", command=translate)             .grid(column=3, row=6, sticky=W)
+    mainframe                                              .grid(column=0, row=0, sticky=(N, W, E, S))
+    ttk.Label (mainframe, text="Choose text file through:").grid(column=1, row=1, sticky=W)
+    root_fsbrowser_entry                                   .grid(column=1, row=2, sticky=W)
+    ttk.Label (mainframe, text="or enter")                 .grid(column=2, row=2, sticky=W)
+    root_path_file_entry                                   .grid(column=3, row=2, sticky=(W, E))
+    root_choose_in_entry                                   .grid(column=3, row=3, sticky=(W, E))
+    ttk.Label (mainframe, text="Choose type report text:") .grid(column=1, row=3, sticky=W)
+    root_choosecsv_entry                                   .grid(column=3, row=4, sticky=(W, E))
+    root_choosexls_entry                                   .grid(column=3, row=5, sticky=(W, E))
+    root_translate_entry                                   .grid(column=3, row=6, sticky=W)
 
     for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
 

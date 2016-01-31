@@ -1,7 +1,6 @@
 @echo off
 
-rem set PROJECTDIR=$1
-set PROJECTDIR=
+set PROJECTDIR=C:\Users\zappyk\PycharmProjects\zappyk-python
 
 if not defined PROJECTDIR set PROJECTDIR=%~dp0\..
 
@@ -14,9 +13,4 @@ set PYTHONPATH=^
 %PROJECTDIR%\src\src_zappyk;^
 .
 
-echo PYTHONUNBUFFERED=%PYTHONUNBUFFERED%
-
-echo PYTHONIOENCODING=%PYTHONIOENCODING%
-
-echo PYTHONPATH=^
-%PYTHONPATH%
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

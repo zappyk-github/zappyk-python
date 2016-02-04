@@ -36,18 +36,23 @@ csv_quotechar      = args.csv_quotechar      if args.csv_quotechar      is not N
 csv_lineterminator = args.csv_lineterminator if args.csv_lineterminator is not None else csv_lineterminator
 
 run_gui            = args.run_gui
+run_cmd            = args.run_cmd
 type_input         = args.type_input
 file_input         = args.file_input
 file_output        = args.file_output
 type_output        = args.type_output
+
+run_gui            = True  if sys.platform == 'win32' else run_gui
+run_gui            = False if run_cmd                 else run_gui
 
 name_input         = _basenameNotExt(file_input)
 exte_output        = _basenameGetExt(file_output)
 type_output        = TYPE_OUT_csv      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_csv) else type_output
 type_output        = TYPE_OUT_xls      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_xls) else type_output
 
-file_output_csv    = _basenameFullPathNotExt(file_input)+'.'+TYPE_OUT_csv
-file_output_xls    = _basenameFullPathNotExt(file_input)+'.'+TYPE_OUT_xls
+file_output_csv    = '.'.join([_basenameFullPathNotExt(file_input), TYPE_OUT_csv])
+file_output_xls    = '.'.join([_basenameFullPathNotExt(file_input), TYPE_OUT_xls])
+
 file_output        = file_output_csv   if (file_output is None)           and (type_output     == TYPE_OUT_csv) else file_output
 file_output        = file_output_xls   if (file_output is None)           and (type_output     == TYPE_OUT_xls) else file_output
 file_output        = file_output_csv   if (file_output == CHAR_STD_INOUT) and (type_output     == TYPE_OUT_csv) else file_output
@@ -81,6 +86,7 @@ if file_input == file_output != CHAR_STD_INOUT:
 
 if args.debug >= 1:
     logs.info('run_gui            = %s' % repr(run_gui))
+    logs.info('run_cmd            = %s' % repr(run_cmd))
     logs.info('type_input         = %s' % repr(type_input))
     logs.info('file_input         = %s' % repr(file_input))
     logs.info('file_output        = %s' % repr(file_output))

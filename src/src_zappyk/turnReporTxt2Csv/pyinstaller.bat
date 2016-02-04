@@ -2,17 +2,19 @@
 call winenv.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+set name_prog=TurnReporTxt2Csv
+set prog_main=TurnReporTxt2Csv\main.py
+set file_gear=images\gear.ico
+set file_vers=pyinstaller-version.txt
+
 set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG
 
-%pyinstaller% ^
-    --name TurnReporTxt2Csv ^
-    -i ....\..\images\gear.ico ^
-    TurnReporTxt2Csv\main.py
+rem %pyinstaller% --icon %file_gear% --version-file %file_vers% --name %name_prog% %prog_main%
+    %pyinstaller% --icon %file_gear%                            --name %name_prog% %prog_main%
 
-rem TurnReporTxt2Csv\main.py -rg
+timeout /t 10 /nobreak
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 rem General Options
 rem
 rem -h, --help	show this help message and exit

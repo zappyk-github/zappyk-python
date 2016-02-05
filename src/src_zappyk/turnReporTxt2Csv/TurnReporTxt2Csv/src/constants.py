@@ -13,3 +13,4 @@ TYPE_IN_av8p = 'av8p' # Analisi Vendite su 8 Periodo
 
 TYPE_OUT_csv = 'csv'
 TYPE_OUT_xls = 'xls'
+TYPE_OUT_xls = 'xlsx'

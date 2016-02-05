@@ -5,7 +5,7 @@ call winenv.bat
 set name_prog=TurnReporTxt2Csv
 set prog_main=TurnReporTxt2Csv\main.py
 set file_gear=images\gear.ico
-set file_vers=pyinstaller-version.txt
+set file_vers=setup-pyinstaller-version.txt
 
 set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG
 

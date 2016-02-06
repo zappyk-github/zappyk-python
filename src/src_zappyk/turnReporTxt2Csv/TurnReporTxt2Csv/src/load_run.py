@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-import re
-import sys
 import csv
 import xlsxwriter
 
@@ -15,9 +13,9 @@ from lib_zappyk          import _initializeVariable
 from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist
 from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
 
-from TurnReporTxt2Csv.cfg.load_cfg  import parser_args, parser_conf, logger_conf
-from TurnReporTxt2Csv.cfg.load_ini  import *
-from TurnReporTxt2Csv.src.constants import *
+from TurnReporTxt2Csv.cfg.load_cfg    import parser_args, parser_conf, logger_conf
+from TurnReporTxt2Csv.cfg.load_ini    import *
+from TurnReporTxt2Csv.src.constants   import *
 
 args = parser_args().args
 conf = parser_conf().conf
@@ -119,6 +117,7 @@ def _root_load_file():
         except:
             logs_error('Failed to read file\n%s' % filename, 'Open Source File')
         return
+
 ###############################################################################
 def _root_translate():
     file_input       = root_path_file.get()
@@ -165,7 +164,9 @@ def _root_destroy():
 
 ###############################################################################
 def main_gui():
-    root.title('Manipulation Text Report')
+    #from TurnReporTxt2Csv.src.version     import the_version
+    #root.title('Manipulation Text Report (ver. %s)' % the_version())
+    root.title('Manipulation Text Report (ver. %s)' % '0.0.2b1')
     root.resizable(0,0)
     root.bind('<Return>', _root_load_file)
 
@@ -173,13 +174,26 @@ def main_gui():
     mainframe.columnconfigure(0, weight=1)
     mainframe.rowconfigure(0, weight=1)
 
-    len_with = 70
+    len_padding = 6
+    len_font_MF = 12
+    len_with_EC = 70
+    len_with_B1 = 20
+    len_with_B2 = 30
 
-    root_path_file_entry = ttk.Entry(mainframe, width=len_with, textvariable=root_path_file)
+    style = ttk.Style()
+    style.configure('.', padding=len_padding, relief='flat', font=('Helvetica', len_font_MF), foreground='black', background='#ccc')
+    style.map('root_translate_entry.TButton', foreground=[('pressed', 'green'), ('active', 'green')]
+                                            , background=[('pressed', '!disabled', 'black'), ('active', 'white')]
+    )
+    style.map('root_cancel_entry.TButton', foreground=[('pressed', 'red'), ('active', 'red')]
+                                         , background=[('pressed', '!disabled', 'black'), ('active', 'white')]
+    )
+
+    root_path_file_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file)
     root_path_file_entry.focus()
     root_path_file.trace('w', _root_translate_entry_on_change) # rwua
 
-    root_choose_in_entry = ttk.Combobox(mainframe, width=len_with, textvariable=root_choose_in, state='readonly')
+    root_choose_in_entry = ttk.Combobox(mainframe, width=len_with_EC, textvariable=root_choose_in, state='readonly')
     root_choose_in_entry['values'] = _root_combo_set(root_combo_out)
     root_choose_in_entry.current(0)
 
@@ -187,11 +201,11 @@ def main_gui():
     root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_xls.upper(), value=TYPE_OUT_xls, variable=root_chooseext)
     root_chooseext.set(TYPE_OUT_xls)
 
-    root_fsbrowser_entry = ttk.Button(mainframe, text='  filesystem browser  ', command=_root_load_file)
-    root_translate_entry = ttk.Button(mainframe, text='Translate', command=_root_translate, state=DISABLED)
+    root_fsbrowser_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file)
+    root_translate_entry = ttk.Button(mainframe, text='Translate', width=len_with_B2, command=_root_translate, state=DISABLED, style='root_translate_entry.TButton')
     self_translate_entry.set(root_translate_entry)
 
-    root_cancel_entry = ttk.Button(mainframe, text='CANCEL', command=_root_destroy)
+    root_cancel_entry = ttk.Button(mainframe, text='CANCEL', width=len_with_B1, command=_root_destroy , style='root_cancel_entry.TButton')
 
     mainframe                                              .grid(column=0, row=0, sticky=(N, W, E, S))
     ttk.Label (mainframe, text="Choose text file through:").grid(column=1, row=1, sticky=W)
@@ -203,7 +217,7 @@ def main_gui():
     root_choosecsv_entry                                   .grid(column=3, row=4, sticky=(W, E))
     root_choosexls_entry                                   .grid(column=3, row=5, sticky=(W, E))
     root_translate_entry                                   .grid(column=3, row=6, sticky=W)
-    root_cancel_entry                                      .grid(column=4, row=8, sticky=W)
+    root_cancel_entry                                      .grid(column=3, row=8, sticky=E)
 
     for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
 

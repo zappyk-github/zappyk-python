@@ -159,6 +159,11 @@ def _root_translate_entry_on_change(a, b, c):
         self_translate_entry.get().config(state=NORMAL)
 
 ###############################################################################
+def _root_destroy():
+    root.destroy()
+    sys.exit(0)
+
+###############################################################################
 def main_gui():
     root.title('Manipulation Text Report')
     root.resizable(0,0)
@@ -178,13 +183,15 @@ def main_gui():
     root_choose_in_entry['values'] = _root_combo_set(root_combo_out)
     root_choose_in_entry.current(0)
 
-    root_choosecsv_entry = ttk.Radiobutton(mainframe, text='output in CSV', value=TYPE_OUT_csv, variable=root_chooseext)
-    root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in XLS', value=TYPE_OUT_xls, variable=root_chooseext)
+    root_choosecsv_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_csv.upper(), value=TYPE_OUT_csv, variable=root_chooseext)
+    root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_xls.upper(), value=TYPE_OUT_xls, variable=root_chooseext)
     root_chooseext.set(TYPE_OUT_xls)
 
     root_fsbrowser_entry = ttk.Button(mainframe, text='  filesystem browser  ', command=_root_load_file)
     root_translate_entry = ttk.Button(mainframe, text='Translate', command=_root_translate, state=DISABLED)
     self_translate_entry.set(root_translate_entry)
+
+    root_cancel_entry = ttk.Button(mainframe, text='CANCEL', command=_root_destroy)
 
     mainframe                                              .grid(column=0, row=0, sticky=(N, W, E, S))
     ttk.Label (mainframe, text="Choose text file through:").grid(column=1, row=1, sticky=W)
@@ -196,6 +203,7 @@ def main_gui():
     root_choosecsv_entry                                   .grid(column=3, row=4, sticky=(W, E))
     root_choosexls_entry                                   .grid(column=3, row=5, sticky=(W, E))
     root_translate_entry                                   .grid(column=3, row=6, sticky=W)
+    root_cancel_entry                                      .grid(column=4, row=8, sticky=W)
 
     for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
 
@@ -204,7 +212,8 @@ def main_gui():
 ###############################################################################
 def main():
     if run_gui:
-        main_gui()
+        while True:
+            main_gui()
     else:
         manipulate()
 
@@ -234,8 +243,6 @@ def manipulate():
 
        #logs_info('Translate completed!\n\nOpen file output on:\n%s' % file_output)
         logs_info('Translate completed!\n\nOpen file output on:\n%s' % self_file_output.get())
-        if run_gui:
-            root.destroy()
 
     except ValueError:
         pass
@@ -393,11 +400,11 @@ def write_fileout(dat_lines):
         fileout = sys.stdout
         typeout = TYPE_OUT_csv
         std_out = True
-        logs.info('Write csv rows on STDOUT:')
+        logs.info('Write %s rows on STDOUT:' % typeout)
     else:
         try:
             fileout = open(out_filename, 'w')
-            logs.info('Write to file out: %s' % out_filename)
+            logs.info('Write to file out %s: %s' % (typeout, out_filename))
         except:
             fileout = sys.stdout
             std_out = True

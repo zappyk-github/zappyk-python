@@ -12,8 +12,22 @@ set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG
 rem %pyinstaller% --icon %file_gear% --version-file %file_vers% --name %name_prog% %prog_main%
     %pyinstaller% --icon %file_gear%                            --name %name_prog% %prog_main%
 
-timeout /t 10 /nobreak
+set EXIT_CODE=%errorlevel%
 
+if %EXIT_CODE% == 0 (
+    echo _______________________________________________________________________________
+	echo.
+	echo    COMPILAZINE RIUSCITA :D
+	timeout /t 10 /nobreak
+) else (
+    echo _______________________________________________________________________________
+	echo.
+	echo    COMPILAZIONE NON RIUSCITA, CONTROLLARE L'ERRORE GENERATO...
+	echo.
+	pause
+)
+
+exit /b %EXIT_CODE%
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 rem General Options
 rem

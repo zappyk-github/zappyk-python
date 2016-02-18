@@ -22,6 +22,6 @@ executables = [
 
 setup(name=name,
       version=version,
-      description='Turn a report in TXT to a CSV file',
+      description='Turn a report in TXT to a CSV/XLS file',
       options=dict(build_exe = buildOptions),
       executables=executables)

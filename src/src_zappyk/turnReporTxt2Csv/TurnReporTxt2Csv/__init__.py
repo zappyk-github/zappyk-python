@@ -21,5 +21,5 @@ def get_description():
 #   return(get_version(*arg, **kwargs))
 ###########################################################
 def get_version():
-    from TurnReporTxt2Csv.src.version import get_version
+    from TurnReporTxt2Csv.src.version import the_version
     return(get_version())

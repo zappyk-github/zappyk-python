@@ -10,7 +10,7 @@ from tkinter.filedialog import askopenfilename
 from tkinter.messagebox import showinfo, showerror
 
 from lib_zappyk          import _initializeVariable
-from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist
+from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist, _pathJoin, _pathCurrent
 from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
 
 from QueryReporting.cfg.load_cfg    import parser_args, parser_conf, logger_conf
@@ -27,8 +27,10 @@ cSects = conf.sections()
 cQuery = filter(lambda x: rQuery.search(x), cSects)
 cQuery = [x for x in cSects if rQuery.search(x)]
 
-connect  = conf.get("DB", "connect" , fallback=None)
-host_dsn = conf.get("DB", "host_dsn", fallback=None)
+_server_ = conf.get("DB", "_server_", fallback=None)
+_onport_ = conf.get("DB", "_onport_", fallback=None)
+_driver_ = conf.get("DB", "_driver_", fallback=None)
+database = conf.get("DB", "database", fallback=None)
 username = conf.get("DB", "username", fallback=None)
 password = conf.get("DB", "password", fallback=None)
 add_opts = conf.get("DB", "add_opts", fallback=None)
@@ -59,6 +61,7 @@ run_query          = args.run_query
 file_output        = args.file_output
 type_output        = args.type_output
 sql_section        = nQuery + run_query
+sql_sessions       = cSects
 sql_title          = None
 sql_query          = None
 sql_param          = None
@@ -72,19 +75,12 @@ try:
     sql_param      = None if sql_param == '' else sql_param
     sql_params     = None if sql_param == '' else sql_param.split(CHAR_aLF_PARAM)
 except:
+    sql_section    = None
     pass
 
-print('[%s]' % sql_section)
-print('[%s]' % sql_title)
-print('[%s]' % sql_query)
-print('[%s]' % sql_param)
-print('[%s]' % sql_params)
-sys.exit()
-
 ####################
-file_input         = None
-type_input         = None
-TYPE_IN_av8p       = None
+file_input         = _pathJoin([_pathCurrent(), sql_title])
+type_input         = run_query
 ####################
 
 run_gui            = True  if sys.platform == 'win32' else run_gui
@@ -113,8 +109,7 @@ root           = Tk()
 root_path_file = StringVar()
 root_choose_in = StringVar()
 root_chooseext = StringVar()
-root_combo_out = [('Analisi delle Vendite su 8 Periodi', TYPE_IN_av8p)
-                 ,('...another report layout...'       , 'xxxx')]
+root_combo_out = [x for x in sql_sessions]
 root_filetypes = (('Text files', '*.txt')
                  ,('All files' , '*.*'  ))
 
@@ -136,6 +131,18 @@ if args.debug >= 1:
     logs.info('file_input         = %s' % repr(file_input))
     logs.info('file_output        = %s' % repr(file_output))
     logs.info('type_output        = %s' % repr(type_output))
+    logs.info('_server_           = %s' % repr(_server_))
+    logs.info('_onport_           = %s' % repr(_onport_))
+    logs.info('_driver_           = %s' % repr(_driver_))
+    logs.info('database           = %s' % repr(database))
+    logs.info('username           = %s' % repr(username))
+    logs.info('password           = %s' % repr(password))
+    logs.info('add_opts           = %s' % repr(add_opts))
+    logs.info('sql_section        = %s' % repr(sql_section))
+    logs.info('sql_title          = %s' % repr(sql_title))
+    logs.info('sql_query          = %s' % repr(sql_query))
+    logs.info('sql_param          = %s' % repr(sql_param))
+    logs.info('sql_params         = %s' % repr(sql_params))
     logs.info('csv_delimiter      = %s' % repr(csv_delimiter))
     logs.info('csv_quotechar      = %s' % repr(csv_quotechar))
     logs.info('csv_lineterminator = %s' % repr(csv_lineterminator))
@@ -195,7 +202,7 @@ def _root_translate():
         logs_info("File report '%s' not exist!" % file_input)
         return
 
-    manipulate()
+    query()
 
 ###############################################################################
 def _root_translate_entry_on_change(a, b, c):
@@ -276,12 +283,12 @@ def main():
         while True:
             main_gui()
     else:
-        manipulate()
+        query()
 
     sys.exit(0)
 
 ###############################################################################
-def manipulate():
+def query():
     if args.debug >= 1:
         logs.info('type_input  = %s' % self_type_input.get())
         logs.info('file_input  = %s' % self_file_input.get())
@@ -290,15 +297,14 @@ def manipulate():
         logs.info('-------------')
 
     try:
-        txt_lines = read_filein()
+    #CZ#txt_lines = read_filein()
 
         dat_lines = None
-       #if type_input ==  TYPE_IN_av8p:
-        if self_type_input.get() ==  TYPE_IN_av8p:
-            dat_lines = manipulate_av8p(txt_lines)
+        if sql_section is not None:
+        #CZ#dat_lines = query_result(txt_lines)
+            dat_lines = query_result()
         else:
-           #logs_error("Type input '%s' can't be configurate!" % type_input)
-            logs_error("Type input '%s' can't be configurate!" % self_type_input.get())
+            logs_error("Query input '%s' can't be configurate!" % run_query)
 
         write_fileout(dat_lines)
 
@@ -309,78 +315,56 @@ def manipulate():
         pass
 
 ###############################################################################
-def manipulate_av8p(txt_lines):
+def replace_password(cnt, pwd):
+    return(cnt.replace('PWD=' + pwd, 'PWD=***'))
+
+###############################################################################
+#CZ#def query_result(txt_lines):
+def query_result():
     tmp_lines = []
     dat_lines = []
 
-    dat_head_0 = True
-    dat_body_1 = False
-    dat_body_2 = False
+    import pyodbc as p
 
-    row_head_0 = None
-    row_body_1 = None
-    row_body_2 = None
 
-    fld_first  = 45
-    fld_code   = 10
-    fld_name   = fld_first - fld_code
-    frm_first  = '%'+str(fld_code)+'s' + csv_delimiter + '%-'+str(fld_name)+'s'
+    c = (r'DRIVER='     + _driver_
+        +';SERVER='     + _server_
+        #';SERVERNAME=' + _server_
+        +';PORT='       + _onport_
+        #';DATABASE='   + database
+        +';DNS='        + database
+        #';UID='        + username
+        +';USER='       + username
+        +';PWD='        + password
+                        + add_opts
+        +';CHARSET=UTF8'
+        +';TDS_Version=7.0'
+        #';Trusted_Connection=yes'
+        )
 
-    reg_head_0 = 'DAL .* TOTALI'
-    reg_body_1 = '\d{1,'+str(fld_code)+'}\s\s?\w'
+    if args.verbose:
+        logs.info('connect: %s' % replace_password(c, password))
 
-   #rec_head_0 = re.compile(reg_head_0, re.I|re.L|re.M|re.U|re.S)
-   #rec_body_1 = re.compile(reg_body_1, re.I|re.L|re.M|re.U|re.S)
+    if args.verbose:
+        logs.info('connect on DB %s@%s:%s wait...' % (database, _server_, _onport_))
+    dbp = p.connect(c)
+    dbc = dbp.cursor()
 
-    #__________________________________________________________________________
-    for txt_line in txt_lines:
-        txt_line = _remove(txt_line, "\f\r\n")
-        txt_line = normalize_string(txt_line)
+    if args.verbose:
+        logs.info('execute query:\n[%s]' % sql_query)
+    dbc.execute(sql_query)
 
-        if args.debug >= 2:
-            print("#-|"+txt_line)
-        #______________________________________________________________________
-       #if dat_head_0 and rec_head_0.search(txt_line):
-        if dat_head_0 and _search(reg_head_0, txt_line):
-            dat_head_0 = False
-            dat_body_1 = True
+    if args.verbose:
+        logs.info('query result:')
+    for row in dbc:
+        dat_lines.append(row)
 
-            row_head_0 = (frm_first % ('Codice', 'Prodotto')) + txt_line
+    if args.verbose:
+        logs.info('connect on DB close.')
+    dbp.close()
 
-            tmp_lines.append(row_head_0)
-            if args.debug >= 1:
-                print("#1#" + row_head_0)
-        #______________________________________________________________________
-        if dat_body_2:
-            dat_body_1 = True
-            dat_body_2 = False
+    print(dat_lines)
 
-            row_body_2 = row_body_1 + txt_line
-
-            tmp_lines.append(row_body_2)
-            if args.debug >= 1:
-                print("#1|" + row_body_2)
-        #______________________________________________________________________
-       #if dat_body_1 and rec_body_1.search(txt_line) and len(txt_line)<=fld_first:
-        if dat_body_1 and _search(reg_body_1, txt_line) and len(txt_line)<=fld_first:
-            dat_body_1 = False
-            dat_body_2 = True
-
-            list = _stringToListOnSpace(_trim(txt_line))
-
-            code = list[0]                     if len(list) > 0 else None
-            name = _trim(_joinSpace(list[1:])) if len(list) > 1 else None
-
-            row_body_1 = frm_first % (code, name)
-
-    #__________________________________________________________________________
-    for txt_line in tmp_lines:
-        txt_line = string_to_csv(txt_line, csv_delimiter, fld_first, 6, 14)
-        if args.debug >= 1:
-            print("#2|" + txt_line)
-        cvs_line = _stringToList(txt_line, csv_delimiter)
-        cvs_line = _trimList(cvs_line)
-        dat_lines.append(cvs_line)
     return(dat_lines)
 
 ###############################################################################

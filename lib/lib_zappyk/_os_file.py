@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
+import os
+
 from os     import path, walk, listdir
 from shutil import copy2
 
@@ -46,6 +48,9 @@ def _pathJoin(list_path_file_name):
 ###############################################################################
 def _pathExpanduser(path_name):
     return(path.expanduser(path_name))
+###############################################################################
+def _pathCurrent():
+    return(os.getcwd())
 ###############################################################################
 def _pathAbs(path_name):
     return(path.abspath(path_name))

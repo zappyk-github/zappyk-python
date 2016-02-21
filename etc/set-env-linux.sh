@@ -5,6 +5,8 @@ PROJECTDIR=
 
 [ -z "$PROJECTDIR" ] && PROJECTDIR=$(readlink -f $(dirname "$0")/..)
 
+PROJECTBIN="$PROJECTDIR/bin"
+
 PYTHONUNBUFFERED=1
 PYTHONIOENCODING='UTF-8'
 PYTHONPATH="\
@@ -14,6 +16,8 @@ $PROJECTDIR/lib/lib_zappyk:\
 $PROJECTDIR/src/src_zappyk:\
 .\
 "
+
+echo "PATH=\$PATH:$PROJECTBIN"
 
 echo "PROJECTDIR=$PROJECTDIR"
 

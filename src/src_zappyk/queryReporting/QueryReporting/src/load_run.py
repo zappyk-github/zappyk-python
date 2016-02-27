@@ -11,7 +11,7 @@ from tkinter.messagebox import showinfo, showerror
 
 from lib_zappyk          import _initializeVariable
 from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist, _pathJoin, _pathCurrent
-from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
+from lib_zappyk._string  import _define, _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
 
 from QueryReporting.cfg.load_cfg    import parser_args, parser_conf, logger_conf
 from QueryReporting.cfg.load_ini    import *
@@ -21,19 +21,19 @@ args = parser_args().args
 conf = parser_conf().conf
 logs = logger_conf().logs
 
-nQuery = 'Query'
+nQuery = 'Query:'
 rQuery = re.compile('^%s' % nQuery)
 cSects = conf.sections()
 cQuery = filter(lambda x: rQuery.search(x), cSects)
 cQuery = [x for x in cSects if rQuery.search(x)]
 
-_server_ = conf.get("DB", "_server_", fallback=None)
-_onport_ = conf.get("DB", "_onport_", fallback=None)
-_driver_ = conf.get("DB", "_driver_", fallback=None)
-database = conf.get("DB", "database", fallback=None)
-username = conf.get("DB", "username", fallback=None)
-password = conf.get("DB", "password", fallback=None)
-add_opts = conf.get("DB", "add_opts", fallback=None)
+db__server_ = conf.get("DB", "_server_", fallback=None)
+db__onport_ = conf.get("DB", "_onport_", fallback=None)
+db__driver_ = conf.get("DB", "_driver_", fallback=None)
+db_database = conf.get("DB", "database", fallback=None)
+db_username = conf.get("DB", "username", fallback=None)
+db_password = conf.get("DB", "password", fallback=None)
+db_add_opts = conf.get("DB", "add_opts", fallback=None)
 
 title = {}
 query = {}
@@ -51,6 +51,31 @@ try:
 except:
     pass
 
+db__server_        = _define(args.db__server_, db__server_, 'None')
+db__onport_        = _define(args.db__onport_, db__onport_, 0)
+db__driver_        = _define(args.db__driver_, db__driver_, 'None')
+db_database        = _define(args.db_database, db_database, 'None')
+db_username        = _define(args.db_username, db_username, 'None')
+db_password        = _define(args.db_password, db_password, 'None')
+db_add_opts        = _define(args.db_add_opts, db_add_opts, 'None')
+db_noheader        = _define(args.db_noheader, None       , 'None')
+
+_server_ = {}
+_onport_ = {}
+_driver_ = {}
+database = {}
+username = {}
+password = {}
+add_opts = {}
+for name in cQuery:
+    _server_[name] = conf.get(name, "_server_", fallback=db__server_)
+    _onport_[name] = conf.get(name, "_onport_", fallback=db__onport_)
+    _driver_[name] = conf.get(name, "_driver_", fallback=db__driver_)
+    database[name] = conf.get(name, "database", fallback=db_database)
+    username[name] = conf.get(name, "username", fallback=db_username)
+    password[name] = conf.get(name, "password", fallback=db_password)
+    add_opts[name] = conf.get(name, "add_opts", fallback=db_add_opts)
+
 csv_delimiter      = args.csv_delimiter      if args.csv_delimiter      is not None else csv_delimiter
 csv_quotechar      = args.csv_quotechar      if args.csv_quotechar      is not None else csv_quotechar
 csv_lineterminator = args.csv_lineterminator if args.csv_lineterminator is not None else csv_lineterminator
@@ -67,6 +92,14 @@ sql_query          = None
 sql_param          = None
 sql_params         = None
 try:
+    db__server_    = _define(_server_[sql_section], db__server_)
+    db__onport_    = _define(_onport_[sql_section], db__onport_)
+    db__driver_    = _define(_driver_[sql_section], db__driver_)
+    db_database    = _define(database[sql_section], db_database)
+    db_username    = _define(username[sql_section], db_username)
+    db_password    = _define(password[sql_section], db_password)
+    db_add_opts    = _define(add_opts[sql_section], db_add_opts)
+
     sql_title      = _trim(title[sql_section])
     sql_query      = _trim(query[sql_section])
     sql_param      = _trim(param[sql_section])
@@ -75,8 +108,10 @@ try:
     sql_param      = None if sql_param == '' else sql_param
     sql_params     = None if sql_param == '' else sql_param.split(CHAR_aLF_PARAM)
 except:
-    sql_section    = None
+#CZ#sql_section    = None
     pass
+
+sql_section = None if sql_query is None else sql_section
 
 ####################
 file_input         = _pathJoin([_pathCurrent(), sql_title])
@@ -131,13 +166,14 @@ if args.debug >= 1:
     logs.info('file_input         = %s' % repr(file_input))
     logs.info('file_output        = %s' % repr(file_output))
     logs.info('type_output        = %s' % repr(type_output))
-    logs.info('_server_           = %s' % repr(_server_))
-    logs.info('_onport_           = %s' % repr(_onport_))
-    logs.info('_driver_           = %s' % repr(_driver_))
-    logs.info('database           = %s' % repr(database))
-    logs.info('username           = %s' % repr(username))
-    logs.info('password           = %s' % repr(password))
-    logs.info('add_opts           = %s' % repr(add_opts))
+    logs.info('db__server_        = %s' % repr(db__server_))
+    logs.info('db__onport_        = %s' % repr(db__onport_))
+    logs.info('db__driver_        = %s' % repr(db__driver_))
+    logs.info('db_database        = %s' % repr(db_database))
+    logs.info('db_username        = %s' % repr(db_username))
+    logs.info('db_password        = %s' % repr(db_password))
+    logs.info('db_add_opts        = %s' % repr(db_add_opts))
+    logs.info('db_noheader        = %s' % repr(db_noheader))
     logs.info('sql_section        = %s' % repr(sql_section))
     logs.info('sql_title          = %s' % repr(sql_title))
     logs.info('sql_query          = %s' % repr(sql_query))
@@ -308,45 +344,46 @@ def query():
 
         write_fileout(dat_lines)
 
-       #logs_info('Translate completed!\n\nOpen file output on:\n%s' % file_output)
-        logs_info('Translate completed!\n\nOpen file output on:\n%s' % self_file_output.get())
+       #logs_info('Result completed!\n\nOpen file output on:\n%s' % file_output)
+        logs_info('Result completed!\n\nOpen file output on:\n%s' % self_file_output.get())
 
     except ValueError:
         pass
 
 ###############################################################################
 def replace_password(cnt, pwd):
+    if pwd is None:
+        return(cnt)
     return(cnt.replace('PWD=' + pwd, 'PWD=***'))
 
 ###############################################################################
 #CZ#def query_result(txt_lines):
 def query_result():
     tmp_lines = []
-    dat_lines = []
+    col_lines = []
+    row_lines = []
 
     import pyodbc as p
 
-
-    c = (r'DRIVER='     + _driver_
-        +';SERVER='     + _server_
-        #';SERVERNAME=' + _server_
-        +';PORT='       + _onport_
-        #';DATABASE='   + database
-        +';DNS='        + database
-        #';UID='        + username
-        +';USER='       + username
-        +';PWD='        + password
-                        + add_opts
-        +';CHARSET=UTF8'
-        +';TDS_Version=7.0'
-        #';Trusted_Connection=yes'
-        )
+    l = []
+    if db__driver_ is not None: l.append('DRIVER={%s}'   % db__driver_)
+   #if db__server_ is not None: l.append('SERVERNAME=%s' % db__server_)
+    if db__server_ is not None: l.append('SERVER=%s'     % db__server_)
+    if db__onport_ is not None: l.append('PORT=%s'       % db__onport_)
+   #if db_database is not None: l.append('DNS=%s'        % db_database)
+    if db_database is not None: l.append('DATABASE=%s'   % db_database)
+    if db_username is not None: l.append('UID=%s'        % db_username)
+    if db_password is not None: l.append('PWD=%s'        % db_password)
+    if db_add_opts is not None: l.append(                  db_add_opts)
+    if True                   : l.append('CHARSET=UTF8')
+    if True                   : l.append('TDS_Version=7.2')
+    c = ';'.join(l)
 
     if args.verbose:
-        logs.info('connect: %s' % replace_password(c, password))
+        logs.info('connect: %s' % replace_password(c, db_password))
 
     if args.verbose:
-        logs.info('connect on DB %s@%s:%s wait...' % (database, _server_, _onport_))
+        logs.info('connect on DB %s@%s:%s wait...' % (db_database, db__server_, db__onport_))
     dbp = p.connect(c)
     dbc = dbp.cursor()
 
@@ -354,18 +391,24 @@ def query_result():
         logs.info('execute query:\n[%s]' % sql_query)
     dbc.execute(sql_query)
 
+    if not db_noheader:
+        col_lines = [d[0] for d in dbc.description]
+        row_lines.append(col_lines)
+
     if args.verbose:
         logs.info('query result:')
-    for row in dbc:
-        dat_lines.append(row)
+#CZ#for rows in dbc:
+    for rows in dbc.fetchall():
+        row_lines.append(rows)
 
     if args.verbose:
         logs.info('connect on DB close.')
     dbp.close()
 
-    print(dat_lines)
+    if args.debug >= 1:
+        print(row_lines)
 
-    return(dat_lines)
+    return(row_lines)
 
 ###############################################################################
 def normalize_string(string_old):

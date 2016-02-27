@@ -12,7 +12,7 @@ CHAR_SEP_PARAM = '='
 CHAR_aLF_PARAM = '\n' # ASCII Linefeed (LF)
 
 DEF_SQLQUERY = ''
-TYPE_DB_LIST = ['psql','mysql','mssql','sqlite','oracle']
+TYPE_DB_LIST = ['psql', 'mysql', 'mssql', 'sqlite', 'oracle', 'FreeTDS']
 
 TYPE_OUT_csv = 'csv'
 TYPE_OUT_xls = 'xls'

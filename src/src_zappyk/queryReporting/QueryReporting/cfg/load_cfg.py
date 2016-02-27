@@ -25,6 +25,7 @@ default_stdout  = CHAR_STD_INOUT
 default_typeout = TYPE_OUT_csv
 default_typeout = None
 list_typeout    = [TYPE_OUT_csv,TYPE_OUT_xls]
+list_drivers    = TYPE_DB_LIST
 
 ###############################################################################
 class logger_conf(object):
@@ -53,6 +54,14 @@ class parser_args(object):
         parser.add_argument('-rq'    , '--run_query'         , help='run query name'                    , type=str                      , default=default_query  ,required=True)
         parser.add_argument('-fo'    , '--file_output'       , help='file write output'                 , type=str                      , default=default_stdout)
         parser.add_argument('-to'    , '--type_output'       , help='file type  output'                 , type=str, choices=list_typeout, default=default_typeout)
+        parser.add_argument('-dbdr'  , '--db__driver_'       , help='DB driver'                         , type=str, choices=list_drivers, default=None)
+        parser.add_argument('-dbsn'  , '--db__server_'       , help='DB server'                         , type=str                      , default=None)
+        parser.add_argument('-dbsp'  , '--db__onport_'       , help='DB server port'                    , type=int                      , default=None)
+        parser.add_argument('-dbdb'  , '--db_database'       , help='DB database'                       , type=str                      , default=None)
+        parser.add_argument('-dbun'  , '--db_username'       , help='DB username'                       , type=str                      , default=None)
+        parser.add_argument('-dbpw'  , '--db_password'       , help='DB password'                       , type=str                      , default=None)
+        parser.add_argument('-dbao'  , '--db_add_opts'       , help='DB add options'                    , type=str                      , default=None)
+        parser.add_argument('-dbnh'  , '--db_noheader'       , help='DB result not print header'        , action='store_true')
         parser.add_argument('-cdl'   , '--csv_delimiter'     , help='CSV file delimiter char fields'    , type=str                      , default=None)
         parser.add_argument('-cqc'   , '--csv_quotechar'     , help='CSV file quote char fields'        , type=str                      , default=None)
         parser.add_argument('-clt'   , '--csv_lineterminator', help='CSV file line terminator'          , type=str                      , default=None)

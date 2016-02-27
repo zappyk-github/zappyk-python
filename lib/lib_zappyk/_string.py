@@ -6,6 +6,13 @@ import re
 one_space = ' '
 
 ###########################################################################
+def _define(then_value, else_value, is_value=None, def_value=None):
+    value = def_value
+    value = then_value if then_value is not None else else_value
+    if is_value is not None:
+        value = def_value if then_value == is_value else value
+    return(value)
+###########################################################################
 def _trim(string):
     return(string.strip())
 ###########################################################################

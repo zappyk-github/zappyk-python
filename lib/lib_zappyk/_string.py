@@ -6,13 +6,6 @@ import re
 one_space = ' '
 
 ###########################################################################
-def _define(then_value, else_value, is_value=None, def_value=None):
-    value = def_value
-    value = then_value if then_value is not None else else_value
-    if is_value is not None:
-        value = def_value if then_value == is_value else value
-    return(value)
-###########################################################################
 def _trim(string):
     return(string.strip())
 ###########################################################################
@@ -22,6 +15,18 @@ def _trimList(string_list):
         string = _trim(string)
         list.append(string)
     return(list)
+###########################################################################
+def _define(then_value, else_value, is_value=None, def_value=None):
+    value = def_value
+    value = then_value if then_value is not None else else_value
+    if is_value is not None:
+        if type(is_value) is int:
+            if int(value) == is_value:
+                value = def_value
+        if type(is_value) is str:
+            if str(value) == is_value:
+                value = def_value
+    return(value)
 ###########################################################################
 def _search(regexp, string):
     return(re.search(regexp, string))

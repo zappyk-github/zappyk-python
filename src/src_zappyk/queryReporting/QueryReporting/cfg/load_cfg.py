@@ -77,6 +77,7 @@ class parser_conf(object):
     conf = None
     ###########################################################################
     def __init__(self):
+    #??#conf = configparser.ConfigParser(allow_no_value=True)
         conf = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 
         if not _fileExist(file_conf):

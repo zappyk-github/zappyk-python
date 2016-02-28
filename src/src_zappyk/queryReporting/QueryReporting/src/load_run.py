@@ -51,14 +51,14 @@ try:
 except:
     pass
 
-db__server_        = _define(args.db__server_, db__server_, 'None')
-db__onport_        = _define(args.db__onport_, db__onport_, 0)
-db__driver_        = _define(args.db__driver_, db__driver_, 'None')
-db_database        = _define(args.db_database, db_database, 'None')
-db_username        = _define(args.db_username, db_username, 'None')
-db_password        = _define(args.db_password, db_password, 'None')
-db_add_opts        = _define(args.db_add_opts, db_add_opts, 'None')
-db_noheader        = _define(args.db_noheader, None       , 'None')
+db__server_        = _define(args.db__server_, db__server_, CHAR_NONE_STR)
+db__onport_        = _define(args.db__onport_, db__onport_, CHAR_NONE_INT)
+db__driver_        = _define(args.db__driver_, db__driver_, CHAR_NONE_STR)
+db_database        = _define(args.db_database, db_database, CHAR_NONE_STR)
+db_username        = _define(args.db_username, db_username, CHAR_NONE_STR)
+db_password        = _define(args.db_password, db_password, CHAR_NONE_STR)
+db_add_opts        = _define(args.db_add_opts, db_add_opts, CHAR_NONE_STR)
+db_noheader        = _define(args.db_noheader, None       , CHAR_NONE_STR)
 
 _server_ = {}
 _onport_ = {}
@@ -92,13 +92,13 @@ sql_query          = None
 sql_param          = None
 sql_params         = None
 try:
-    db__server_    = _define(_server_[sql_section], db__server_)
-    db__onport_    = _define(_onport_[sql_section], db__onport_)
-    db__driver_    = _define(_driver_[sql_section], db__driver_)
-    db_database    = _define(database[sql_section], db_database)
-    db_username    = _define(username[sql_section], db_username)
-    db_password    = _define(password[sql_section], db_password)
-    db_add_opts    = _define(add_opts[sql_section], db_add_opts)
+    db__server_    = _define(_server_[sql_section], db__server_, CHAR_NONE_STR)
+    db__onport_    = _define(_onport_[sql_section], db__onport_, CHAR_NONE_INT)
+    db__driver_    = _define(_driver_[sql_section], db__driver_, CHAR_NONE_STR)
+    db_database    = _define(database[sql_section], db_database, CHAR_NONE_STR)
+    db_username    = _define(username[sql_section], db_username, CHAR_NONE_STR)
+    db_password    = _define(password[sql_section], db_password, CHAR_NONE_STR)
+    db_add_opts    = _define(add_opts[sql_section], db_add_opts, CHAR_NONE_STR)
 
     sql_title      = _trim(title[sql_section])
     sql_query      = _trim(query[sql_section])
@@ -114,6 +114,7 @@ except:
 sql_section = None if sql_query is None else sql_section
 
 ####################
+print(sql_title)
 file_input         = _pathJoin([_pathCurrent(), sql_title])
 type_input         = run_query
 ####################
@@ -254,8 +255,8 @@ def _root_destroy():
 
 ###############################################################################
 def main_gui():
-    #from QueryReporting.src.version     import the_version
-    #root.title('Manipulation Text Report (ver. %s)' % the_version())
+#CZ#from QueryReporting.src.version     import the_version
+#CZ#root.title('Manipulation Text Report (ver. %s)' % the_version())
     root.title('Manipulation Text Report (ver. %s)' % '0.0.2b1')
     root.resizable(0,0)
     root.bind('<Return>', _root_load_file)
@@ -344,7 +345,7 @@ def query():
 
         write_fileout(dat_lines)
 
-       #logs_info('Result completed!\n\nOpen file output on:\n%s' % file_output)
+    #CZ#logs_info('Result completed!\n\nOpen file output on:\n%s' % file_output)
         logs_info('Result completed!\n\nOpen file output on:\n%s' % self_file_output.get())
 
     except ValueError:
@@ -367,10 +368,10 @@ def query_result():
 
     l = []
     if db__driver_ is not None: l.append('DRIVER={%s}'   % db__driver_)
-   #if db__server_ is not None: l.append('SERVERNAME=%s' % db__server_)
+#CZ#if db__server_ is not None: l.append('SERVERNAME=%s' % db__server_)
     if db__server_ is not None: l.append('SERVER=%s'     % db__server_)
     if db__onport_ is not None: l.append('PORT=%s'       % db__onport_)
-   #if db_database is not None: l.append('DNS=%s'        % db_database)
+#CZ#if db_database is not None: l.append('DNS=%s'        % db_database)
     if db_database is not None: l.append('DATABASE=%s'   % db_database)
     if db_username is not None: l.append('UID=%s'        % db_username)
     if db_password is not None: l.append('PWD=%s'        % db_password)
@@ -461,7 +462,7 @@ def read_filein():
 
     if std_in:
         logs.info(LINE_PARTITION)
-   #csv_lines = list(csv.reader(filein, delimiter=csv_delimiter))
+#CZ#csv_lines = list(csv.reader(filein, delimiter=csv_delimiter))
     txt_lines = filein.readlines()
     if std_in:
         logs.info(LINE_PARTITION)
@@ -475,14 +476,14 @@ def read_filein():
 
 ###############################################################################
 def write_fileout(dat_lines):
-   #txt_filename = file_input
-   #out_filename = file_output
+#CZ#txt_filename = file_input
+#CZ#out_filename = file_output
     txt_filename = self_file_input.get()
     out_filename = self_file_output.get()
 
     fileout = None
     std_out = False
-   #typeout = type_output
+#CZ#typeout = type_output
     typeout = self_type_output.get()
     if out_filename == CHAR_STD_INOUT:
         fileout = sys.stdout
@@ -500,7 +501,7 @@ def write_fileout(dat_lines):
 
     name_ws = None
     if txt_filename != CHAR_STD_INOUT:
-       #name_ws = name_input
+    #CZ#name_ws = name_input
         name_ws = self_name_input.get()
 
     if std_out:
@@ -514,13 +515,13 @@ def write_fileout(dat_lines):
 
 ###############################################################################
 def write_filecsv(dat_lines, fileout):
-   #csv_values= csv.writer(fileout)
+#CZ#csv_values= csv.writer(fileout)
     csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
     csv_values.writerows(dat_lines)
 
 ###############################################################################
 def write_filexls(dat_lines, name_ws='Report'):
-   #out_filename = file_output
+#CZ#out_filename = file_output
     out_filename = self_file_output.get()
 
     workbook = xlsxwriter.Workbook(out_filename)

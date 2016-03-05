@@ -2,9 +2,8 @@
 __author__ = 'pes0zap'
 
 PROJECT     = 'QueryReporting'
-DESCRIPTION = 'Query Reporting management and aoutput a CSV/XLS file'
+DESCRIPTION = 'Query Reporting management and output CSV/XLS file'
 VERSION     = (0, 0, 1, 'beta', 1)
-VERSION     = (0, 0, 2, 'beta', 1)
 
 ###########################################################
 def get_project():

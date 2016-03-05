@@ -13,6 +13,7 @@ CHAR_aLF_PARAM = '\n' # ASCII Linefeed (LF)
 
 CHAR_NONE_INT = 0
 CHAR_NONE_STR = '-'
+CHAR_LIST_SQL = '?'
 
 DEF_SQLQUERY = ''
 TYPE_DB_LIST = ['psql', 'mysql', 'mssql', 'sqlite', 'oracle', 'FreeTDS']

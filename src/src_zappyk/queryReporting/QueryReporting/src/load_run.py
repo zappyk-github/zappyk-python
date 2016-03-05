@@ -87,6 +87,7 @@ file_output        = args.file_output
 type_output        = args.type_output
 sql_section        = nQuery + run_query
 sql_sessions       = cSects
+sql_sessions       = cQuery
 sql_title          = None
 sql_query          = None
 sql_param          = None
@@ -111,10 +112,24 @@ except:
 #CZ#sql_section    = None
     pass
 
+if run_query == CHAR_LIST_SQL:
+    for name in sql_sessions:
+        path = name.replace(nQuery, '')
+        logs.info('_%s_' % ('_' * len(path)))
+        logs.info('|%s|' % path)
+        logs.info('\ttitle: %s' % title[name])
+        logs.info('\tquery: %s' % query[name])
+    logs.error('Done')
+
 sql_section = None if sql_query is None else sql_section
 
+if sql_section is None:
+    logs.error('Query [%s] not found!' % run_query)
+else:
+    logs.info('title: %s' % sql_title)
+#CZ#logs.info('query: %s' % sql_query)
+
 ####################
-print(sql_title)
 file_input         = _pathJoin([_pathCurrent(), sql_title])
 type_input         = run_query
 ####################
@@ -145,7 +160,7 @@ root           = Tk()
 root_path_file = StringVar()
 root_choose_in = StringVar()
 root_chooseext = StringVar()
-root_combo_out = [x for x in sql_sessions]
+root_combo_out = [(title[x], x) for x in sql_sessions]
 root_filetypes = (('Text files', '*.txt')
                  ,('All files' , '*.*'  ))
 
@@ -256,8 +271,8 @@ def _root_destroy():
 ###############################################################################
 def main_gui():
 #CZ#from QueryReporting.src.version     import the_version
-#CZ#root.title('Manipulation Text Report (ver. %s)' % the_version())
-    root.title('Manipulation Text Report (ver. %s)' % '0.0.2b1')
+#CZ#root.title('Query Reporting management and output CSV/XLS file (ver. %s)' % the_version())
+    root.title('Query Reporting management and output CSV/XLS file (ver. %s)' % '0.0.1b1')
     root.resizable(0,0)
     root.bind('<Return>', _root_load_file)
 
@@ -280,9 +295,9 @@ def main_gui():
                                          , background=[('pressed', '!disabled', 'black'), ('active', 'white')]
     )
 
-    root_path_file_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file)
-    root_path_file_entry.focus()
-    root_path_file.trace('w', _root_translate_entry_on_change) # rwua
+#!!#root_path_file_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file)
+#!!#root_path_file_entry.focus()
+#!!#root_path_file.trace('w', _root_translate_entry_on_change) # rwua
 
     root_choose_in_entry = ttk.Combobox(mainframe, width=len_with_EC, textvariable=root_choose_in, state='readonly')
     root_choose_in_entry['values'] = _root_combo_set(root_combo_out)
@@ -292,17 +307,17 @@ def main_gui():
     root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_xls.upper(), value=TYPE_OUT_xls, variable=root_chooseext)
     root_chooseext.set(TYPE_OUT_xls)
 
-    root_fsbrowser_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file)
+#!!#root_fsbrowser_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file)
     root_translate_entry = ttk.Button(mainframe, text='Translate', width=len_with_B2, command=_root_translate, state=DISABLED, style='root_translate_entry.TButton')
     self_translate_entry.set(root_translate_entry)
 
     root_cancel_entry = ttk.Button(mainframe, text='CANCEL', width=len_with_B1, command=_root_destroy , style='root_cancel_entry.TButton')
 
     mainframe                                              .grid(column=0, row=0, sticky=(N, W, E, S))
-    ttk.Label (mainframe, text="Choose text file through:").grid(column=1, row=1, sticky=W)
-    root_fsbrowser_entry                                   .grid(column=1, row=2, sticky=W)
-    ttk.Label (mainframe, text="or enter")                 .grid(column=2, row=2, sticky=W)
-    root_path_file_entry                                   .grid(column=3, row=2, sticky=(W, E))
+#!!#ttk.Label (mainframe, text="Choose text file through:").grid(column=1, row=1, sticky=W)
+#!!#root_fsbrowser_entry                                   .grid(column=1, row=2, sticky=W)
+#!!#ttk.Label (mainframe, text="or enter")                 .grid(column=2, row=2, sticky=W)
+#!!#root_path_file_entry                                   .grid(column=3, row=2, sticky=(W, E))
     root_choose_in_entry                                   .grid(column=3, row=3, sticky=(W, E))
     ttk.Label (mainframe, text="Choose type report text:") .grid(column=1, row=3, sticky=W)
     root_choosecsv_entry                                   .grid(column=3, row=4, sticky=(W, E))

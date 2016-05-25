@@ -21,9 +21,9 @@ Return disk usage statistics about the given path as a (total, used, free)
 namedtuple. Values are expressed in bytes or human unit measure.
 
 Replace variables:
-  *  %path_base% with base path
-  *  %host_type% with type host
-  *  %host_name% with name host
+  *  $path_base$ with base path
+  *  $host_type$ with type host
+  *  $host_name$ with name host
 '''
 
 _epilog = "Version: %s" % _version
@@ -242,8 +242,8 @@ if __name__ == '__main__':
 
         _sendmail(_sendmail_prepare(args, message_print, message_alert))
     else:
-        _message_allok = _message_allok  % limit_h_free
-        print(_message_allok)
+        message_allok = _message_allok  % limit_h_free
+        print(message_allok)
         exit = 0
 
     sys.exit(exit)

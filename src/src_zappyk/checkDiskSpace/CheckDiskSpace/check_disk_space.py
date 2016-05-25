@@ -45,12 +45,12 @@ _message_alert = 'Attention, free space below limit! [= %s ] :-('
 _message_allok = 'All right, free space over limit [= %s ] :-)'
 
 ###############################################################################
-def _sendmail_prepare(args, message_print, message_alert):
+def _sendmail_prepare(args, message_email):
 
-    message_email = [message_print, message_alert]
     if args.mail_message is not None:
         message_email.insert(0, _mail_message_sep)
         message_email.insert(0, args.mail_message)
+
     args.mail_message = "\n".join(message_email)
 
     args.mail_subject = _replaces(args.mail_subject, _path_base=path_base)
@@ -240,7 +240,7 @@ if __name__ == '__main__':
         print(message_alert)
         exit = 1
 
-        _sendmail(_sendmail_prepare(args, message_print, message_alert))
+        _sendmail(_sendmail_prepare(args, [message_print, message_alert]))
     else:
         message_allok = _message_allok  % limit_h_free
         print(message_allok)

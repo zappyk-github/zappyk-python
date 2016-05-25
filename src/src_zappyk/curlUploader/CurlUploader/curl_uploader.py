@@ -36,6 +36,7 @@ _http_contents_decode = 'utf-8'
 _http_tag_flowName    = 'flowName'
 _http_tag_flowCPWD    = 'flowCPWD'
 _http_tag_fileUpload  = 'fileUpload'
+_save_tag_fileUpload  = '%Y%m%d_%H-%M.%S_'
 
 _mail_message_sep = '''
 _______________________________________________________________________________
@@ -55,18 +56,20 @@ _______________________________________________________________________________
 _______________________________________________________________________________
 """
 
-_message_alert = 'Attention, WExeMFT on errors :-('
-_message_allok = 'All right, WExeMFT all is ok :-)'
+_message_error = 'Upload file "%s" failed error! :-('
+_message_alert = 'Upload file "%s" is not found! :-|'
+_message_butok = '%s\n\nBut something is failed! :-|\n\n%s'
+_message_allok = 'Upload file "%s" successfully! :-)'
 
 logs = _log()
 
 ###############################################################################
-def _sendmail_prepare(args, message_print, message_alert):
+def _sendmail_prepare(args, message_email):
 
-    message_email = [message_print, message_alert]
     if args.mail_message is not None:
         message_email.insert(0, _mail_message_sep)
         message_email.insert(0, args.mail_message)
+
     args.mail_message = "\n".join(message_email)
 
     args.mail_subject = _replaces(args.mail_subject, _flow_user=url_username, _path_save=path_save, _path_file=path_file)
@@ -180,7 +183,7 @@ def _save_file(path_file, path_save, name_zip_):
     try:
         _makeDir(path_save)
 
-        save_date = _dateNowFormat('%Y%m%d_%H-%M.%S_')
+        save_date = _dateNowFormat(_save_tag_fileUpload)
         name_save = '%s%s' % (save_date, _basename(path_file))
         file_save = _pathJoin([path_save, name_save])
         name_zip_ = '%s.zip' % name_zip_
@@ -272,29 +275,35 @@ if __name__ == '__main__':
 
             data_file.close()
 
-            if not exitcode and path_save is not None:
-                _save_file(path_file, path_save, url_username)
+            if not exitcode:
+                messages = _message_allok % path_file
+
+                if path_save is not None:
+                    _save_file(path_file, path_save, url_username)
+
+                logs.info(messages)
 
         except Exception as e:
             exitcode = True
-            messages = str(e)
+            if messages is None:
+                messages = _message_error % path_file
+            else:
+                messages = _message_butok % (messages, str(e))
+            logs.warning(messages)
+
     else:
         exitcode = False
-        messages = 'Upload file "%s" not found!' % path_file
+        messages = _message_alert % path_file
         logs.warning(messages)
 
     if exitcode:
-        message_alert = _message_alert
-        logs.warning(message_alert)
+        message_email = _mail_message % (url_username, path_file, path_save, messages)
+        logs.warning(message_email)
+
+        _sendmail(_sendmail_prepare(args, [message_email]))
+
         exit = 1
-
-        message_print = _mail_message % (url_username, path_file, path_save, messages)
-        logs.warning(message_print)
-
-        _sendmail(_sendmail_prepare(args, message_print, message_alert))
     else:
-        message_allok = _message_allok
-        logs.info(message_allok)
         exit = 0
 
     sys.exit(exit)

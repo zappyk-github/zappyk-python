@@ -6,7 +6,7 @@ import os, sys
 
 from lib_zappyk import _setup
 
-from CurlUploader.check_disk_space import _project, _description, _version
+from CurlUploader.curl_uploader import _project, _description, _version
 
 #CZ#project = 'CurlUploader'
 
@@ -23,7 +23,7 @@ url          = _setup.URL
 keywords     = _setup._keywords([author])
 
 path_execute = [name]
-name_execute = 'check_disk_space.py'
+name_execute = 'curl_uploader.py'
 
 path_img_ico = ['images']
 name_img_ico = 'gear.ico'

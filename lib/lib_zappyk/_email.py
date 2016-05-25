@@ -28,6 +28,7 @@ mail_subject = "<oggetto>"
 mail_message = "<messaggio>"
 
 mail_html_body_send   = True
+mail_html_body_escape = True
 mail_html_font_size   = '2' # (1|2|3|0=None)
 mail_html_body_face   = "arial,helvetica,sans-serif"
 mail_html_body_style  = "font-family: courier new,monospace;"
@@ -70,6 +71,7 @@ class _email(object):
         self.mail_message = mail_message
 
         self.mail_html_body_send   = mail_html_body_send
+        self.mail_html_body_escape = mail_html_body_escape
         self.mail_html_font_size   = mail_html_font_size
         self.mail_html_body_face   = mail_html_body_face
         self.mail_html_body_style  = mail_html_body_style
@@ -96,11 +98,14 @@ class _email(object):
 
         # Create the body of the message (a plain-text and an HTML version).
         _text = self.mail_message
+        _hscp = _text
+        if self.mail_html_body_escape:
+            _hscp = html.escape(_text)
+        #CZ#_hscp = html.escape(_text.replace('\r', '').replace('\n', '<br>\n'))
         _html = self.mail_html_body_layout % (self.mail_html_body_face,
                                               self.mail_html_body_style,
                                               self.mail_html_font_size,
-                                              html.escape(_text))
-                                             #html.escape(_text.replace('\r', '').replace('\n', '<br>\n')))
+                                              _hscp)
 
         # Record the MIME types of both parts - text/plain and text/html.
         _text_content = MIMEText(_text, 'plain')
@@ -228,6 +233,12 @@ class _email(object):
     #--------------------------------------------------------------------------
     def _getMailHtmlBodySend(self):
         return(self.mail_html_body_send)
+    ###########################################################################
+    def _setMailHtmlBodyEscape(self, mail_html_body_escape):
+        self.mail_html_body_escape = mail_html_body_escape
+    #--------------------------------------------------------------------------
+    def _getMailHtmlBodyEscape(self):
+        return(self.mail_html_body_escape)
     ###########################################################################
     def _setMailHtmlFontSize(self, mail_html_font_size):
         self.mail_html_font_size = mail_html_font_size

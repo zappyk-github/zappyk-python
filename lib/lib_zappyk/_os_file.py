@@ -43,6 +43,12 @@ def _fileListDir(path_name):
 def _fileExist(file_name):
     return(path.isfile(file_name))
 ###############################################################################
+def _fileMove(file_name_from, file_name_to):
+    return(os.rename(file_name_from, file_name_to))
+###############################################################################
+def _fileRemove(file_name):
+    return(os.remove(file_name))
+###############################################################################
 def _pathJoin(list_path_file_name):
     return(path.sep.join(list_path_file_name))
 ###############################################################################
@@ -54,6 +60,11 @@ def _pathCurrent():
 ###############################################################################
 def _pathAbs(path_name):
     return(path.abspath(path_name))
+###############################################################################
+def _makeDir(path_name):
+    if not os.path.exists(path_name):
+        return(os.makedirs(path_name))
+    return(True)
 ###############################################################################
 def _pathSep():
     return(path.sep)

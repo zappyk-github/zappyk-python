@@ -5,9 +5,12 @@ __author__ = 'pes0zap'
 import os, sys, html
 import argparse #, configparser
 import requests, hashlib
+import zipfile
 
 from lib_zappyk._os      import _os_host_type, _os_host_name
-from lib_zappyk._os_file import _fileExist
+from lib_zappyk._os_file import _basename, _makeDir, _pathJoin, _fileExist, _fileMove, _fileRemove
+from lib_zappyk._log     import _log
+from lib_zappyk._date    import _dateNowFormat
 from lib_zappyk._email   import _email
 from lib_zappyk._string  import _findall
 
@@ -40,12 +43,12 @@ _______________________________________________________________________________
 
 _mail_host    = 'smtp.payroll.it'
 _mail_from    = 'it@payroll.it'
-_mail_subject = 'Alert WExeMFT flow $flow_user$ on $host_name$ ($host_type$) uploader file'
+_mail_subject = 'WExeMFT: Alert, flow $flow_user$ uploader file on $host_name$ ($host_type$)'
 _mail_message = """
 Flow User = [<b>%s</b>]
 Path File = [<b>%s</b>]
 Path Save = [<b>%s</b>]
-WExeMFT on $host_name$ generate messagge:
+<i>WExeMFT on $host_name$ generate messagge:</i>
 _______________________________________________________________________________
 
 %s
@@ -54,6 +57,8 @@ _______________________________________________________________________________
 
 _message_alert = 'Attention, WExeMFT on errors :-('
 _message_allok = 'All right, WExeMFT all is ok :-)'
+
+logs = _log()
 
 ###############################################################################
 def _sendmail_prepare(args, message_print, message_alert):
@@ -117,26 +122,26 @@ def _sendmail(args):
             send_email._setMailFrom        (email__from__)
 
         if args.verbose:
-        #CZ#print('___________________')
-        #CZ#print('|                 |')
-        #CZ#print('| Send mail check |')
-        #CZ#print('|_________________|________________________________________________________________________________')
-            print('___________________________________________________________________________________________________')
-            print('|')
-            print('| ' + email__subj__)
-            print('|__________________________________________________________________________________________________')
-            print(email__body__)
-            print('___________________________________________________________________________________________________')
+        #CZ#logs.info('___________________')
+        #CZ#logs.info('|                 |')
+        #CZ#logs.info('| Send mail check |')
+        #CZ#logs.info('|_________________|________________________________________________________________________________')
+            logs.info('___________________________________________________________________________________________________')
+            logs.info('|')
+            logs.info('| ' + email__subj__)
+            logs.info('|__________________________________________________________________________________________________')
+            logs.info(email__body__)
+            logs.info('___________________________________________________________________________________________________')
 
         try:
         #CZ#send_email._verbose(args.verbose)
         #CZ#send_email._debug(args.debug)
             send_email._send()
         except:
-            print("Send mail detect & check, but an error occurs!")
+            logs.warning("Send mail detect & check, but an error occurs!")
             raise(Exception(sys.exc_info()))
     else:
-        print("Send mail detect, but not check!")
+        logs.warning("Send mail detect, but not check!")
 
 ###############################################################################
 def _getmount(path_save):
@@ -163,12 +168,38 @@ def _replaces(string, _flow_user='', _path_save='', _path_file=''):
 
 ###############################################################################
 def _checkExitCode(message):
-    exitcode = 1
+    exitcode = True
 
     if _findall(_http_detect_exitcode, message):
-        exitcode = 0
+        exitcode = False
 
     return(exitcode)
+
+###############################################################################
+def _save_file(path_file, path_save, name_zip_):
+    try:
+        _makeDir(path_save)
+
+        save_date = _dateNowFormat('%Y%m%d_%H-%M.%S_')
+        name_save = '%s%s' % (save_date, _basename(path_file))
+        file_save = _pathJoin([path_save, name_save])
+        name_zip_ = '%s.zip' % name_zip_
+        file_zip_ = _pathJoin([path_save, name_zip_])
+
+        _fileMove(path_file, file_save)
+    except:
+        pass
+
+    with zipfile.ZipFile(file_zip_, 'a') as zip:
+
+        try:
+            zip.write(file_save, _basename(file_save))
+        except:
+            pass
+        finally:
+            zip.close()
+
+        _fileRemove(file_save)
 
 ###############################################################################
 def _getargs():
@@ -215,9 +246,9 @@ if __name__ == '__main__':
     url_password = args.url_password
     url_pswd_md5 = hashlib.md5(url_password.encode()).hexdigest()
 
-    if path_save is None:
-        path_save = os.getcwd()
-    path_save = _getmount(path_save)
+#CZ#if path_save is None:
+#CZ#    path_save = os.getcwd()
+#CZ#path_save = _getmount(path_save)
 
     exitcode = None
     messages = None
@@ -241,25 +272,29 @@ if __name__ == '__main__':
 
             data_file.close()
 
+            if not exitcode and path_save is not None:
+                _save_file(path_file, path_save, url_username)
+
         except Exception as e:
-            exitcode = 1
+            exitcode = True
             messages = str(e)
     else:
-        exitcode = 1
-        messages = 'File "%s" not found!' % path_file
+        exitcode = False
+        messages = 'Upload file "%s" not found!' % path_file
+        logs.warning(messages)
 
     if exitcode:
         message_alert = _message_alert
-        print(message_alert)
+        logs.warning(message_alert)
         exit = 1
 
         message_print = _mail_message % (url_username, path_file, path_save, messages)
-        print(message_print)
+        logs.warning(message_print)
 
         _sendmail(_sendmail_prepare(args, message_print, message_alert))
     else:
         message_allok = _message_allok
-        print(message_allok)
+        logs.info(message_allok)
         exit = 0
 
     sys.exit(exit)

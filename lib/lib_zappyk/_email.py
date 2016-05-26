@@ -15,7 +15,7 @@ from email.utils            import COMMASPACE, formatdate
 mail_Verbose = True
 mail_DebugOn = False
 
-mail__smtp__ = 'Xsmtp.gmail.com:587'
+mail__smtp__ = 'smtp.gmail.com:587'
 mailStartTLS = True
 mailAuthUser = 'sysop@payroll.it'
 mailAuthPswd = 's3rv1c3s'

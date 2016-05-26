@@ -7,12 +7,14 @@ import argparse #, configparser
 
 from lib_zappyk._os      import _os_host_type, _os_host_name
 from lib_zappyk._os_disk import _disk_usage
+from lib_zappyk._log     import _log
 from lib_zappyk._email   import _email
 from lib_zappyk._manip   import _bytes_human_manip
 
 _version = '0.1'
 _version = '0.2'
 _version = '0.2-1'
+_version = '0.2-2'
 
 _project = 'CheckDiskSpace'
 
@@ -43,6 +45,8 @@ Check disk space on path base: %s
 
 _message_alert = 'Attention, free space below limit! [= %s ] :-('
 _message_allok = 'All right, free space over limit [= %s ] :-)'
+
+logs = _log()
 
 ###############################################################################
 def _sendmail_prepare(args, message_email):
@@ -104,26 +108,28 @@ def _sendmail(args):
             send_email._setMailFrom        (email__from__)
 
         if args.verbose:
-        #CZ#print('___________________')
-        #CZ#print('|                 |')
-        #CZ#print('| Send mail check |')
-        #CZ#print('|_________________|________________________________________________________________________________')
-            print('___________________________________________________________________________________________________')
-            print('|')
-            print('| ' + email__subj__)
-            print('|__________________________________________________________________________________________________')
-            print(email__body__)
-            print('___________________________________________________________________________________________________')
+        #CZ#logs.info('___________________')
+        #CZ#logs.info('|                 |')
+        #CZ#logs.info('| Send mail check |')
+        #CZ#logs.info('|_________________|________________________________________________________________________________')
+            logs.info('___________________________________________________________________________________________________')
+            logs.info('|')
+            logs.info('| ' + email__subj__)
+            logs.info('|__________________________________________________________________________________________________')
+            logs.info(email__body__)
+            logs.info('___________________________________________________________________________________________________')
 
         try:
         #CZ#send_email._verbose(args.verbose)
         #CZ#send_email._debug(args.debug)
             send_email._send()
-        except:
-            print("Send mail detect & check, but an error occurs!")
-            raise(Exception(sys.exc_info()))
+        except Exception as e:
+            logs.warning("Send mail detect & check, but an error occurs!")
+        #CZ#raise(Exception(sys.exc_info()))
+            logs.warning(str(e))
+            pass
     else:
-        print("Send mail detect, but not check!")
+        logs.warning("Send mail detect, but not check!")
 
 ###############################################################################
 #def _bytes2human_1(value):
@@ -228,7 +234,7 @@ if __name__ == '__main__':
         space_h_free  = _bytes2human(space_h_free)
 
     message_print = _mail_message % (path_base, space_h_total, space_h_used, space_h_free)
-    print(message_print)
+    logs.info(message_print)
 
     limit_b_free = _human2bytes(args.limit_free)
     limit_h_free = limit_b_free
@@ -237,13 +243,13 @@ if __name__ == '__main__':
 
     if space_b_free <= limit_b_free:
         message_alert = _message_alert  % limit_h_free
-        print(message_alert)
+        logs.warning(message_alert)
         exit = 1
 
         _sendmail(_sendmail_prepare(args, [message_print, message_alert]))
     else:
         message_allok = _message_allok  % limit_h_free
-        print(message_allok)
+        logs.info(message_allok)
         exit = 0
 
     sys.exit(exit)

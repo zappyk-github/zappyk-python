@@ -1,8 +1,9 @@
 @echo off
 
-set VERSION=0.1
-set VERSION=0.2
-set VERSION=0.2-1
+rem VERSION=0.1
+rem VERSION=0.2
+rem VERSION=0.2-1
+set VERSION=0.2-2
 
 set PROGRAM=.\CheckDiskSpace-%VERSION%\CheckDiskSpace.exe
 set PPARAMS=

@@ -140,9 +140,12 @@ def _sendmail(args):
         #CZ#send_email._verbose(args.verbose)
         #CZ#send_email._debug(args.debug)
             send_email._send()
-        except:
+        except Exception as e:
             logs.warning("Send mail detect & check, but an error occurs!")
-            raise(Exception(sys.exc_info()))
+        #CZ#raise(Exception(sys.exc_info()))
+            logs.warning(str(e))
+            pass
+
     else:
         logs.warning("Send mail detect, but not check!")
 

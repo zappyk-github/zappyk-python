@@ -2,9 +2,10 @@
 
 set PATH_BUILD=build
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-set VERS_PROGRAM=0.1
-set VERS_PROGRAM=0.2
-set VERS_PROGRAM=0.2-1
+rem VERS_PROGRAM=0.1
+rem VERS_PROGRAM=0.2
+rem VERS_PROGRAM=0.2-1
+set VERS_PROGRAM=0.2-2
 set NAME_EXE_BAT=CheckDiskSpace-launch.bat
 set PATH_PROGRAM=CheckDiskSpace-%VERS_PROGRAM%
 set NAME_PAK_ZIP=%PATH_PROGRAM%-win32

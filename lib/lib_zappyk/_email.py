@@ -15,7 +15,7 @@ from email.utils            import COMMASPACE, formatdate
 mail_Verbose = True
 mail_DebugOn = False
 
-mail__smtp__ = 'smtp.gmail.com:587'
+mail__smtp__ = 'Xsmtp.gmail.com:587'
 mailStartTLS = True
 mailAuthUser = 'sysop@payroll.it'
 mailAuthPswd = 's3rv1c3s'
@@ -140,7 +140,7 @@ class _email(object):
                 print("* Send mail on %s:" % self.mail__smtp__)
             else:
                 if self.mail_Verbose:
-                    print("Send mail on %s " % self.mail__smtp__, end='', flush=True)
+                    print("Send mail on %s ..." % self.mail__smtp__, end='', flush=True)
             #CZ#sys.stdout.flush()
             server = SMTP(self.mail__smtp__)
 

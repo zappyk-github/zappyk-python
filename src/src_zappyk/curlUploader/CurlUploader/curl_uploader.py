@@ -255,6 +255,10 @@ if __name__ == '__main__':
 #CZ#if path_save is None:
 #CZ#    path_save = os.getcwd()
 #CZ#path_save = _getmount(path_save)
+#___________________________________________________________________________________________________________________________________
+#                                                                                                                                   #
+# curl --digest -u url_username:url_password -F flowName=url_username -F flowCPWD=url_pswd_md5 -F fileUpload=@path_file url_address #
+#___________________________________________________________________________________________________________________________________#
 
     exitcode = None
     messages = None

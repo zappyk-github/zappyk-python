@@ -13,8 +13,8 @@ from lib_zappyk._manip   import _bytes_human_manip
 
 _version = '0.1'
 _version = '0.2'
-_version = '0.2-1'
-_version = '0.2-2'
+_version = '0.2.1'
+_version = '0.2.2'
 
 _project = 'CheckDiskSpace'
 

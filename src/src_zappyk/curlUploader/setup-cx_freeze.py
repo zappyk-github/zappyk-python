@@ -1,6 +1,6 @@
 import os
 ###############################################################################
-project = 'TurnReporTxt2Csv'
+project = 'CurlDisk'
 #
 name         = __import__(project).get_project()
 description  = __import__(project).get_description()
@@ -14,17 +14,17 @@ from cx_Freeze import setup, Executable
 buildOptions = dict(packages = [], excludes = [])
 
 base = 'Console'
-base = 'Win32GUI'
+#CZ#base = 'Win32GUI'
 
 if os.name == 'nt':
     name = '%s.exe' % name
 
 executables = [
-    Executable(os.path.join(name, 'main.py'), base=base, targetName=name)
+    Executable(os.path.join(name, 'curl_uploader.py'), base=base, targetName=name)
 ]
 
 setup(name=name,
       version=version,
-      description='Turn a report in TXT to a CSV/XLS file',
+      description='Simulate curl program for upload file',
       options=dict(build_exe = buildOptions),
       executables=executables)

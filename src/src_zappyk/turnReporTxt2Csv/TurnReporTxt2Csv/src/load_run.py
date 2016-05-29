@@ -164,9 +164,10 @@ def _root_destroy():
 
 ###############################################################################
 def main_gui():
-    #from TurnReporTxt2Csv.src.version     import the_version
-    #root.title('Manipulation Text Report (ver. %s)' % the_version())
-    root.title('Manipulation Text Report (ver. %s)' % '0.0.2b1')
+#CZ#from TurnReporTxt2Csv.src.version     import the_version
+#CZ#root.title('Manipulation Text Report (ver. %s)' % the_version())
+    from TurnReporTxt2Csv import VERSION as version
+    root.title('Manipulation Text Report (ver. %s)' % version)
     root.resizable(0,0)
     root.bind('<Return>', _root_load_file)
 
@@ -226,8 +227,12 @@ def main_gui():
 ###############################################################################
 def main():
     if run_gui:
-        while True:
-            main_gui()
+        try:
+            while True:
+                main_gui()
+        except Exception as e:
+            print(str(e))
+            sys.exit(1)
     else:
         manipulate()
 

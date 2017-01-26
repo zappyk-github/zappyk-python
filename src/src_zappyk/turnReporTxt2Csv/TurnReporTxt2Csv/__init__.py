@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__author__ = 'pes0zap'
+__author__ = 'zappyk'
 
 PROJECT     = 'TurnReporTxt2Csv'
 DESCRIPTION = 'Turn a report in TXT to a CSV/XLS file'

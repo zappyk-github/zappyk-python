@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__author__ = 'pes0zap'
+__author__ = 'zappyk'
 
 PROJECT     = 'QueryReporting'
 DESCRIPTION = 'Query Reporting management and output CSV/XLS file'

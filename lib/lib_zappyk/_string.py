@@ -38,7 +38,8 @@ def _remove(string, remove):
     return(string.rstrip(remove))
 ###########################################################################
 def _replace(string, search, replace):
-    return(re.replace(search, replace, string))
+#CZ#return(string.replace(search, replace))
+    return(re.sub(search, replace, string))
 ###########################################################################
 def _joinSpace(string_list):
     return(one_space.join(string_list))

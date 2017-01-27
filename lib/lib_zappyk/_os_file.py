@@ -4,7 +4,7 @@ __author__ = 'zappyk'
 import os
 
 from os     import path, walk, listdir
-from shutil import copy2
+from shutil import copy2, rmtree
 
 ###############################################################################
 def _copy2(file_from, file_to):
@@ -48,6 +48,13 @@ def _fileMove(file_name_from, file_name_to):
 ###############################################################################
 def _fileRemove(file_name):
     return(os.remove(file_name))
+###############################################################################
+def _pathRemove(path_name):
+#CZ#return(rmtree(path_name, ignore_errors=True))
+    return(rmtree(path_name))
+###############################################################################
+def _pathExist(path_name):
+    return(path.isdir(path_name))
 ###############################################################################
 def _pathJoin(list_path_file_name):
     return(path.sep.join(list_path_file_name))

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-import sys, argparse #, configparser
+import sys, argparse, copy #, configparser
 import xlrd #, xlwt
 import openpyxl
 
@@ -101,16 +101,14 @@ if __name__ == '__main__':
         if workbook is None:
             raise ExceptionFileInputNotParsed('File is not .xls/.xlsx format!')
     except FileNotFoundError as e:
-        logs.error(str(e))
+        logs.warning(str(e))
     except ExceptionFileInputNotParsed as e:
-        logs.error(str(e))
+        logs.warning(str(e))
     finally:
         if workbook is not None:
             logs.info('Opened file successfully')
-        #CZ#sys.exit(0)
         else:
             logs.error('Something is wrong, file not opened!')
-            sys.exit(1)
 
     sheet_names = None
     if xlsx_ext:
@@ -145,6 +143,7 @@ if __name__ == '__main__':
         _copy2(file_input, file_output)
 
         workbook_output = None
+        workbook_outxls = None
         if xlsx_ext:
             workbook_output = openpyxl.load_workbook(file_output, data_only=True)
         else:
@@ -159,10 +158,14 @@ if __name__ == '__main__':
                 if xlsx_ext:
                     workbook_output.remove_sheet(workbook_output.get_sheet_by_name(sheet_name_))
                 else:
-                    print('...devel remove sheet XLS...')
+                    workbook_outxls = copy.copy(workbook_output)
+                    workbook_outxls._Workbook__worksheets = [ worksheet for worksheet in workbook_outxls._Workbook__worksheets if worksheet.name <> sheet_name_ ]
 
         logs.info('  File Out[%s]' % file_output)
-        workbook_output.save(file_output)
+        if xlsx_ext:
+            workbook_output.save(file_output)
+        else:
+            workbook_outxls.save(file_output)
 
     print('...devel create zip...')
 

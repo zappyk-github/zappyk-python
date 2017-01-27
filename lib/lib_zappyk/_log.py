@@ -21,14 +21,17 @@ class _log(object):
     ###########################################################################
     def info(self, string=None, end=None):
         print(string, end=end, file=sys.stdout)
+       #print(string) # for python2
 
     ###########################################################################
     def warning(self, string=None, end=None):
         print(string, end=end, file=sys.stderr)
+       #print(string) # for python2
 
     ###########################################################################
     def error(self, string=None, end=None, exit_code=1):
         print(string, end=end, file=sys.stderr)
+       #print(string) # for python2
         sys.exit(exit_code)
 
     ###########################################################################

@@ -3,9 +3,10 @@
 __author__ = 'zappyk'
 
 import sys, argparse #, configparser
-import xlrd, xlwt
+import xlrd #, xlwt
 import openpyxl
-import xlutils
+
+from xlutils import copy
 
 from lib_zappyk._os_file import _makeDir, _pathSep, _pathExist, _pathRemove, _basename, _copy2, _makeArchive
 from lib_zappyk._string  import _replace
@@ -23,6 +24,8 @@ according to the first N characters of the name of each sheet name.
 _epilog = "Version: %s" % _version
 
 _group_sheet = 6
+_archive_for = ['zip', 'tar', 'gztar', 'bztar', 'xztar']
+_archive_ext = _archive_for[0]
 
 logs = _log()
 
@@ -41,6 +44,7 @@ def _getargs():
     parser.add_argument('-V' , '--version'     , help='print version number'                 , action='version'   , version='%(prog)s '+_version)
     parser.add_argument('-us', '--unit_sheet'  , help='grouped sheet by first char'          , type=int           , default=_group_sheet)
     parser.add_argument('-fi', '--file_input'  , help='file spreadsheet (only .xls/.xlsx)'   , type=str           , required=True)
+    parser.add_argument('-ae', '--archive_ext' , help='select archive format'                , type=str           , default=_archive_ext, choices=_archive_for)
 #CZ#parser.add_argument('name'                 , help='Name')
 #CZ#parser.add_argument('surname'              , help='Surnamename')
 
@@ -141,11 +145,12 @@ if __name__ == '__main__':
 
     unit_sheet = args.unit_sheet
     file_input = args.file_input
+    archiveext = args.archive_ext
 
     name_input = _basename(file_input)
 
     try:
-        logs.info('Open file "%s" (splits first %s characters name sheets)' % (file_input, unit_sheet))
+        logs.info('Open file "%s" (splits first %s characters by sheets name)' % (file_input, unit_sheet))
         (workbook
         ,xlsx_ext) = open_file_input(file_input)
 
@@ -184,52 +189,60 @@ if __name__ == '__main__':
                logs.info('     Sheet[%s]' % sheet_name)
     # ------------------------------------------------------------------------------------------------------------------
 
-    for sheet_first in sheet_group:
-        logs.info('___________')
-        logs.info('Group     [%s]' % sheet_first)
+    try:
+        for sheet_first in sheet_group:
+            logs.info('___________')
+            logs.info('Group     [%s]' % sheet_first)
 
-        name_output = _replace(name_input, '.xls', (' # %s.xls' % sheet_first))
-        file_output = path_split + _pathSep() + name_output
+            name_output = _replace(name_input, '.xls', (' # %s.xls' % sheet_first))
+            file_output = path_split + _pathSep() + name_output
 
-        _copy2(file_input, file_output)
+            _copy2(file_input, file_output)
 
-        workbook_output = None
-        workbook_outxls = None
-        if xlsx_ext:
-            workbook_output = open_file_xlsx(file_output)
-        else:
-            workbook_output = open_file_xls_(file_output)
-            workbook_outxls = xlutils.copy.copy(workbook_output)
-
-        for sheet_name_ in sheet_names:
-            sheet_keep = sheet_puorg.get(sheet_name_, '')
-            if sheet_first == sheet_keep:
-                logs.info('  ++ Sheet[%s]' % sheet_name_)
+            workbook_output = None
+            workbook_outxls = None
+            if xlsx_ext:
+                workbook_output = open_file_xlsx(file_output)
             else:
-                logs.info('  -- Sheet[%s]' % sheet_name_)
-                if xlsx_ext:
-                    workbook_output.remove_sheet(workbook_output.get_sheet_by_name(sheet_name_))
-                else:
-                    #workbook_outxls = copy.copy(workbook_output)
-                    #workbook_outxls.unload_sheet(sheet_name_)
-                    workbook_outxls._Workbook__worksheets = [ worksheet for worksheet in workbook_outxls._Workbook__worksheets if worksheet.name != sheet_name_ ]
+                workbook_output = open_file_xls_(file_output)
+                workbook_outxls = copy.copy(workbook_output)
 
-        logs.info('  File Out[%s]' % file_output)
+            for sheet_name_ in sheet_names:
+                sheet_keep = sheet_puorg.get(sheet_name_, '')
+                if sheet_first == sheet_keep:
+                    logs.info('  ++ Sheet[%s]' % sheet_name_)
+                else:
+                    logs.info('  -- Sheet[%s]' % sheet_name_)
+                    if xlsx_ext:
+                        workbook_output.remove_sheet(workbook_output.get_sheet_by_name(sheet_name_))
+                    else:
+                        workbook_outxls._Workbook__worksheets = [ worksheet for worksheet in workbook_outxls._Workbook__worksheets if worksheet.name != sheet_name_ ]
+
+            logs.info('Write Out [%s]' % file_output)
+            if xlsx_ext:
+                workbook_output.active = 0
+                workbook_output.save(file_output)
+            else:
+                workbook_outxls.active = 0
+                workbook_outxls.save(file_output)
+    except Exception as e:
+        logs.info('Something is wrong when delete (-- Sheets[···]) or (Write Out [···]) file :-|')
         if xlsx_ext:
-            workbook_output.save(file_output)
+            logs.warning('[%s]' % workbook_output.get_sheet_names())
         else:
-            workbook_outxls.save(file_output)
+            logs.warning('[%s]' % [worksheet.name for worksheet in workbook_outxls._Workbook__worksheets])
+        logs.error(str(e))
 
     try:
         logs.info()
-        logs.info('Create zip archive %s' % file_press)
-        _makeArchive(file_press, 'zip', path_split)
-        logs.info('Create zip archive successfully')
+        logs.info('Create %s archive %s' % (archiveext, file_press + '.' + archiveext))
+        _makeArchive(file_press, archiveext, path_split)
+        logs.info('Create %s archive successfully' % archiveext)
 
         if not args.debug:
             _pathRemove(path_split)
     except Exception as e:
-        logs.info('Create zip archive failed  :-( ')
+        logs.info('Create %s archive failed  :-( ' % archiveext)
         logs.error(str(e))
 
     sys.exit(0)

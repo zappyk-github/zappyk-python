@@ -69,7 +69,7 @@ def _pathAbs(path_name):
     return(path.abspath(path_name))
 ###############################################################################
 def _makeArchive(file_name, file_type='zip', path_name=None):
-    make_archive(file_name, file_type, path_name)
+    return(make_archive(file_name, file_type, path_name))
 ###############################################################################
 def _makeDir(path_name):
     if not os.path.exists(path_name):

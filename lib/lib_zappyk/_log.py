@@ -20,18 +20,18 @@ class _log(object):
 
     ###########################################################################
     def info(self, string=None, end=None):
-        print(string, end=end, file=sys.stdout)
-       #print(string) # for python2
+        sys.stdout.write(('' if string is None else string) + (os.linesep if end is None else end)) # on python2
+    #CZ#print(string, end=end, file=sys.stdout)                                                     # on python3
 
     ###########################################################################
     def warning(self, string=None, end=None):
-        print(string, end=end, file=sys.stderr)
-       #print(string) # for python2
+        sys.stderr.write(('' if string is None else string) + (os.linesep if end is None else end)) # on python2
+    #CZ#print(string, end=end, file=sys.stderr)                                                     # on python3
 
     ###########################################################################
     def error(self, string=None, end=None, exit_code=1):
-        print(string, end=end, file=sys.stderr)
-       #print(string) # for python2
+        sys.stderr.write(('' if string is None else string) + (os.linesep if end is None else end)) # on python2
+    #CZ#print(string, end=end, file=sys.stderr)                                                     # on python3
         sys.exit(exit_code)
 
     ###########################################################################

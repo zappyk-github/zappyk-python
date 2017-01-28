@@ -5,6 +5,7 @@ __author__ = 'zappyk'
 import sys, argparse, copy #, configparser
 import xlrd #, xlwt
 import openpyxl
+import shutil
 
 from lib_zappyk._os_file import _makeDir, _pathSep, _pathExist, _pathRemove, _basename, _copy2
 from lib_zappyk._string  import _replace
@@ -55,60 +56,110 @@ class ExceptionFileInputNotParsed(Exception):
         return repr(self.value)
 
 ###############################################################################
+def open_file_input(file_input):
+    workbook = None
+    xlsx_ext = None
+
+    exception = None
+
+    if workbook is None:
+        try:
+            workbook = open_file_xlsx(file_input)
+            xlsx_ext = True
+        except Exception as e:
+            exception = e
+            pass
+        finally:
+            if args.debug:
+                logs.info('...try open .xlsx format... ', '')
+                if workbook is None:
+                    logs.info('no! :-(')
+                else:
+                    logs.info('yes :-)')
+
+    if workbook is None:
+        try:
+            workbook = open_file_xls_(file_input)
+            xlsx_ext = False
+        except Exception as e:
+            exception = e
+            pass
+        finally:
+            if args.debug:
+                logs.info('...try open .xls  format... ', '')
+                if workbook is None:
+                    logs.info('no! :-(')
+                else:
+                    logs.info('yes :-)')
+
+    if workbook is None:
+        if exception is not None:
+            if str(exception) == 'formatting_info=True not yet implemented':
+            #CZ#raise ExceptionFileInputNotParsed('File is not .xls/.xlsx format!')
+                raise Exception('File is not .xls/.xlsx format!')
+            else:
+                raise Exception(str(exception))
+        else:
+            raise Exception('Something is wrong, file not opened!')
+    else:
+        logs.info('Opened file successfully')
+
+    return(workbook, xlsx_ext)
+
+###############################################################################
+def open_file_xlsx(file_input):
+    workbook = openpyxl.load_workbook(file_input, data_only=True)
+    return(workbook)
+
+###############################################################################
+def open_file_xls_(file_input):
+#CZ#workbook = xlrd.open_workbook(file_input)
+    workbook = xlrd.open_workbook(file_input, formatting_info=True)
+    return(workbook)
+
+###############################################################################
+def make_name_input(name_input):
+    name_input = _replace(name_input, '.xls$' , '')
+    name_input = _replace(name_input, '.xlsx$', '')
+    return(name_input)
+
+###############################################################################
+def make_path_split(path_split):
+    if _pathExist(path_split):
+        _pathRemove(path_split)
+        if _pathExist(path_split):
+            logs.error('Cannot remove directory [%s]' % path_split)
+        else:
+            _makeDir(path_split)
+    else:
+        _makeDir(path_split)
+    return(path_split)
+
+###############################################################################
 if __name__ == '__main__':
     args = _getargs()
 
     unit_sheet = args.unit_sheet
     file_input = args.file_input
-    file_input = '../resources/test.xlsx'
+    unit_sheet = 3
+    file_input = './resources/excel-examples-1.xls'
+    #file_input = './resources/excel-wrong.xlsd'
+    #args.debug = True
+
     name_input = _basename(file_input)
 
-    path_split = file_input
-    path_split = _replace(path_split, '.xls$' , '.d')
-    path_split = _replace(path_split, '.xlsx$', '.d')
-
-    if _pathExist(path_split):
-        _pathRemove(path_split)
-        if _pathExist(path_split):
-            logs.error('Cannot remove directory [%s]' % path_split)
-            sys.exit(1)
-        else:
-            _makeDir(path_split)
-    else:
-        _makeDir(path_split)
-
-    xlsx_ext = None
-    workbook = None
-
-    logs.info('Open file "%s" (splits first %s characters)' % (file_input, unit_sheet))
     try:
-        if workbook is None:
-            try:
-                workbook = openpyxl.load_workbook(file_input, data_only=True)
-                xlsx_ext = True
-            except FileNotFoundError:
-                raise
-            except:
-                pass
-        if workbook is None:
-            try:
-                workbook = xlrd.open_workbook(file_input, formatting_info=True)
-                xlsx_ext = False
-            except FileNotFoundError:
-                raise
-            except:
-                pass
-        if workbook is None:
-            raise ExceptionFileInputNotParsed('File is not .xls/.xlsx format!')
-    except FileNotFoundError as e:
-        logs.warning(str(e))
-    except ExceptionFileInputNotParsed as e:
-        logs.warning(str(e))
-    finally:
-        if workbook is not None:
-            logs.info('Opened file successfully')
-        else:
-            logs.error('Something is wrong, file not opened!')
+        logs.info('Open file "%s" (splits first %s characters)' % (file_input, unit_sheet))
+        (workbook
+        ,xlsx_ext) = open_file_input(file_input)
+
+        path_input = make_name_input(file_input)
+        path_split = make_path_split(path_input + '.d')
+        file_press = path_input
+#CZ#except ExceptionFileInputNotParsed as e:
+#CZ#    logs.error(str(e))
+    except Exception as e:
+        logs.error(str(e))
 
     sheet_names = None
     if xlsx_ext:
@@ -126,13 +177,16 @@ if __name__ == '__main__':
         sheet_group[sheet_first] = sheet_tuple
         sheet_puorg[sheet_name_] = sheet_first
         logs.info('Sheets[%s] = %s' % (sheet_first, sheet_name_))
+
     #-------------------------------------------------------------------------------------------------------------------
-#CZ#for sheet_first in sheet_group:
-#CZ#    logs.info('__________')
-#CZ#    logs.info('Group     [%s]' % sheet_first)
-#CZ#    for sheet_name in sheet_group[sheet_first]:
-#CZ#        logs.info('     Sheet[%s]' % sheet_name)
-    # -------------------------------------------------------------------------------------------------------------------
+    if args.debug:
+        for sheet_first in sheet_group:
+            logs.info('__________')
+            logs.info('Group     [%s]' % sheet_first)
+            for sheet_name in sheet_group[sheet_first]:
+               logs.info('     Sheet[%s]' % sheet_name)
+    # ------------------------------------------------------------------------------------------------------------------
+
     for sheet_first in sheet_group:
         logs.info('__________')
         logs.info('Group     [%s]' % sheet_first)
@@ -145,9 +199,10 @@ if __name__ == '__main__':
         workbook_output = None
         workbook_outxls = None
         if xlsx_ext:
-            workbook_output = openpyxl.load_workbook(file_output, data_only=True)
+            workbook_output = open_file_xlsx(file_output)
         else:
-            workbook_output = xlrd.open_workbook(file_output, formatting_info=True)
+            workbook_output = open_file_xls_(file_output)
+            workbook_outxls = copy.copy(workbook_output)
 
         for sheet_name_ in sheet_names:
             sheet_keep = sheet_puorg.get(sheet_name_, '')
@@ -158,8 +213,9 @@ if __name__ == '__main__':
                 if xlsx_ext:
                     workbook_output.remove_sheet(workbook_output.get_sheet_by_name(sheet_name_))
                 else:
-                    workbook_outxls = copy.copy(workbook_output)
-                    workbook_outxls._Workbook__worksheets = [ worksheet for worksheet in workbook_outxls._Workbook__worksheets if worksheet.name <> sheet_name_ ]
+                    #workbook_outxls = copy.copy(workbook_output)
+                    print('...qui...')
+                    workbook_outxls._Workbook__worksheets = [ worksheet for worksheet in workbook_outxls._Workbook__worksheets if worksheet.name != sheet_name_ ]
 
         logs.info('  File Out[%s]' % file_output)
         if xlsx_ext:
@@ -167,6 +223,16 @@ if __name__ == '__main__':
         else:
             workbook_outxls.save(file_output)
 
-    print('...devel create zip...')
+    try:
+        logs.info()
+        logs.info('Create zip archive %s' % file_press)
+        shutil.make_archive(file_press, 'zip', path_split)
+        logs.info('Create zip archive successfully')
+
+        if not args.debug:
+            _pathRemove(path_split)
+    except Exception as e:
+        logs.info('Create zip archive failed  :-( ')
+        logs.error(str(e))
 
     sys.exit(0)

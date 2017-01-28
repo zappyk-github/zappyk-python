@@ -4,7 +4,7 @@ __author__ = 'zappyk'
 import os
 
 from os     import path, walk, listdir
-from shutil import copy2, rmtree
+from shutil import copy2, rmtree, make_archive
 
 ###############################################################################
 def _copy2(file_from, file_to):
@@ -67,6 +67,9 @@ def _pathCurrent():
 ###############################################################################
 def _pathAbs(path_name):
     return(path.abspath(path_name))
+###############################################################################
+def _makeArchive(file_name, file_type='zip', path_name=None):
+    make_archive(file_name, file_type, path_name)
 ###############################################################################
 def _makeDir(path_name):
     if not os.path.exists(path_name):

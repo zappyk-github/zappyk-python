@@ -1,13 +1,13 @@
-#!/usr/bin/env python-payroll
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-import sys, argparse, copy #, configparser
-import xlrd #, xlwt
+import sys, argparse #, configparser
+import xlrd, xlwt
 import openpyxl
-import shutil
+import xlutils
 
-from lib_zappyk._os_file import _makeDir, _pathSep, _pathExist, _pathRemove, _basename, _copy2
+from lib_zappyk._os_file import _makeDir, _pathSep, _pathExist, _pathRemove, _basename, _copy2, _makeArchive
 from lib_zappyk._string  import _replace
 from lib_zappyk._log     import _log
 
@@ -141,15 +141,11 @@ if __name__ == '__main__':
 
     unit_sheet = args.unit_sheet
     file_input = args.file_input
-    unit_sheet = 3
-    file_input = './resources/excel-examples-1.xls'
-    #file_input = './resources/excel-wrong.xlsd'
-    #args.debug = True
 
     name_input = _basename(file_input)
 
     try:
-        logs.info('Open file "%s" (splits first %s characters)' % (file_input, unit_sheet))
+        logs.info('Open file "%s" (splits first %s characters name sheets)' % (file_input, unit_sheet))
         (workbook
         ,xlsx_ext) = open_file_input(file_input)
 
@@ -176,19 +172,20 @@ if __name__ == '__main__':
         sheet_tuple.append(sheet_name_)
         sheet_group[sheet_first] = sheet_tuple
         sheet_puorg[sheet_name_] = sheet_first
-        logs.info('Sheets[%s] = %s' % (sheet_first, sheet_name_))
+        if args.debug:
+            logs.info('Sheets[%s] = %s' % (sheet_first, sheet_name_))
 
     #-------------------------------------------------------------------------------------------------------------------
     if args.debug:
         for sheet_first in sheet_group:
-            logs.info('__________')
+            logs.info('___________')
             logs.info('Group     [%s]' % sheet_first)
             for sheet_name in sheet_group[sheet_first]:
                logs.info('     Sheet[%s]' % sheet_name)
     # ------------------------------------------------------------------------------------------------------------------
 
     for sheet_first in sheet_group:
-        logs.info('__________')
+        logs.info('___________')
         logs.info('Group     [%s]' % sheet_first)
 
         name_output = _replace(name_input, '.xls', (' # %s.xls' % sheet_first))
@@ -202,7 +199,7 @@ if __name__ == '__main__':
             workbook_output = open_file_xlsx(file_output)
         else:
             workbook_output = open_file_xls_(file_output)
-            workbook_outxls = copy.copy(workbook_output)
+            workbook_outxls = xlutils.copy.copy(workbook_output)
 
         for sheet_name_ in sheet_names:
             sheet_keep = sheet_puorg.get(sheet_name_, '')
@@ -214,7 +211,7 @@ if __name__ == '__main__':
                     workbook_output.remove_sheet(workbook_output.get_sheet_by_name(sheet_name_))
                 else:
                     #workbook_outxls = copy.copy(workbook_output)
-                    print('...qui...')
+                    #workbook_outxls.unload_sheet(sheet_name_)
                     workbook_outxls._Workbook__worksheets = [ worksheet for worksheet in workbook_outxls._Workbook__worksheets if worksheet.name != sheet_name_ ]
 
         logs.info('  File Out[%s]' % file_output)
@@ -226,7 +223,7 @@ if __name__ == '__main__':
     try:
         logs.info()
         logs.info('Create zip archive %s' % file_press)
-        shutil.make_archive(file_press, 'zip', path_split)
+        _makeArchive(file_press, 'zip', path_split)
         logs.info('Create zip archive successfully')
 
         if not args.debug:

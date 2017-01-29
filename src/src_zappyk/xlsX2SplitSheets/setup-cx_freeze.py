@@ -25,6 +25,6 @@ executables = [
 
 setup(name=name,
       version=version,
-      description='Return disk usage statistics about the given path',
+      description='Splits a Spreadsheet (.xls/.xlsx) in so many files grouped',
       options=dict(build_exe = buildOptions),
       executables=executables)

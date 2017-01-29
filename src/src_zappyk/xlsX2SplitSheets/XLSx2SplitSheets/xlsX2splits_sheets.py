@@ -17,15 +17,15 @@ _version = '0.1'
 _project = 'XLSx2SplitSheets'
 
 _description = '''
-It splits a Spreadsheet ( .xls / .xlsx ) in so many files grouped
+Splits a Spreadsheet ( .xls / .xlsx ) in so many files grouped
 according to the first N characters of the name of each sheet name.
 '''
 
 _epilog = "Version: %s" % _version
 
 _group_sheet = 6
-_archive_for = ['zip', 'tar', 'gztar', 'bztar', 'xztar']
-_archive_ext = _archive_for[0]
+_archive_ext = ['zip', 'tar', 'gztar', 'bztar', 'xztar']
+_archive_set = _archive_ext[0]
 
 logs = _log()
 
@@ -44,7 +44,7 @@ def _getargs():
     parser.add_argument('-V' , '--version'     , help='print version number'                 , action='version'   , version='%(prog)s '+_version)
     parser.add_argument('-us', '--unit_sheet'  , help='grouped sheet by first char'          , type=int           , default=_group_sheet)
     parser.add_argument('-fi', '--file_input'  , help='file spreadsheet (only .xls/.xlsx)'   , type=str           , required=True)
-    parser.add_argument('-ae', '--archive_ext' , help='select archive format'                , type=str           , default=_archive_ext, choices=_archive_for)
+    parser.add_argument('-as', '--archive_set' , help='select archive format'                , type=str           , default=_archive_set, choices=_archive_ext)
 #CZ#parser.add_argument('name'                 , help='Name')
 #CZ#parser.add_argument('surname'              , help='Surnamename')
 
@@ -145,12 +145,13 @@ if __name__ == '__main__':
 
     unit_sheet = args.unit_sheet
     file_input = args.file_input
-    archiveext = args.archive_ext
+    archiveset = args.archive_set
 
     name_input = _basename(file_input)
 
     try:
-        logs.info('Open file "%s" (splits first %s characters by sheets name)' % (file_input, unit_sheet))
+        logs.info('Splits first %s characters by sheets name and create %s archive' % (unit_sheet, archiveset))
+        logs.info('Open file "%s" for splits:' % file_input)
         (workbook
         ,xlsx_ext) = open_file_input(file_input)
 
@@ -235,14 +236,14 @@ if __name__ == '__main__':
 
     try:
         logs.info()
-        logs.info('Create %s archive %s' % (archiveext, file_press + '.' + archiveext))
-        _makeArchive(file_press, archiveext, path_split)
-        logs.info('Create %s archive successfully' % archiveext)
+        logs.info('Create %s archive %s' % (archiveset, file_press + '.' + archiveset))
+        _makeArchive(file_press, archiveset, path_split)
+        logs.info('Create %s archive successfully' % archiveset)
 
         if not args.debug:
             _pathRemove(path_split)
     except Exception as e:
-        logs.info('Create %s archive failed  :-( ' % archiveext)
+        logs.info('Create %s archive failed  :-( ' % archiveset)
         logs.error(str(e))
 
     sys.exit(0)

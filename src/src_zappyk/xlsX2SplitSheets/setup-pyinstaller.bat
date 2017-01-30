@@ -1,5 +1,5 @@
 @echo off
-call winenv.bat
+call set-env-windows.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set name_prog=XLSx2SplitSheets

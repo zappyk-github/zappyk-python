@@ -1,5 +1,5 @@
 @echo off
-call winenv.bat
+call set-env-windows.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set name_prog=QueryReporting
@@ -7,12 +7,31 @@ set prog_main=QueryReporting\main.py
 set file_gear=images\gear.ico
 set file_vers=setup-pyinstaller-version.txt
 
+set verp_dist=.\dist\QueryReporting.exe
+set verp_vers=0.1.0.0
+set verp_desc=Query Reporting management and output CSV/XLS file.
+set verp_prod=QueryReporting
+set verp_copy=zappyk@gmail.com, 2016
+set verp_comp=Carlo Zappacosta
+
+set pyinstaller=pyinstaller.exe --clean --onefile            --log-level=DEBUG
 set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG
 
 rem %pyinstaller% --icon %file_gear% --version-file %file_vers% --name %name_prog% %prog_main%
     %pyinstaller% --icon %file_gear%                            --name %name_prog% %prog_main%
 
 set EXIT_CODE=%errorlevel%
+
+if %EXIT_CODE% == 0 (
+    echo _______________________________________________________________________________
+    echo.
+    verpatch.exe "%verp_dist%" %verp_vers% /va /pv %verp_vers% /s description "%verp_desc%" /s product "%verp_prod%" /s copyright "%verp_copy%" /s company "%verp_comp%"
+    if %errorlevel% == 0 (
+        echo    Assegnazione Versione/Patch eseguita con successo :D
+    ) else (
+        echo    Assegnazione Versione/Patch FALLITA, analizzare! o_O
+    )
+)
 
 if %EXIT_CODE% == 0 (
     echo _______________________________________________________________________________

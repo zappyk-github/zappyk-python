@@ -1,11 +1,11 @@
 @echo off
-call winenv.bat
+call set-env-windows.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set name_prog=CheckDiskSpace
 set prog_main=CheckDiskSpace\check_disk_space.py
 set file_gear=images\gear.ico
-set file_verp=setup-pyinstaller-version.txt
+set file_vers=setup-pyinstaller-version.txt
 
 set verp_dist=.\dist\CheckDiskSpace.exe
 set verp_vers=0.2.2.0
@@ -17,7 +17,7 @@ set verp_comp=Carlo Zappacosta
 set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG
 set pyinstaller=pyinstaller.exe --clean --onefile            --log-level=DEBUG
 
-rem %pyinstaller% --icon %file_gear% --version-file %file_verp% --name %name_prog% %prog_main%
+rem %pyinstaller% --icon %file_gear% --version-file %file_vers% --name %name_prog% %prog_main%
     %pyinstaller% --icon %file_gear%                            --name %name_prog% %prog_main%
 
 set EXIT_CODE=%errorlevel%

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python-payroll
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
@@ -8,9 +8,21 @@ import openpyxl
 
 from xlutils import copy
 
-from lib_zappyk._os_file import _makeDir, _pathSep, _pathExist, _pathRemove, _basename, _copy2, _makeArchive
-from lib_zappyk._string  import _replace
-from lib_zappyk._log     import _log
+#CZ#from lib_zappyk._os_file import _makeDir, _pathSep, _pathExist, _pathRemove, _basename, _copy2, _makeArchive
+#CZ#from lib_zappyk._string  import _replace
+#CZ#from lib_zappyk._log     import _log
+import os
+import re
+import traceback
+import logging
+import logging.config
+from os     import path
+#CZ#from shutil import copy2, rmtree, make_archive
+try:
+    from shutil import copy2, rmtree, make_archive
+except ImportError:
+    from shutil import copy2, rmtree #, make_archive
+    from shutil_zappyk.shutil_zappyk import make_archive
 
 _version = '0.1'
 
@@ -26,6 +38,80 @@ _epilog = "Version: %s" % _version
 _group_sheet = 6
 _archive_ext = ['zip', 'tar', 'gztar', 'bztar', 'xztar']
 _archive_set = _archive_ext[0]
+
+########################################################################################################################
+
+            #        ###  ######          #######     #     ######   ######   #     #  #    #
+            #         #   #     #              #     # #    #     #  #     #   #   #   #   #
+            #         #   #     #             #     #   #   #     #  #     #    # #    #  #
+            #         #   ######            #      #     #  ######   ######      #     ###
+            #         #   #     #          #       #######  #        #           #     #  #
+            #         #   #     #         #        #     #  #        #           #     #   #
+            #######  ###  ######   #####  #######  #     #  #        #           #     #    #
+
+########################################################################################################################
+###############################################################################
+class _log(object):
+    ###########################################################################
+    def __init__(self, name=None, file=None):
+        if file != None:
+            if os.path.isfile(file):
+                logging.config.fileConfig(file)
+
+        if name != None:
+            self = logging.getLogger(name)
+        else:
+            self = logging.getLogger(__name__)
+
+    ###########################################################################
+    def info(self, string=None, end=None):
+        sys.stdout.write(('' if string is None else string) + (os.linesep if end is None else end)) # on python2
+    #CZ#print(string, end=end, file=sys.stdout)                                                     # on python3
+
+    ###########################################################################
+    def warning(self, string=None, end=None):
+        sys.stderr.write(('' if string is None else string) + (os.linesep if end is None else end)) # on python2
+    #CZ#print(string, end=end, file=sys.stderr)                                                     # on python3
+
+    ###########################################################################
+    def error(self, string=None, end=None, exit_code=1):
+        sys.stderr.write(('' if string is None else string) + (os.linesep if end is None else end)) # on python2
+    #CZ#print(string, end=end, file=sys.stderr)                                                     # on python3
+        sys.exit(exit_code)
+
+    ###########################################################################
+    def traceback(self, exc_traceback=None, limit=1, file=sys.stderr):
+        traceback.print_tb(exc_traceback, limit=limit, file=file)
+###########################################################################
+def _replace(string, search, replace):
+    # CZ#return(string.replace(search, replace))
+    return (re.sub(search, replace, string))
+###############################################################################
+def _makeDir(path_name):
+    if not os.path.exists(path_name):
+        return(os.makedirs(path_name))
+    return(True)
+###############################################################################
+def _pathSep():
+    return(path.sep)
+###############################################################################
+def _pathRemove(path_name):
+#CZ#return(rmtree(path_name, ignore_errors=True))
+    return(rmtree(path_name))
+###############################################################################
+def _pathExist(path_name):
+    return(path.isdir(path_name))
+###############################################################################
+def _copy2(file_from, file_to):
+    copy2(file_from, file_to)
+###############################################################################
+def _basename(path_file):
+    return(path.basename(path_file))
+###############################################################################
+def _makeArchive(file_name, file_type='zip', path_name=None):
+    return(make_archive(file_name, file_type, path_name))
+########################################################################################################################
+########################################################################################################################
 
 logs = _log()
 

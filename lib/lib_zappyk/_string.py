@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__author__ = 'pes0zap'
+__author__ = 'zappyk'
 
 import re
 

@@ -1,11 +1,11 @@
 @echo off
-call winenv.bat
+call set-env-windows.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set name_prog=CurlUploader
 set prog_main=CurlUploader\curl_uploader.py
 set file_gear=images\gear.ico
-set file_verp=setup-pyinstaller-version.txt
+set file_vers=setup-pyinstaller-version.txt
 
 set verp_dist=.\dist\CurlUploader.exe
 set verp_vers=0.1.0.0
@@ -17,7 +17,7 @@ set verp_comp=Carlo Zappacosta
 set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG
 set pyinstaller=pyinstaller.exe --clean --onefile            --log-level=DEBUG
 
-rem %pyinstaller% --icon %file_gear% --version-file %file_verp% --name %name_prog% %prog_main%
+rem %pyinstaller% --icon %file_gear% --version-file %file_vers% --name %name_prog% %prog_main%
     %pyinstaller% --icon %file_gear%                            --name %name_prog% %prog_main%
 
 set EXIT_CODE=%errorlevel%

@@ -209,8 +209,8 @@ def open_file_xls_(file_input):
 
 ###############################################################################
 def make_name_input(name_input):
-    name_input = _replace(name_input, '.xls$' , '')
     name_input = _replace(name_input, '.xlsx$', '')
+    name_input = _replace(name_input, '.xls$' , '')
     return(name_input)
 
 ###############################################################################

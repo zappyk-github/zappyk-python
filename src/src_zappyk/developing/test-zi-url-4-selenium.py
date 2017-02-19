@@ -27,13 +27,13 @@ PageBack    = False
 PageLogout  = False
 DoneBrowser = True
 WriteBuffer = True
+PrintBuffer = False
 ExitCode    = 0
 ########################################################################################################################
 
 debug_step = False
 urlweb_PES = True
-screenshot = 'screenshot-%s.png'
-linebuffer = []
+urlweb_SQL = "select IDCOMPANY,DSCOMPANY,DTSTARTVL,replace(IDCODAL,'|','-') as IDCODAL,FLCALPRE,FLHRAGO,IDSERVHSP from coda_001company00"
 
 browser_wd = 'PhantomJS'
 browser_wd = 'Chrome'
@@ -71,11 +71,17 @@ find_execResul = ".*_FrameResult_iframe" # id => find_element_by_xpath("//*[@id=
 find_theLogout = ".*_imgLogouthref"      # id => find_element_by_xpath("//*[@id='.*_imgLogouthref']"")
 
 find_queryArea = 'MMSQL'
-find_queryExec = 'select IDCOMPANY,DSCOMPANY,DTSTARTVL,IDCODAL,FLCALPRE,FLHRAGO,IDSERVHSP from coda_001company00'
+find_queryExec = urlweb_SQL
+
+screenshot_tag = 'screenshot-%s.png'
+linebuffer_log = []
+
+h2s_field_char = '|'
+csv_field_char = '|'
 
 ########################################################################################################################
 
-browser_wd_PhantomJS_screenshot = screenshot
+browser_wd_PhantomJS_screenshot = screenshot_tag
 browser_wd_PhantomJS_htmlstring = '<html><body><div style="background-color:red;height:500px;width:500px;">This is a png</div></body></html>'
 browser_wd_PhantomJS_overralert = 'window.alert=function(message){return true;}'
 browser_wd_PhantomJS_overrconfi = 'window.confirm=function(message){return true;}'
@@ -94,48 +100,80 @@ function this_Loaded(){
 """
 
 ########################################################################################################################
+
+if debug_step:
+    WriteBuffer = False
+
+########################################################################################################################
 def _write(string=''):
     lineend = ''
     if WriteBuffer:
-        linebuffer.append(string)
+        if PrintBuffer:
+            if string != '':
+                if string != '.':
+                    print(':', end=lineend)
+                else:
+                    print('.', end=lineend)
+        linebuffer_log.append(string)
     else:
         print(string, end=lineend)
-        sys.stdout.flush()
+    sys.stdout.flush()
 
 ########################################################################################################################
 def _writeln(string=''):
     lineend = '\n'
     if WriteBuffer:
-        linebuffer.append(string + lineend)
+        if PrintBuffer:
+            if string != '':
+                print(':')
+            else:
+                print()
+        linebuffer_log.append(string + lineend)
     else:
         print(string)
 
 ########################################################################################################################
 def _writebuffer():
     if WriteBuffer:
-        print(''.join(linebuffer))
+        print(_repeat_string('#', 80))
+        print(''.join(linebuffer_log))
+        print(_repeat_string('#', 80))
 
 ########################################################################################################################
 def _writesql(browser_page_source=''):
     ps = browser_page_source
+#CZ#print("ps=[[%s]]" % ps)
+#CZ#print("ps={{%s}}" % type(ps))
     tt = _html_table2text(ps)
-#CZ#print("%s" % ps)
-#CZ#print("%s" % tt)
-    print("%s" % _writecsv(tt))
+#CZ#print("tt=[[%s]]" % tt)
+#CZ#print("tt={{%s}}" % type(tt))
+    lc = _writecsv(tt)
+#CZ#print("lc=[[%s]]" % lc)
+#CZ#print("lc={{%s}}" % type(lc))
+    return('\n'.join(lc))
 
 ########################################################################################################################
-def _writecsv(text_in='', sep_field='|', trim_field=True):
-    cols_max = {}
+def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
+    text_in = []
+    if type(data) is str:
+        text_in = data.split('\n')
+    else:
+        text_in = data
 
-    colsSkip = '---'
+#CZ#print("ti=[[%s]]" % text_in)
+#CZ#print("ti={{%s}}" % type(text_in))
+
     lineSkip = True
+    colsSkip = '---'
+
+    cols_max = {}
 
     line_tmp = []
     for line in text_in:
         if line.strip() == '':
             continue
 
-        this_row = line.split(sep_field)
+        this_row = line.split(h2s_sep_field)
         if trim_field:
             this_row = map(str.strip, this_row)
 
@@ -163,12 +201,17 @@ def _writecsv(text_in='', sep_field='|', trim_field=True):
     rows_out = []
     for r in rows_tmp:
     #CZ#l = sep_field.join(r)
-        l = '%s%s%s' % (sep_field, sep_field.join(r), sep_field)
+        l = '%s%s%s' % (csv_field_char, csv_field_char.join(r), csv_field_char)
         rows_out.append(l)
 
-    text_out = '\n'.join(rows_out)
+#CZ#text_out = '\n'.join(rows_out)
+    text_out = rows_out
 
     return(text_out)
+
+########################################################################################################################
+def _repeat_string(string='', repetitions=0):
+    return(''.join([ string for n in range(repetitions)]))
 
 ########################################################################################################################
 def _sleep(count=1, view=1):
@@ -192,9 +235,16 @@ def _read(string=''):
     return(input_line)
 
 ########################################################################################################################
+def _read_file(file=''):
+#CZ#text = None
+#CZ#with open(file, 'r') as f:
+#CZ#    text = f.readlines()
+    text = open(file).read()
+    return(text)
+
+########################################################################################################################
 def _html_table2text(html_table='', body_width=300):
     import html2text
-#CZ#html_table = open("test-zi-url-4-selenium.html").read()
 #CZ#text = html2text.html2text(html_table, bodywidth=body_width).encode('utf-8')
     text = html2text.html2text(html_table, bodywidth=body_width)
     return(text)
@@ -266,12 +316,6 @@ def _browser(browser_webdrive):
     return(browser)
 
 ########################################################################################################################
-text = ''
-with open('out', 'r') as f:
-    text = f.readlines()
-#print(''.join(text))
-print(_writecsv(text))
-sys.exit()
 ########################################################################################################################
 
 try:
@@ -309,7 +353,7 @@ try:
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step:
-            browser.save_screenshot(screenshot % '1-login')
+            browser.save_screenshot(screenshot_tag % '1-login')
             pass
 
 ########################################################################################################################
@@ -344,7 +388,7 @@ try:
         #   browser.execute_script(browser_wd_PhantomJS_override_f)
             pass
         if debug_step:
-            browser.save_screenshot(screenshot % '2-home')
+            browser.save_screenshot(screenshot_tag % '2-home')
             pass
 
 ########################################################################################################################
@@ -385,7 +429,7 @@ try:
         #_______________________________________________________________________________________________________________
     #CZ#_writeln("\t|\n\t| here is Insert & Execute query\n\t|")
         if debug_step:
-            browser.save_screenshot(screenshot % '3-query')
+            browser.save_screenshot(screenshot_tag % '3-query')
             pass
 
 ########################################################################################################################
@@ -405,7 +449,7 @@ try:
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step:
-            browser.save_screenshot(screenshot % '3-query-1-insert')
+            browser.save_screenshot(screenshot_tag % '3-query-1-insert')
             pass
 
 ########################################################################################################################
@@ -438,14 +482,16 @@ try:
         _writeln("Result query:")
         ids_resu = find_element_by_regex(browser, 'id', find_execResul)
         browser.switch_to.frame(ids_resu[0])
-        _writesql(browser.page_source)
+        out_resu = browser.page_source
+        csv_resu = _writesql(out_resu)
+        print('%s' % csv_resu)
         browser.switch_to.default_content()
         _sleep(wait_step1)
         _writeln()
         #_______________________________________________________________________________________________________________
     #CZ#_read("<press key to continue>")
         if debug_step:
-            browser.save_screenshot(screenshot % '3-query-2-result')
+            browser.save_screenshot(screenshot_tag % '3-query-2-result')
             pass
 
 except Exception as e:
@@ -480,7 +526,7 @@ try:
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step:
-            browser.save_screenshot(screenshot % '4-logout')
+            browser.save_screenshot(screenshot_tag % '4-logout')
             pass
 
 ########################################################################################################################

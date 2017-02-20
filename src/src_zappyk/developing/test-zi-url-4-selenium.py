@@ -28,12 +28,95 @@ PageLogout  = False
 DoneBrowser = True
 WriteBuffer = True
 PrintBuffer = False
+PrintBuffer = True
 ExitCode    = 0
 ########################################################################################################################
 
 debug_step = False
 urlweb_PES = True
+urlweb_PES = False
 urlweb_SQL = "select IDCOMPANY,DSCOMPANY,DTSTARTVL,replace(IDCODAL,'|','-') as IDCODAL,FLCALPRE,FLHRAGO,IDSERVHSP from coda_001company00"
+urlweb_SQL = """
+select
+    '20feb17 13:26'                  as 'LetturaDatiAl',
+    '201701'                  as 'PerRif',
+    coda00.idcompany            as 'CodCli',
+   left(coda00.dscompany + space(40), 30)            as 'Cliente',
+    sum(
+        case hrqtco.iddatoqt
+            when 'HR1CED000F007' then null
+            when 'HR1CED000F006' then null
+            when 'HR1CED000F650' then null
+            when 'HR1CED000F651' then null
+            when 'HR1CED000F654' then null
+            when 'HR1CED000F001' then null
+            when 'HR1CED000F019' then null
+            when 'HR1NUM000F047' then null
+            when 'HR1UNI0000581' then null
+            when 'HR1UNI0000583' then null
+            else                      hrqtco.qtcalcqt
+        end
+    )                           as 'CED.Dipe.',
+    sum(
+        case hrqtco.iddatoqt
+            when 'HR1CED000F007' then hrqtco.qtcalcqt
+        end
+    )                           as 'CED.Coll.',
+    sum(
+        case hrqtco.iddatoqt
+            when 'HR1CED000F006' then hrqtco.qtcalcqt
+            when 'HR1CED000F650' then hrqtco.qtcalcqt
+            when 'HR1CED000F651' then hrqtco.qtcalcqt
+        end
+    )                           as 'CED.Stag.',
+    sum(
+        case hrqtco.iddatoqt
+            when 'HR1CED000F001' then hrqtco.qtcalcqt
+        end
+    )                           as 'CED.Ammin.',
+    sum(
+        case hrqtco.iddatoqt
+            when 'HR1CED000F654' then hrqtco.qtcalcqt
+        end
+    )                           as 'CED.Sommin.',
+    sum(
+        case hrqtco.iddatoqt
+            when 'HR1CED000F019' then hrqtco.qtcalcqt
+            when 'HR1CED000F099' then hrqtco.qtcalcqt
+        end
+    )                           as 'CED.TOT.Lavor.',
+    sum(
+        case hrqtco.iddatoqt
+            when 'HR1NUM000F047' then hrqtco.qtcalcqt
+        end
+    )                           as 'TOT.Coll.',
+    tab_01.totale               as 'TOT.Uniem[M-1]'
+from
+             coda_001company00   coda00
+        join ba_contact          bacont on bacont.cohrcod=coda00.idcompany and bacont.coforgiu<>'PER' and bacont.cohrcod is not null and bacont.cohrenv='001'
+        join aahrb_001vldatoqtco hrqtco on hrqtco.idcompany=bacont.cocompanyid
+   left join (
+        select
+            hrqtco.idcompany,
+            sum(hrqtco.qtcalcqt) as totale
+        from
+            aahrb_001vldatoqtco hrqtco
+        where
+           (hrqtco.qtyear*100+hrqtco.qtmonth)=201612 and
+            hrqtco.iddatoqt in ('HR1UNI000F581','HR1UNI000F583')
+        group by
+            hrqtco.idcompany
+   ) tab_01 on tab_01.idcompany=hrqtco.idcompany
+where
+    1=1 and hrqtco.qtyear in (2017) and hrqtco.qtmonth in (01)
+    and(hrqtco.iddatoqt like 'HR1CED000F00_' or hrqtco.iddatoqt like 'HR1CED000F01_' or hrqtco.iddatoqt in ('HR1CED000F650','HR1CED000F651','HR1CED000F654','HR1CED000F099','HR1NUM000F047'))
+group by
+    coda00.idcompany,
+   left(coda00.dscompany + space(40), 30),
+    tab_01.totale
+order by
+   left(coda00.dscompany + space(40), 30)
+"""
 
 browser_wd = 'PhantomJS'
 browser_wd = 'Chrome'
@@ -41,6 +124,7 @@ browser_wd = 'Firefox'
 
 wait_step1 = 3
 wait_step2 = 9
+wait_step2 = 5
 wait_step3 = 5
 
 ########################################################################################################################
@@ -111,12 +195,15 @@ def _write(string=''):
         if PrintBuffer:
             if string != '':
                 if string != '.':
-                    print(':', end=lineend)
+                #CZ#print(':', end=lineend) # valido per python >= 3
+                    sys.stdout.write(':')   # valido per python >= 2
                 else:
-                    print('.', end=lineend)
+                #CZ#print('.', end=lineend) # valido per python >= 3
+                    sys.stdout.write('.')   # valido per python >= 2
         linebuffer_log.append(string)
     else:
-        print(string, end=lineend)
+    #CZ#print(string, end=lineend) # valido per python >= 3
+        sys.stdout.write(string)   # valido per python >= 2
     sys.stdout.flush()
 
 ########################################################################################################################
@@ -125,7 +212,8 @@ def _writeln(string=''):
     if WriteBuffer:
         if PrintBuffer:
             if string != '':
-                print(':')
+            #CZ#print(':')
+                print(':%s' % string)
             else:
                 print()
         linebuffer_log.append(string + lineend)

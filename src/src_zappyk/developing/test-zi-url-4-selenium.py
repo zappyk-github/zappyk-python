@@ -163,6 +163,9 @@ linebuffer_log = []
 h2s_field_char = '|'
 csv_field_char = '|'
 
+write_colsSkip = '---'
+write_lineSkip = True
+
 ########################################################################################################################
 
 browser_wd_PhantomJS_screenshot = screenshot_tag
@@ -215,7 +218,7 @@ def _writeln(string=''):
             #CZ#print(':')
                 print(':%s' % string)
             else:
-                print()
+                print('')
         linebuffer_log.append(string + lineend)
     else:
         print(string)
@@ -230,6 +233,8 @@ def _writebuffer():
 ########################################################################################################################
 def _writesql(browser_page_source=''):
     ps = browser_page_source
+#CZ#if isinstance(ps, unicode):
+#CZ#    ps = ps.encode('utf-8')
 #CZ#print("ps=[[%s]]" % ps)
 #CZ#print("ps={{%s}}" % type(ps))
     tt = _html_table2text(ps)
@@ -238,10 +243,15 @@ def _writesql(browser_page_source=''):
     lc = _writecsv(tt)
 #CZ#print("lc=[[%s]]" % lc)
 #CZ#print("lc={{%s}}" % type(lc))
-    return('\n'.join(lc))
+    ws = '\n'.join(lc)
+#CZ#print("ws=((%s))" % ws)
+    return(ws)
 
 ########################################################################################################################
 def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
+    if isinstance(data, unicode):
+        data = data.encode('utf-8')
+
     text_in = []
     if type(data) is str:
         text_in = data.split('\n')
@@ -250,9 +260,6 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_ch
 
 #CZ#print("ti=[[%s]]" % text_in)
 #CZ#print("ti={{%s}}" % type(text_in))
-
-    lineSkip = True
-    colsSkip = '---'
 
     cols_max = {}
 
@@ -263,14 +270,17 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_ch
 
         this_row = line.split(h2s_sep_field)
         if trim_field:
-            this_row = map(str.strip, this_row)
+        #CZ#this_row = map(str.strip, this_row)           # valido per python >= 3
+            this_row = map(lambda s: s.strip(), this_row) # valido per python >= 2
 
-        lineSkip = True
+    #CZ#colsSkip = write_colsSkip
+        lineSkip = write_lineSkip
         this_tmp = []
         for i, v in enumerate(this_row):
             l = len(v)
             m = cols_max[i] if i in cols_max.keys() else 0
-            if v != colsSkip:
+        #CZ#if v != colsSkip:
+            if v != write_colsSkip:
                 lineSkip = False
                 if l > m:
                     cols_max[i] = l
@@ -418,6 +428,7 @@ try:
 ########################################################################################################################
     if VirDisplay:
     #CZ#vdisplay = Xvfb()
+    #CZ#vdisplay = Display(visible=0, size=(800, 600), use_xauth=True)
         vdisplay = Display(visible=0, size=(800, 600))
         vdisplay.start()
 
@@ -585,7 +596,8 @@ try:
 except Exception as e:
     print(e)
     if browser is not None:
-        browser.close()
+        browser.quit()
+    #CZ#browser.close()
     if VirDisplay:
         vdisplay.stop()
     ExitCode = 1
@@ -645,8 +657,8 @@ try:
 ########################################################################################################################
     if DoneBrowser:
         _writeln("Done browser %s." % browser_wd)
-    #CZ#browser.quit()
-        browser.close()
+        browser.quit()
+    #CZ#browser.close()
 
 ########################################################################################################################
 ######   #######  #     #  #######        ######   ###   #####   ######   #           #     #     #

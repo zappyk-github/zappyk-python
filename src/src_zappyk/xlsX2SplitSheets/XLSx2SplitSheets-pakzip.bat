@@ -2,10 +2,7 @@
 
 set PATH_BUILD=build
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-rem VERS_PROGRAM=0.1
-rem VERS_PROGRAM=0.2
-rem VERS_PROGRAM=0.2-1
-set VERS_PROGRAM=0.2-2
+set VERS_PROGRAM=0.1
 set NAME_EXE_BAT=XLSx2SplitSheets-launch.bat
 set PATH_PROGRAM=XLSx2SplitSheets-%VERS_PROGRAM%
 set NAME_PAK_ZIP=%PATH_PROGRAM%-win32

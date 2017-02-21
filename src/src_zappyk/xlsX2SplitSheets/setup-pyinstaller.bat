@@ -8,7 +8,7 @@ set file_gear=images\gear.ico
 set file_verp=setup-pyinstaller-version.txt
 
 set verp_dist=.\dist\XLSx2SplitSheets.exe
-set verp_vers=0.2.2.0
+set verp_vers=0.1
 set verp_desc=Return disk usage statistics about the given path.
 set verp_prod=XLSx2SplitSheets
 set verp_copy=zappyk@gmail.com, 2016

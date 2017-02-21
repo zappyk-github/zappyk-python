@@ -1,0 +1,8 @@
+PATH=$PATH:/home/pes0zap/Programmi/zappyk-python/bin
+PROJECTDIR=/home/pes0zap/Programmi/zappyk-python
+export PYTHONUNBUFFERED=1
+export PYTHONIOENCODING=UTF-8
+export PYTHONPATH=/home/pes0zap/Programmi/zappyk-python/lib:/home/pes0zap/Programmi/zappyk-python/lib/lib_external:/home/pes0zap/Programmi/zappyk-python/lib/lib_zappyk:/home/pes0zap/Programmi/zappyk-python/src/src_zappyk:.
+alias pyinstaller=/home/pes0zap/Programmi/zappyk-python/bin/pyinstaller/pyinstaller.py
+alias cx_freeze=/home/pes0zap/Programmi/zappyk-python/bin/cx_freeze/cxfreeze
+alias cx_freeze_quickstart=/home/pes0zap/Programmi/zappyk-python/bin/cx_freeze/cxfreeze-quickstart

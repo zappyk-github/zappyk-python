@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-PROJECT     = 'XLSx2SplitSheets'
+PROJECT     = 'QueryExecWebZI'
 DESCRIPTION = """
-It splits a Spreadsheet ( .xls / .xlsx ) in so many files grouped
-according to the first N characters of the name of each sheet name.
+Query Executed on WEB Zucchetti Infinity Portal through page RUN-SQL.
 """
 VERSION     = (0, 1, 0, 'rc'  , 1)
 VERSION     = '0.1'
@@ -20,9 +19,9 @@ def get_version():
     return(VERSION)
 ###########################################################
 #def get_version(*arg, **kwargs):
-#   from XLSx2SplitSheets.src.version import get_version
+#   from QueryExecWebZI.src.version import get_version
 #   return(get_version(*arg, **kwargs))
 ###########################################################
 #def get_version():
-#    from XLSx2SplitSheets.src.version import get_version
+#    from QueryExecWebZI.src.version import get_version
 #    return(get_version())

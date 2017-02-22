@@ -1,156 +1,98 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python-payroll
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-import sys, re, time
+import sys, re, time, argparse
 
-#from pydoc import browse
-#from xvfbwrapper import Xvfb
 from pyvirtualdisplay import Display
 from selenium import webdriver
-#from selenium.webdriver.common.keys import Keys
-#from selenium.webdriver.common.by import By
-#from selenium.webdriver.support.ui import WebDriverWait
-#from selenium.webdriver.support import expected_conditions as EC
-#from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+_version = '0.1'
+
+_project = 'QueryExecWebZI'
+
+_description = '''
+Query Executed on WEB Zucchetti Infinity Portal through page RUN-SQL.
+'''
+
+_epilog = "Version: %s" % _version
 
 ########################################################################################################################
-VirDisplay  = True
-InitBrowser = True
-PageLogin   = True
-PageQuery   = True
-PageAlert   = True
-InsQuery    = True
-ExcQuery    = InsQuery
-ResQuery    = ExcQuery
-PageBack    = False
-PageLogout  = False
-DoneBrowser = True
-WriteBuffer = True
-PrintBuffer = False
-PrintBuffer = True
-ExitCode    = 0
+def _getconfig(run=''):
+    config = {}
+
+    if run == 'pes_test':
+        config['username'] = 'administrator'
+        config['password'] = '!S3rv1c3s!'
+        config['basepath'] = 'https://test.payroll.it/HRPW'
+
+    if run == 'accademia':
+        config['username'] = 'administrator'
+        config['password'] = '!4cc4d3m14!'
+        config['basepath'] = 'https://saas.hrzucchetti.it/hrppbs'
+
+    return(config)
+
+########################################################################################################################
+def _getargs():
+#CZ#parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=120)
+    formatter = lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=50, width=120)
+#CZ#formatter = lambda prog: argparse.RawDescriptionHelpFormatter(prog, max_help_position=50, width=120)
+    parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
+
+#CZ#pgroup.add_argument('-p' , '--power'       , help='display a power of a given number'   , type=int           , choices=[1,2,3,4,5])
+#CZ#pgroup.add_argument('-s' , '--square'      , help='display a square of a given number'  , type=int)
+    parser.add_argument('-d' , '--debug'       , help='increase output debug'               , action='count'     , default=0)
+    parser.add_argument('-v' , '--verbose'     , help='output verbosity'                    , action='store_true')
+    parser.add_argument('-V' , '--version'     , help='print version number'                , action='version'   , version='%(prog)s '+_version)
+    parser.add_argument('-r' , '--run'         , help='run execute'                         , type=str           , required=True)
+    parser.add_argument('-s' , '--sql'         , help='sql execute'                         , type=str           , required=True)
+#CZ#parser.add_argument('name'                 , help='Name')
+#CZ#parser.add_argument('surname'              , help='Surnamename')
+
+    args = parser.parse_args()
+
+    return(args)
+
 ########################################################################################################################
 
-debug_step = False
-urlweb_PES = True
-urlweb_PES = False
-urlweb_SQL = "select IDCOMPANY,DSCOMPANY,DTSTARTVL,replace(IDCODAL,'|','-') as IDCODAL,FLCALPRE,FLHRAGO,IDSERVHSP from coda_001company00"
-urlweb_SQL = """
-select
-    '20feb17 13:26'                  as 'LetturaDatiAl',
-    '201701'                  as 'PerRif',
-    coda00.idcompany            as 'CodCli',
-   left(coda00.dscompany + space(40), 30)            as 'Cliente',
-    sum(
-        case hrqtco.iddatoqt
-            when 'HR1CED000F007' then null
-            when 'HR1CED000F006' then null
-            when 'HR1CED000F650' then null
-            when 'HR1CED000F651' then null
-            when 'HR1CED000F654' then null
-            when 'HR1CED000F001' then null
-            when 'HR1CED000F019' then null
-            when 'HR1NUM000F047' then null
-            when 'HR1UNI0000581' then null
-            when 'HR1UNI0000583' then null
-            else                      hrqtco.qtcalcqt
-        end
-    )                           as 'CED.Dipe.',
-    sum(
-        case hrqtco.iddatoqt
-            when 'HR1CED000F007' then hrqtco.qtcalcqt
-        end
-    )                           as 'CED.Coll.',
-    sum(
-        case hrqtco.iddatoqt
-            when 'HR1CED000F006' then hrqtco.qtcalcqt
-            when 'HR1CED000F650' then hrqtco.qtcalcqt
-            when 'HR1CED000F651' then hrqtco.qtcalcqt
-        end
-    )                           as 'CED.Stag.',
-    sum(
-        case hrqtco.iddatoqt
-            when 'HR1CED000F001' then hrqtco.qtcalcqt
-        end
-    )                           as 'CED.Ammin.',
-    sum(
-        case hrqtco.iddatoqt
-            when 'HR1CED000F654' then hrqtco.qtcalcqt
-        end
-    )                           as 'CED.Sommin.',
-    sum(
-        case hrqtco.iddatoqt
-            when 'HR1CED000F019' then hrqtco.qtcalcqt
-            when 'HR1CED000F099' then hrqtco.qtcalcqt
-        end
-    )                           as 'CED.TOT.Lavor.',
-    sum(
-        case hrqtco.iddatoqt
-            when 'HR1NUM000F047' then hrqtco.qtcalcqt
-        end
-    )                           as 'TOT.Coll.',
-    tab_01.totale               as 'TOT.Uniem[M-1]'
-from
-             coda_001company00   coda00
-        join ba_contact          bacont on bacont.cohrcod=coda00.idcompany and bacont.coforgiu<>'PER' and bacont.cohrcod is not null and bacont.cohrenv='001'
-        join aahrb_001vldatoqtco hrqtco on hrqtco.idcompany=bacont.cocompanyid
-   left join (
-        select
-            hrqtco.idcompany,
-            sum(hrqtco.qtcalcqt) as totale
-        from
-            aahrb_001vldatoqtco hrqtco
-        where
-           (hrqtco.qtyear*100+hrqtco.qtmonth)=201612 and
-            hrqtco.iddatoqt in ('HR1UNI000F581','HR1UNI000F583')
-        group by
-            hrqtco.idcompany
-   ) tab_01 on tab_01.idcompany=hrqtco.idcompany
-where
-    1=1 and hrqtco.qtyear in (2017) and hrqtco.qtmonth in (01)
-    and(hrqtco.iddatoqt like 'HR1CED000F00_' or hrqtco.iddatoqt like 'HR1CED000F01_' or hrqtco.iddatoqt in ('HR1CED000F650','HR1CED000F651','HR1CED000F654','HR1CED000F099','HR1NUM000F047'))
-group by
-    coda00.idcompany,
-   left(coda00.dscompany + space(40), 30),
-    tab_01.totale
-order by
-   left(coda00.dscompany + space(40), 30)
-"""
+args = _getargs()
 
-browser_wd = 'PhantomJS'
-browser_wd = 'Chrome'
+debug_step = args.debug
+verbose_on = args.verbose
+urlweb_RUN = args.run
+urlweb_SQL = args.sql
+config_RUN = _getconfig(urlweb_RUN)
+
+if urlweb_SQL == '-':
+    urlweb_SQL = [line.strip() for line in sys.stdin.readlines()]
+    urlweb_SQL = '\n'.join(urlweb_SQL)
+
+########################################################################################################################
+
 browser_wd = 'Firefox'
 
 wait_step1 = 3
-wait_step2 = 9
 wait_step2 = 5
 wait_step3 = 5
 
 ########################################################################################################################
 
-set_user_agent = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1"
 set_user_agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
 
-url_base_path1 = "https://test.payroll.it/HRPW"
-url_base_path2 = "https://saas.hrzucchetti.it/hrppbs"
-url_base_path_ = url_base_path1 if urlweb_PES else url_base_path2
+url_base_path_ = config_RUN['basepath']
 url_page_home_ = url_base_path_ + "/HRPW/jsp/home.jsp"
 url_page_login = url_base_path_ + "/jsp/login.jsp"
 url_page_query = url_base_path_ + "/servlet/cost_bexecrunsql?m_cWindowName=main"
-#url_page_query = url_base_path_ + "/jsp/cost_speedtest_portlet.jsp?m_cWindowName=main"
 
-type_username_ = 'administrator'
-type_password1 = '!S3rv1c3s!'
-type_password2 = '!4cc4d3m14!'
-type_password_ = type_password1 if urlweb_PES else type_password2
+type_username_ = config_RUN['username']
+type_password_ = config_RUN['password']
 find_username_ = 'm_cUserName'
 find_password_ = 'm_cPassword'
 
 find_typeLogin = "//*[@type='submit']"   #    => find_element_by_xpath(find_typeLogin)
-find_execQuery = ".btsalva"              #    => find_element_by_css_selector(find_execQuery)
 find_execQuery = ".*_RunButton"          # id => find_element_by_xpath("//*[@id='.*_RunButton']")
-find_execResul = ".*_FrameResult"        # id => find_element_by_xpath("//*[@id='.*_FrameResult']")
 find_execResul = ".*_FrameResult_iframe" # id => find_element_by_xpath("//*[@id='.*_FrameResult_iframe']")
 find_theLogout = ".*_imgLogouthref"      # id => find_element_by_xpath("//*[@id='.*_imgLogouthref']"")
 
@@ -173,22 +115,28 @@ browser_wd_PhantomJS_htmlstring = '<html><body><div style="background-color:red;
 browser_wd_PhantomJS_overralert = 'window.alert=function(message){return true;}'
 browser_wd_PhantomJS_overrconfi = 'window.confirm=function(message){return true;}'
 browser_wd_PhantomJS_override_f = 'cost_bexecrunsql.CtxLoad_=function(){return true;}'
-browser_wd_PhantomJS_override_f = """
-function this_Loaded(){
-  if(this.GFLSYSLOGIN.Value()){
-      if (opener){
-        window.close();
-      } else {
-        if (self.closeFrame) self.closeFrame();
-        else self.close();
-      }
-  }
-}
-"""
 
 ########################################################################################################################
+VirDisplay  = True
+InitBrowser = True
+PageLogin   = True
+PageQuery   = True
+PageAlert   = True
+InsQuery    = True
+ExcQuery    = InsQuery
+ResQuery    = ExcQuery
+PageBack    = False
+PageLogout  = False
+DoneBrowser = True
+WriteBuffer = True
+PrintBuffer = False
+ExitCode    = 0
+########################################################################################################################
 
-if debug_step:
+if debug_step >= 0:
+    PrintBuffer = True
+
+if debug_step >= 1:
     WriteBuffer = False
 
 ########################################################################################################################
@@ -235,22 +183,32 @@ def _writesql(browser_page_source=''):
     ps = browser_page_source
 #CZ#if isinstance(ps, unicode):
 #CZ#    ps = ps.encode('utf-8')
-#CZ#print("ps=[[%s]]" % ps)
-#CZ#print("ps={{%s}}" % type(ps))
+
+    if verbose_on:
+        print("ps=[[%s]]" % ps)
+        print("ps={{%s}}" % type(ps))
     tt = _html_table2text(ps)
-#CZ#print("tt=[[%s]]" % tt)
-#CZ#print("tt={{%s}}" % type(tt))
+
+    if verbose_on:
+            print("tt=[[%s]]" % tt)
+            print("tt={{%s}}" % type(tt))
     lc = _writecsv(tt)
-#CZ#print("lc=[[%s]]" % lc)
-#CZ#print("lc={{%s}}" % type(lc))
+
+    if verbose_on:
+        print("lc=[[%s]]" % lc)
+        print("lc={{%s}}" % type(lc))
+
     ws = '\n'.join(lc)
-#CZ#print("ws=((%s))" % ws)
+
+    if verbose_on:
+        print("ws=((%s))" % ws)
+
     return(ws)
 
 ########################################################################################################################
 def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
-    if isinstance(data, unicode):
-        data = data.encode('utf-8')
+#CZ#if isinstance(data, unicode):
+#CZ#    data = data.encode('utf-8')
 
     text_in = []
     if type(data) is str:
@@ -393,13 +351,6 @@ def _browser(browser_webdrive):
     #   print(dcap)
     #   dcap['handlesAlerts'] = True
     #   print(dcap)
-    #   dcap["phantomjs.page.settings.resourceTimeout"]   = ("10000")
-    #   dcap["phantomjs.page.settings.userAgent"]         = (set_user_agent)
-    #   dcap["phantomjs.page.settings.javascriptEnabled"] = ("true")
-    #   dcap["phantomjs.settings.loadImages"]             = ("false")
-    #   dcap["phantomjs.cookiesEnabled"]                  = ("true")
-    #   dcap["phantomjs.javascriptEnabled"]               = ("true")
-    #   dcap["phantomjs.handlesAlerts"]                   = ("true")
         browser = webdriver.PhantomJS()
     #CZ#browser = webdriver.PhantomJS(desired_capabilities=dcap, service_args=['--ignore-ssl-errors=true', '--ssl-protocol=any'])
         browser.set_window_size(1920, 1080)
@@ -451,7 +402,7 @@ try:
         _sleep(wait_step2)
         _writeln()
         #_______________________________________________________________________________________________________________
-        if debug_step:
+        if debug_step >= 5:
             browser.save_screenshot(screenshot_tag % '1-login')
             pass
 
@@ -468,11 +419,11 @@ try:
         _write("Login credential:")
         username = browser.find_element_by_name(find_username_)
         password = browser.find_element_by_name(find_password_)
-        #if _browser_is_PhantomJS(browser_wd):
-        #    wait = WebDriverWait(browser, wait_step3)
-        #    password = wait.until(EC.presence_of_element_located((By.NAME, find_password_)))
-        #    password = wait.until(EC.visibility_of_element_located((By.NAME, find_password_)))
-        #    pass
+    #   if _browser_is_PhantomJS(browser_wd):
+    #       wait = WebDriverWait(browser, wait_step3)
+    #       password = wait.until(EC.presence_of_element_located((By.NAME, find_password_)))
+    #       password = wait.until(EC.visibility_of_element_located((By.NAME, find_password_)))
+    #       pass
         username.clear()
         username.send_keys(type_username_)
         password.clear()
@@ -486,7 +437,7 @@ try:
         #   browser.execute_script(browser_wd_PhantomJS_overralert)
         #   browser.execute_script(browser_wd_PhantomJS_override_f)
             pass
-        if debug_step:
+        if debug_step >= 5:
             browser.save_screenshot(screenshot_tag % '2-home')
             pass
 
@@ -527,7 +478,7 @@ try:
         _writeln()
         #_______________________________________________________________________________________________________________
     #CZ#_writeln("\t|\n\t| here is Insert & Execute query\n\t|")
-        if debug_step:
+        if debug_step >= 5:
             browser.save_screenshot(screenshot_tag % '3-query')
             pass
 
@@ -547,7 +498,7 @@ try:
         _sleep(wait_step1)
         _writeln()
         #_______________________________________________________________________________________________________________
-        if debug_step:
+        if debug_step >= 5:
             browser.save_screenshot(screenshot_tag % '3-query-1-insert')
             pass
 
@@ -589,7 +540,7 @@ try:
         _writeln()
         #_______________________________________________________________________________________________________________
     #CZ#_read("<press key to continue>")
-        if debug_step:
+        if debug_step >= 5:
             browser.save_screenshot(screenshot_tag % '3-query-2-result')
             pass
 
@@ -625,7 +576,7 @@ try:
         _sleep(wait_step2)
         _writeln()
         #_______________________________________________________________________________________________________________
-        if debug_step:
+        if debug_step >= 5:
             browser.save_screenshot(screenshot_tag % '4-logout')
             pass
 

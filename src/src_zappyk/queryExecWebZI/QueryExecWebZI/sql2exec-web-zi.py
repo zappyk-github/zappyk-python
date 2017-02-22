@@ -105,6 +105,7 @@ linebuffer_log = []
 h2s_field_char = '|'
 csv_field_char = '|'
 
+writeValueNull = ''
 write_colsSkip = '---'
 write_lineSkip = True
 
@@ -242,6 +243,8 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_ch
                 lineSkip = False
                 if l > m:
                     cols_max[i] = l
+            if v == 'NULL':
+                v = writeValueNull
             this_tmp.append(v)
         if not lineSkip:
             line_tmp.append(this_tmp)

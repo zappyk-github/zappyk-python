@@ -207,8 +207,8 @@ def _writesql(browser_page_source=''):
 
 ########################################################################################################################
 def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
-#CZ#if isinstance(data, unicode):
-#CZ#    data = data.encode('utf-8')
+    if isinstance(data, unicode):
+        data = data.encode('utf-8')
 
     text_in = []
     if type(data) is str:

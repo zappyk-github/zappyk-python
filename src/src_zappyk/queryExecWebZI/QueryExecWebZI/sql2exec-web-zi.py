@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-import sys, re, time, copy, argparse
+import os, re, sys, time, copy, argparse
 
 from pyvirtualdisplay import Display
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 _version = '0.1'
 
@@ -375,7 +376,10 @@ def _browser(browser_webdrive):
     browser = None
     #___________________________________________________________________________________________________________________
     if _browser_is_Firefox(browser_webdrive):
+    #CZ#dcap = dict(DesiredCapabilities.FIREFOX)
+    #CZ#dcap['log_path'] = os.devnull
         browser = webdriver.Firefox()
+    #CZ#browser = webdriver.Firefox(firefox_profile=webdriver.FirefoxProfile())
     #___________________________________________________________________________________________________________________
     if _browser_is_PhantomJS(browser_webdrive):
     #   dcap = dict(DesiredCapabilities.PHANTOMJS)

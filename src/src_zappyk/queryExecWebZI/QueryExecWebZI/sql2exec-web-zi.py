@@ -124,6 +124,7 @@ type_password_ = config_RUN['password']
 find_username_ = 'm_cUserName'
 find_password_ = 'm_cPassword'
 
+name_titleHome = 'Infinity Zucchetti'
 find_typeLogin = "//*[@type='submit']"   #    => find_element_by_xpath(find_typeLogin)
 find_execQuery = ".*_RunButton"          # id => find_element_by_xpath("//*[@id='.*_RunButton']")
 find_execResul = ".*_FrameResult_iframe" # id => find_element_by_xpath("//*[@id='.*_FrameResult_iframe']")
@@ -158,6 +159,7 @@ browser_wd_PhantomJS_override_f = 'cost_bexecrunsql.CtxLoad_=function(){return t
 VirDisplay  = True
 InitBrowser = True
 PageLogin   = True
+PageTitle   = True
 PageQuery   = True
 PageAlert   = True
 InsQuery    = True
@@ -486,6 +488,20 @@ try:
         if debug_step >= 5:
             browser.save_screenshot(screenshot_tag % '2-home')
             pass
+
+########################################################################################################################
+######      #      #####   #######        #######  ###  #######  #        #######
+#     #    # #    #     #  #                 #      #      #     #        #
+#     #   #   #   #        #                 #      #      #     #        #
+######   #     #  #  ####  #####             #      #      #     #        #####
+#        #######  #     #  #                 #      #      #     #        #
+#        #     #  #     #  #                 #      #      #     #        #
+#        #     #   #####   #######           #     ###     #     #######  #######
+########################################################################################################################
+    if PageTitle:
+        _writeln("Home page?")
+        if browser.title != name_titleHome:
+            raise Exception("Home page not fond!")
 
 ########################################################################################################################
 ######      #      #####   #######         #####   #     #  #######  ######   #     #

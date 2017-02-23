@@ -18,6 +18,7 @@ from selenium import webdriver
 VirDisplay  = True
 InitBrowser = True
 PageLogin   = True
+PageTitle   = True
 PageQuery   = True
 PageAlert   = True
 InsQuery    = True
@@ -147,6 +148,7 @@ type_password_ = type_password1 if urlweb_PES else type_password2
 find_username_ = 'm_cUserName'
 find_password_ = 'm_cPassword'
 
+name_titleHome = 'Infinity Zucchetti'
 find_typeLogin = "//*[@type='submit']"   #    => find_element_by_xpath(find_typeLogin)
 find_execQuery = ".btsalva"              #    => find_element_by_css_selector(find_execQuery)
 find_execQuery = ".*_RunButton"          # id => find_element_by_xpath("//*[@id='.*_RunButton']")
@@ -490,6 +492,20 @@ try:
         if debug_step:
             browser.save_screenshot(screenshot_tag % '2-home')
             pass
+
+########################################################################################################################
+######      #      #####   #######        #######  ###  #######  #        #######
+#     #    # #    #     #  #                 #      #      #     #        #
+#     #   #   #   #        #                 #      #      #     #        #
+######   #     #  #  ####  #####             #      #      #     #        #####
+#        #######  #     #  #                 #      #      #     #        #
+#        #     #  #     #  #                 #      #      #     #        #
+#        #     #   #####   #######           #     ###     #     #######  #######
+########################################################################################################################
+    if PageTitle:
+        _writeln("Home page?")
+        if browser.title != name_titleHome:
+            raise Exception("Home page not fond!")
 
 ########################################################################################################################
 ######      #      #####   #######         #####   #     #  #######  ######   #     #

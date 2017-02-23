@@ -611,7 +611,9 @@ try:
             pass
 
 except Exception as e:
-    print(e)
+    _writeln("________________")
+    _writeln("Exception Detect")
+    _writeln(e)
     if browser is not None:
         browser.quit()
     #CZ#browser.close()
@@ -692,7 +694,9 @@ try:
     _writeln("Success :-)")
 
 except Exception as e:
-    print(e)
+    _writeln("________________")
+    _writeln("Exception Detect")
+    _writeln(e)
     browser.close()
     if VirDisplay:
         vdisplay.stop()

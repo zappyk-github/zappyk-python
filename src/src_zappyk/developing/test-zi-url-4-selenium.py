@@ -613,7 +613,7 @@ try:
 except Exception as e:
     _writeln("________________")
     _writeln("Exception Detect")
-    _writeln(e)
+    _writeln(str(e))
     if browser is not None:
         browser.quit()
     #CZ#browser.close()
@@ -696,7 +696,7 @@ try:
 except Exception as e:
     _writeln("________________")
     _writeln("Exception Detect")
-    _writeln(e)
+    _writeln(str(e))
     browser.close()
     if VirDisplay:
         vdisplay.stop()

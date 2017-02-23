@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'zappyk'
 
-import sys, re, time, argparse
+import sys, re, time, copy, argparse
 
 from pyvirtualdisplay import Display
 from selenium import webdriver
@@ -30,7 +30,7 @@ def _getconfig(run='', config_help=False):
         config['password'] = '!S3rv1c3s!'
         config['basepath'] = 'https://test.payroll.it/HRPW'
         if config_help:
-            conf_h['pes_test'] = config
+            conf_h['pes_test'] = copy.deepcopy(config)
 
     if config_help\
     or run == 'accademia':
@@ -38,7 +38,7 @@ def _getconfig(run='', config_help=False):
         config['password'] = '!4cc4d3m14!'
         config['basepath'] = 'https://saas.hrzucchetti.it/hrppbs'
         if config_help:
-            conf_h['accademia'] = config
+            conf_h['accademia'] = copy.deepcopy(config)
 
     if config_help:
         config = conf_h
@@ -48,17 +48,16 @@ def _getconfig(run='', config_help=False):
 ########################################################################################################################
 class MyArgumentParser(argparse.ArgumentParser):
     def print_help(self, file=None):
-        import pprint
         print(self.format_help())
         print('Configurations RUN available are:')
         config = _getconfig(config_help=True)
     #CZ#import pprint
     #CZ#pprint.pprint(config, indent=2, depth=2)
         for run in config:
+            config[run]['password'] = config[run]['password'][:3] + '***'
             print(' · %s' % run)
             for key in config[run]:
-                if key != 'password':
-                    print('\t\t%s: %s' % (key, config[run][key]))
+                print('\t\t%s: %s' % (key, config[run][key]))
             print('')
         self.exit()
 ########################################################################################################################

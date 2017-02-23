@@ -17,37 +17,66 @@ Query Executed on WEB Zucchetti Infinity Portal through page RUN-SQL.
 
 _epilog = "Version: %s" % _version
 
-########################################################################################################################
-def _getconfig(run=''):
-    config = {}
+_sdtin_ = '-'
 
-    if run == 'pes_test':
+########################################################################################################################
+def _getconfig(run='', config_help=False):
+    config = {}
+    conf_h = {}
+
+    if config_help\
+    or run == 'pes_test':
         config['username'] = 'administrator'
         config['password'] = '!S3rv1c3s!'
         config['basepath'] = 'https://test.payroll.it/HRPW'
+        if config_help:
+            conf_h['pes_test'] = config
 
-    if run == 'accademia':
+    if config_help\
+    or run == 'accademia':
         config['username'] = 'administrator'
         config['password'] = '!4cc4d3m14!'
         config['basepath'] = 'https://saas.hrzucchetti.it/hrppbs'
+        if config_help:
+            conf_h['accademia'] = config
+
+    if config_help:
+        config = conf_h
 
     return(config)
 
+########################################################################################################################
+class MyArgumentParser(argparse.ArgumentParser):
+    def print_help(self, file=None):
+        import pprint
+        print(self.format_help())
+        print('Configurations RUN available are:')
+        config = _getconfig(config_help=True)
+    #CZ#import pprint
+    #CZ#pprint.pprint(config, indent=2, depth=2)
+        for run in config:
+            print(' · %s' % run)
+            for key in config[run]:
+                if key != 'password':
+                    print('\t\t%s: %s' % (key, config[run][key]))
+            print('')
+        self.exit()
 ########################################################################################################################
 def _getargs():
 #CZ#parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=120)
     formatter = lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=50, width=120)
 #CZ#formatter = lambda prog: argparse.RawDescriptionHelpFormatter(prog, max_help_position=50, width=120)
-    parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
+#CZ#parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
+    parser = MyArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
 
-#CZ#pgroup.add_argument('-p' , '--power'       , help='display a power of a given number'   , type=int           , choices=[1,2,3,4,5])
-#CZ#pgroup.add_argument('-s' , '--square'      , help='display a square of a given number'  , type=int)
-    parser.add_argument('-d' , '--debug'       , help='increase output debug'               , action='count'     , default=0)
-    parser.add_argument('-v' , '--verbose'     , help='output verbosity'                    , action='store_true')
-    parser.add_argument('-V' , '--version'     , help='print version number'                , action='version'   , version='%(prog)s '+_version)
-    parser.add_argument('-r' , '--run'         , help='run execute'                         , type=str           , required=True)
-    parser.add_argument('-s' , '--sql'         , help='sql execute'                         , type=str           , required=True)
+#CZ#pgroup.add_argument('-p' , '--power'       , help='display a power of a given number'    , type=int           , choices=[1,2,3,4,5])
+#CZ#pgroup.add_argument('-s' , '--square'      , help='display a square of a given number'   , type=int)
+    parser.add_argument('-d' , '--debug'       , help='increase output debug'                , action='count'     , default=0)
+    parser.add_argument('-v' , '--verbose'     , help='output verbosity'                     , action='store_true')
+    parser.add_argument('-V' , '--version'     , help='print version number'                 , action='version'   , version='%(prog)s '+_version)
+    parser.add_argument('-r' , '--run'         , help='run execute, read below for more info', type=str           , required=True)
+    parser.add_argument('-s' , '--sql'         , help=('sql execute, %s for STDIN' % _sdtin_), type=str           , required=True)
 #CZ#parser.add_argument('name'                 , help='Name')
 #CZ#parser.add_argument('surname'              , help='Surnamename')
 
@@ -65,17 +94,13 @@ urlweb_RUN = args.run
 urlweb_SQL = args.sql
 config_RUN = _getconfig(urlweb_RUN)
 
-if urlweb_SQL == '-':
+if urlweb_SQL == _sdtin_:
     urlweb_SQL = [line.strip() for line in sys.stdin.readlines()]
     urlweb_SQL = '\n'.join(urlweb_SQL)
 
 ########################################################################################################################
 
-browser_wd = 'Firefox'
-
-wait_step1 = 3
-wait_step2 = 5
-wait_step3 = 5
+browser_wd = 'Firefox' # = 'Chrome' # = 'PhantomJS'
 
 ########################################################################################################################
 
@@ -105,9 +130,13 @@ linebuffer_log = []
 h2s_field_char = '|'
 csv_field_char = '|'
 
-writeValueNull = ''
+write_valsNULL = ''
 write_colsSkip = '---'
 write_lineSkip = True
+
+wait_on_step_1 = 3
+wait_on_step_2 = 5
+wait_on_step_3 = 5
 
 ########################################################################################################################
 
@@ -134,10 +163,10 @@ PrintBuffer = False
 ExitCode    = 0
 ########################################################################################################################
 
-if debug_step >= 0:
+if debug_step >= 1:
     PrintBuffer = True
 
-if debug_step >= 1:
+if debug_step >= 2:
     WriteBuffer = False
 
 ########################################################################################################################
@@ -243,8 +272,8 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_ch
                 lineSkip = False
                 if l > m:
                     cols_max[i] = l
-            if v == 'NULL':
-                v = writeValueNull
+            if v.upper() == 'NULL':
+                v = write_valsNULL
             this_tmp.append(v)
         if not lineSkip:
             line_tmp.append(this_tmp)
@@ -357,7 +386,7 @@ def _browser(browser_webdrive):
         browser = webdriver.PhantomJS()
     #CZ#browser = webdriver.PhantomJS(desired_capabilities=dcap, service_args=['--ignore-ssl-errors=true', '--ssl-protocol=any'])
         browser.set_window_size(1920, 1080)
-        browser.implicitly_wait(wait_step3)
+        browser.implicitly_wait(wait_on_step_3)
     #   browser.get_screenshot_as_file(browser_wd_PhantomJS_screenshot % 0)
     #___________________________________________________________________________________________________________________
     if _browser_is_Chrome(browser_webdrive):
@@ -402,7 +431,7 @@ try:
         _writeln("Open page login.")
         _write("Load page login %s:" % url_page_login)
         browser.get(url_page_login)
-        _sleep(wait_step2)
+        _sleep(wait_on_step_2)
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step >= 5:
@@ -433,7 +462,7 @@ try:
         password.send_keys(type_password_)
         login_attempt = browser.find_element_by_xpath(find_typeLogin)
         login_attempt.click()
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
         if _browser_is_PhantomJS(browser_wd):
@@ -457,7 +486,7 @@ try:
         _writeln("Open page query.")
         _write("Load page query %s:" % url_page_query)
         browser.get(url_page_query)
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
 
 ########################################################################################################################
@@ -477,7 +506,7 @@ try:
             browser.switch_to.alert.accept()
         if _browser_is_PhantomJS(browser_wd):
             pass
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
     #CZ#_writeln("\t|\n\t| here is Insert & Execute query\n\t|")
@@ -498,7 +527,7 @@ try:
         _write("Insert query:")
         sql_area = browser.find_element_by_name(find_queryArea)
         sql_area.send_keys(find_queryExec)
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step >= 5:
@@ -519,7 +548,7 @@ try:
         ids_exec = find_element_by_regex(browser, 'id', find_execQuery)
         sql_exec = browser.find_element_by_id(ids_exec[0])
         sql_exec.click()
-        _sleep(wait_step2)
+        _sleep(wait_on_step_2)
         _writeln()
 
 ########################################################################################################################
@@ -539,7 +568,7 @@ try:
         csv_resu = _writesql(out_resu)
         print('%s' % csv_resu)
         browser.switch_to.default_content()
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
     #CZ#_read("<press key to continue>")
@@ -576,7 +605,7 @@ try:
     #CZ#browser.execute_script("window.history.go(-2)")
         browser.back()
         browser.back()
-        _sleep(wait_step2)
+        _sleep(wait_on_step_2)
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step >= 5:
@@ -597,7 +626,7 @@ try:
         logout_ids = find_element_by_regex(browser, 'id', find_theLogout, 2)
         logout_attempt = browser.find_element_by_id(logout_ids[0])
         logout_attempt.click()
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
 
 ########################################################################################################################

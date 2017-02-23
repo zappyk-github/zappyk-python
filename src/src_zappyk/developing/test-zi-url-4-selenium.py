@@ -233,8 +233,6 @@ def _writebuffer():
 ########################################################################################################################
 def _writesql(browser_page_source=''):
     ps = browser_page_source
-#CZ#if isinstance(ps, unicode):
-#CZ#    ps = ps.encode('utf-8')
 #CZ#print("ps=[[%s]]" % ps)
 #CZ#print("ps={{%s}}" % type(ps))
     tt = _html_table2text(ps)
@@ -249,11 +247,14 @@ def _writesql(browser_page_source=''):
 
 ########################################################################################################################
 def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
-    if isinstance(data, unicode):
-        data = data.encode('utf-8')
+#CZ#if not isinstance(data, str):   # valido per python >= 3
+#CZ#    data = data.encode('utf-8') # valido per python >= 3
+    if isinstance(data, unicode):   # valido per python  = 2
+        data = data.encode('utf-8') # valido per python  = 2
 
     text_in = []
-    if type(data) is str:
+#CZ#if type(data) is bytes: # valido per python >= 3
+    if type(data) is str:   # valido per python  = 2
         text_in = data.split('\n')
     else:
         text_in = data

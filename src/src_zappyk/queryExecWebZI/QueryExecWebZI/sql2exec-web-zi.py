@@ -41,6 +41,14 @@ def _getconfig(run='', config_help=False):
         if config_help:
             conf_h['accademia'] = copy.deepcopy(config)
 
+    if config_help\
+    or run == 'cassapadana':
+        config['username'] = 'administrator'
+        config['password'] = 'C@33@p@d@n@!2016'
+        config['basepath'] = 'https://hr.cassapadana.it/ERM'
+        if config_help:
+            conf_h['cassapadana'] = copy.deepcopy(config)
+
     if config_help:
         config = conf_h
 
@@ -237,11 +245,14 @@ def _writesql(browser_page_source=''):
 
 ########################################################################################################################
 def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
-    if isinstance(data, unicode):
-        data = data.encode('utf-8')
+#CZ#if not isinstance(data, str):   # valido per python >= 3
+#CZ#    data = data.encode('utf-8') # valido per python >= 3
+    if isinstance(data, unicode):   # valido per python  = 2
+        data = data.encode('utf-8') # valido per python  = 2
 
     text_in = []
-    if type(data) is str:
+#CZ#if type(data) is bytes: # valido per python >= 3
+    if type(data) is str:   # valido per python  = 2
         text_in = data.split('\n')
     else:
         text_in = data

@@ -314,6 +314,7 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_sep_field=csv_field_cha
 ########################################################################################################################
 def _writecsv_line(string='', csv_sep_field=csv_field_char):
     if write_lineOnes:
+        global write_lineOnes
         write_lineOnes = False
         print(_printcsv_line('<header row to be skipped>', csv_sep_field))
     print(_printcsv_line(string, csv_sep_field))

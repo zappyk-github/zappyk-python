@@ -501,7 +501,14 @@ try:
     if PageTitle:
         _writeln("Home page?")
         if browser.title != name_titleHome:
-            raise Exception("Home page not fond!")
+            print('%s: pagina iniziale non accessibile :-(' % urlweb_RUN.upper())
+            if DoneBrowser:
+                browser.quit()
+            #CZ#browser.close()
+            if VirDisplay:
+                vdisplay.stop()
+            sys.exit(1)
+        #CZ#raise Exception("Home page not found!")
 
 ########################################################################################################################
 ######      #      #####   #######         #####   #     #  #######  ######   #     #
@@ -610,7 +617,8 @@ except Exception as e:
     _writeln("________________")
     _writeln("Exception Detect")
     _writeln(str(e))
-    if browser is not None:
+    if DoneBrowser and \
+       browser is not None:
         browser.quit()
     #CZ#browser.close()
     if VirDisplay:
@@ -686,14 +694,16 @@ try:
 ########################################################################################################################
     if VirDisplay:
         vdisplay.stop()
-    # _______________________________________________________________________________________________________________
+    #___________________________________________________________________________________________________________________
     _writeln("Success :-)")
 
 except Exception as e:
     _writeln("________________")
     _writeln("Exception Detect")
     _writeln(str(e))
-    browser.close()
+    if DoneBrowser:
+        browser.quit()
+    #CZ#browser.close()
     if VirDisplay:
         vdisplay.stop()
     ExitCode = 1

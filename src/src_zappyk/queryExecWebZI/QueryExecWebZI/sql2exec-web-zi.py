@@ -246,7 +246,7 @@ def _writesql(browser_page_source=''):
     return(ws)
 
 ########################################################################################################################
-def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
+def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_sep_field=csv_field_char, trim_field=True):
 #CZ#if not isinstance(data, str):   # valido per python >= 3
 #CZ#    data = data.encode('utf-8') # valido per python >= 3
     if isinstance(data, unicode):   # valido per python  = 2
@@ -302,7 +302,7 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_ch
     rows_out = []
     for r in rows_tmp:
     #CZ#l = sep_field.join(r)
-        l = '%s%s%s' % (csv_field_char, csv_field_char.join(r), csv_field_char)
+        l = '%s%s%s' % (csv_sep_field, csv_sep_field.join(r), csv_sep_field)
         rows_out.append(l)
 
 #CZ#text_out = '\n'.join(rows_out)
@@ -501,7 +501,7 @@ try:
     if PageTitle:
         _writeln("Home page?")
         if browser.title != name_titleHome:
-            print('%s: pagina iniziale non accessibile :-(' % urlweb_RUN.upper())
+            print('%s %s: pagina iniziale non accessibile :-(' % (csv_field_char, urlweb_RUN.upper()))
             if DoneBrowser:
                 browser.quit()
             #CZ#browser.close()

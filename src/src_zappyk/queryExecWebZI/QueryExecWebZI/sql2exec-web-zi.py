@@ -142,6 +142,7 @@ csv_field_char = '|'
 write_valsNULL = ''
 write_colsSkip = '---'
 write_lineSkip = True
+write_lineOnes = True
 
 wait_on_step_1 = 3
 wait_on_step_2 = 5
@@ -312,6 +313,9 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_sep_field=csv_field_cha
 
 ########################################################################################################################
 def _writecsv_line(string='', csv_sep_field=csv_field_char):
+    if write_lineOnes:
+        write_lineOnes = False
+        print('<header row to be skipped>')
     print('%s%s%s' % (csv_sep_field, string, csv_sep_field))
 
 ########################################################################################################################

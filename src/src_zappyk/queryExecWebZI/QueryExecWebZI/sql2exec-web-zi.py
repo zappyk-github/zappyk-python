@@ -311,6 +311,10 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_sep_field=csv_field_cha
     return(text_out)
 
 ########################################################################################################################
+def _writecsv_line(string='', csv_sep_field=csv_field_char):
+    print('%s%s%s' % (csv_sep_field, string, csv_sep_field))
+
+########################################################################################################################
 def _repeat_string(string='', repetitions=0):
     return(''.join([ string for n in range(repetitions)]))
 
@@ -501,7 +505,7 @@ try:
     if PageTitle:
         _writeln("Home page?")
         if browser.title != name_titleHome:
-            print('%s %s: pagina iniziale non accessibile :-(' % (csv_field_char, urlweb_RUN.upper()))
+            _writecsv_line('%s: pagina iniziale non accessibile :-(' % urlweb_RUN.upper())
             if DoneBrowser:
                 browser.quit()
             #CZ#browser.close()

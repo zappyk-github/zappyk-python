@@ -303,7 +303,7 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_sep_field=csv_field_cha
     rows_out = []
     for r in rows_tmp:
     #CZ#l = sep_field.join(r)
-        l = '%s%s%s' % (csv_sep_field, csv_sep_field.join(r), csv_sep_field)
+        l = _printcsv_line(csv_sep_field.join(r), csv_sep_field)
         rows_out.append(l)
 
 #CZ#text_out = '\n'.join(rows_out)
@@ -315,8 +315,13 @@ def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_sep_field=csv_field_cha
 def _writecsv_line(string='', csv_sep_field=csv_field_char):
     if write_lineOnes:
         write_lineOnes = False
-        print('<header row to be skipped>')
-    print('%s%s%s' % (csv_sep_field, string, csv_sep_field))
+        print(_printcsv_line('<header row to be skipped>', csv_sep_field))
+    print(_printcsv_line(string, csv_sep_field))
+
+########################################################################################################################
+def _printcsv_line(string='', csv_sep_field=csv_field_char):
+    line = '%s%s%s' % (csv_sep_field, string, csv_sep_field)
+    return(line)
 
 ########################################################################################################################
 def _repeat_string(string='', repetitions=0):

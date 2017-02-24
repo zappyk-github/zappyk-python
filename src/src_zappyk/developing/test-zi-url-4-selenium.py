@@ -16,6 +16,7 @@ from selenium import webdriver
 
 ########################################################################################################################
 VirDisplay  = True
+VirDisplay  = False
 InitBrowser = True
 PageLogin   = True
 PageTitle   = True
@@ -123,11 +124,6 @@ browser_wd = 'PhantomJS'
 browser_wd = 'Chrome'
 browser_wd = 'Firefox'
 
-wait_step1 = 3
-wait_step2 = 9
-wait_step2 = 5
-wait_step3 = 5
-
 ########################################################################################################################
 
 set_user_agent = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1"
@@ -165,8 +161,14 @@ linebuffer_log = []
 h2s_field_char = '|'
 csv_field_char = '|'
 
+write_valsNULL = ''
 write_colsSkip = '---'
 write_lineSkip = True
+write_lineOnes = True
+
+wait_on_step_1 = 3
+wait_on_step_2 = 5
+wait_on_step_3 = 5
 
 ########################################################################################################################
 
@@ -249,14 +251,14 @@ def _writesql(browser_page_source=''):
 
 ########################################################################################################################
 def _writecsv(data='', h2s_sep_field=h2s_field_char, csv_field_char=csv_field_char, trim_field=True):
-#CZ#if not isinstance(data, str):   # valido per python >= 3
-#CZ#    data = data.encode('utf-8') # valido per python >= 3
-    if isinstance(data, unicode):   # valido per python  = 2
-        data = data.encode('utf-8') # valido per python  = 2
+    if not isinstance(data, str):   # valido per python >= 3
+        data = data.encode('utf-8') # valido per python >= 3
+#CZ#if isinstance(data, unicode):   # valido per python  = 2
+#CZ#    data = data.encode('utf-8') # valido per python  = 2
 
     text_in = []
-#CZ#if type(data) is bytes: # valido per python >= 3
-    if type(data) is str:   # valido per python  = 2
+    if type(data) is bytes: # valido per python >= 3
+#CZ#if type(data) is str:   # valido per python  = 2
         text_in = data.split('\n')
     else:
         text_in = data
@@ -406,7 +408,7 @@ def _browser(browser_webdrive):
         browser = webdriver.PhantomJS()
     #CZ#browser = webdriver.PhantomJS(desired_capabilities=dcap, service_args=['--ignore-ssl-errors=true', '--ssl-protocol=any'])
         browser.set_window_size(1920, 1080)
-        browser.implicitly_wait(wait_step3)
+        browser.implicitly_wait(wait_on_step_3)
     #   browser.get_screenshot_as_file(browser_wd_PhantomJS_screenshot % 0)
     #___________________________________________________________________________________________________________________
     if _browser_is_Chrome(browser_webdrive):
@@ -451,7 +453,7 @@ try:
         _writeln("Open page login.")
         _write("Load page login %s:" % url_page_login)
         browser.get(url_page_login)
-        _sleep(wait_step2)
+        _sleep(wait_on_step_2)
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step:
@@ -472,7 +474,7 @@ try:
         username = browser.find_element_by_name(find_username_)
         password = browser.find_element_by_name(find_password_)
         #if _browser_is_PhantomJS(browser_wd):
-        #    wait = WebDriverWait(browser, wait_step3)
+        #    wait = WebDriverWait(browser, wait_on_step_3)
         #    password = wait.until(EC.presence_of_element_located((By.NAME, find_password_)))
         #    password = wait.until(EC.visibility_of_element_located((By.NAME, find_password_)))
         #    pass
@@ -482,7 +484,7 @@ try:
         password.send_keys(type_password_)
         login_attempt = browser.find_element_by_xpath(find_typeLogin)
         login_attempt.click()
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
         if _browser_is_PhantomJS(browser_wd):
@@ -520,7 +522,7 @@ try:
         _writeln("Open page query.")
         _write("Load page query %s:" % url_page_query)
         browser.get(url_page_query)
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
 
 ########################################################################################################################
@@ -540,7 +542,7 @@ try:
             browser.switch_to.alert.accept()
         if _browser_is_PhantomJS(browser_wd):
             pass
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
     #CZ#_writeln("\t|\n\t| here is Insert & Execute query\n\t|")
@@ -561,7 +563,7 @@ try:
         _write("Insert query:")
         sql_area = browser.find_element_by_name(find_queryArea)
         sql_area.send_keys(find_queryExec)
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step:
@@ -582,7 +584,7 @@ try:
         ids_exec = find_element_by_regex(browser, 'id', find_execQuery)
         sql_exec = browser.find_element_by_id(ids_exec[0])
         sql_exec.click()
-        _sleep(wait_step2)
+        _sleep(wait_on_step_2)
         _writeln()
 
 ########################################################################################################################
@@ -602,7 +604,7 @@ try:
         csv_resu = _writesql(out_resu)
         print('%s' % csv_resu)
         browser.switch_to.default_content()
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
         #_______________________________________________________________________________________________________________
     #CZ#_read("<press key to continue>")
@@ -641,7 +643,7 @@ try:
     #CZ#browser.execute_script("window.history.go(-2)")
         browser.back()
         browser.back()
-        _sleep(wait_step2)
+        _sleep(wait_on_step_2)
         _writeln()
         #_______________________________________________________________________________________________________________
         if debug_step:
@@ -662,7 +664,7 @@ try:
         logout_ids = find_element_by_regex(browser, 'id', find_theLogout, 2)
         logout_attempt = browser.find_element_by_id(logout_ids[0])
         logout_attempt.click()
-        _sleep(wait_step1)
+        _sleep(wait_on_step_1)
         _writeln()
 
 ########################################################################################################################

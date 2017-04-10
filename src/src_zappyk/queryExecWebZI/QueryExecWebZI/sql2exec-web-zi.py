@@ -45,6 +45,8 @@ def _getconfig(run='', config_help=False):
     or run == 'cassapadana':
         config['username'] = 'administrator'
         config['password'] = 'C@33@p@d@n@!2016'
+        config['password'] = 'C@33@p@d@n@!2017'
+        config['password'] = '2017!C@33@p@d@n@'
         config['basepath'] = 'https://hr.cassapadana.it/ERM'
         if config_help:
             conf_h['cassapadana'] = copy.deepcopy(config)

@@ -8,8 +8,9 @@ LINE_SEPARATOR = '#' * LINE_LENGTH
 LINE_PARTITION = '=' * LINE_LENGTH
 
 CHAR_STD_INOUT = '-'
+CHAR_KEY_SPLIT = '|'
 
-TYPE_IN_av8p = 'av8p' # Analisi Vendite su 8 Periodo
+TYPE_IN_mmam = 'mmam' # Merge file master with file month
 
 TYPE_OUT_csv = 'csv'
 TYPE_OUT_xls = 'xls'

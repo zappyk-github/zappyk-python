@@ -2,16 +2,17 @@
 __author__ = 'zappyk'
 
 import csv
-import xlsxwriter
+#CZ#import xlsxwriter
 
 from tkinter            import *
 from tkinter            import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter.messagebox import showinfo, showerror
+from collections        import defaultdict
 
 from lib_zappyk          import _initializeVariable
 from lib_zappyk._os_file import _basenameNotExt, _basenameGetExt, _basenameFullPathNotExt, _fileExist
-from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _stringToList, _stringToListOnSpace
+from lib_zappyk._string  import _trim, _trimList, _remove, _search, _findall, _joinSpace, _joinChar, _stringToList, _stringToListOnSpace
 
 from MergeTwoCsv2One.cfg.load_cfg    import parser_args, parser_conf, logger_conf
 from MergeTwoCsv2One.cfg.load_ini    import *
@@ -38,25 +39,27 @@ key_columns_merge  = args.key_columns_merge  if args.key_columns_merge  is not N
 run_gui            = args.run_gui
 run_cmd            = args.run_cmd
 type_input         = args.type_input
-file_input         = args.file_input
+file_input_master  = args.file_input_master
+file_input_addcsv  = args.file_input_addcsv
 file_output        = args.file_output
 type_output        = args.type_output
 
 run_gui            = True  if sys.platform == 'win32' else run_gui
 run_gui            = False if run_cmd                 else run_gui
 
-name_input         = _basenameNotExt(file_input)
+name_input_master  = _basenameNotExt(file_input_master)
+name_input_addcsv  = _basenameNotExt(file_input_addcsv)
 exte_output        = _basenameGetExt(file_output)
 type_output        = TYPE_OUT_csv      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_csv) else type_output
-type_output        = TYPE_OUT_xls      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_xls) else type_output
+#CZ#type_output        = TYPE_OUT_xls      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_xls) else type_output
 
-file_output_csv    = '.'.join([_basenameFullPathNotExt(file_input), TYPE_OUT_csv])
-file_output_xls    = '.'.join([_basenameFullPathNotExt(file_input), TYPE_OUT_xls])
+file_output_csv    = '.'.join([_basenameFullPathNotExt(file_input_master), TYPE_OUT_csv])
+#CZ#file_output_xls    = '.'.join([_basenameFullPathNotExt(file_input_master), TYPE_OUT_xls])
 
 file_output        = file_output_csv   if (file_output is None)           and (type_output     == TYPE_OUT_csv) else file_output
-file_output        = file_output_xls   if (file_output is None)           and (type_output     == TYPE_OUT_xls) else file_output
+#CZ#file_output        = file_output_xls   if (file_output is None)           and (type_output     == TYPE_OUT_xls) else file_output
 file_output        = file_output_csv   if (file_output == CHAR_STD_INOUT) and (type_output     == TYPE_OUT_csv) else file_output
-file_output        = file_output_xls   if (file_output == CHAR_STD_INOUT) and (type_output     == TYPE_OUT_xls) else file_output
+#CZ#file_output        = file_output_xls   if (file_output == CHAR_STD_INOUT) and (type_output     == TYPE_OUT_xls) else file_output
 
 #csv_delimiter     = ','               if csv_delimiter      is None else csv_delimiter
 #csv_quotechar     = '"'               if csv_quotechar      is None else csv_quotechar
@@ -65,31 +68,35 @@ csv_quoting        = csv.QUOTE_NONE    if csv_quoting        is None else csv_qu
 #csv_lineterminator= "\r\n"            if csv_lineterminator is None else csv_lineterminator
 #key_columns_merge = ''                if key_columns_merge  is None else key_columns_merge
 
-root           = Tk()
-root_path_file = StringVar()
-root_choose_in = StringVar()
-root_chooseext = StringVar()
-root_combo_out = [('Analisi delle Vendite su 8 Periodi', TYPE_IN_av8p)
-                 ,('...another report layout...'       , 'xxxx')]
-root_filetypes = (('Text files', '*.txt')
-                 ,('All files' , '*.*'  ))
+root                  = Tk()
+root_path_file_master = StringVar()
+root_path_file_addcsv = StringVar()
+root_choose_in        = StringVar()
+root_chooseext        = StringVar()
+root_combo_out        = [('Merge file master with file month', TYPE_IN_mmam)
+                        ,('...another report layout...'      , 'xxxx')]
+root_filetypes        = (('Text files', '*.csv')
+                        ,('All files' , '*.*'  ))
 
-self_translate_entry = _initializeVariable()
+self__execute__entry   = _initializeVariable()
 
-self_type_input    = _initializeVariable(); self_type_input .set(type_input)
-self_file_input    = _initializeVariable(); self_file_input .set(file_input)
-self_name_input    = _initializeVariable(); self_name_input .set(name_input)
-self_file_output   = _initializeVariable(); self_file_output.set(file_output)
-self_type_output   = _initializeVariable(); self_type_output.set(type_output)
+self_type_input        = _initializeVariable(); self_type_input       .set(type_input)
+self_file_input_master = _initializeVariable(); self_file_input_master.set(file_input_master)
+self_file_input_addcsv = _initializeVariable(); self_file_input_addcsv.set(file_input_addcsv)
+self_name_input_master = _initializeVariable(); self_name_input_master.set(name_input_master)
+self_name_input_addcsv = _initializeVariable(); self_name_input_addcsv.set(name_input_addcsv)
+self_file_output       = _initializeVariable(); self_file_output      .set(file_output)
+self_type_output       = _initializeVariable(); self_type_output      .set(type_output)
 
-if file_input == file_output != CHAR_STD_INOUT:
-    logs.error("File input '%s' can't be the same file output!" % file_input)
+if file_input_master == file_output != CHAR_STD_INOUT:
+    logs.error("File input '%s' can't be the same file output!" % file_input_master)
 
 if args.debug >= 1:
     logs.info('run_gui            = %s' % repr(run_gui))
     logs.info('run_cmd            = %s' % repr(run_cmd))
     logs.info('type_input         = %s' % repr(type_input))
-    logs.info('file_input         = %s' % repr(file_input))
+    logs.info('file_input_master  = %s' % repr(file_input_master))
+    logs.info('file_input_addcsv  = %s' % repr(file_input_addcsv))
     logs.info('file_output        = %s' % repr(file_output))
     logs.info('type_output        = %s' % repr(type_output))
     logs.info('csv_delimiter      = %s' % repr(csv_delimiter))
@@ -113,53 +120,85 @@ def _root_combo_get(root_combo_out, type_input):
     return(type_input)
 
 ###############################################################################
-def _root_load_file():
+def _root_load_file_master():
     filename = askopenfilename(filetypes=root_filetypes)
     if filename:
         try:
-            root_path_file.set(filename)
+            print("*** qui *** ((%s))" % filename)
+            root_path_file_master.set(filename)
         except:
             logs_error('Failed to read file\n%s' % filename, 'Open Source File')
         return
 
 ###############################################################################
-def _root_translate():
-    file_input       = root_path_file.get()
-    type_input       = root_choose_in.get()
-    type_output      = root_chooseext.get()
-
-    name_input       = _basenameNotExt(file_input)
-    name_output      = _basenameFullPathNotExt(file_input)
-    file_output_csv  = '.'.join([name_output, TYPE_OUT_csv]) if name_input != '' else CHAR_STD_INOUT
-    file_output_xls  = '.'.join([name_output, TYPE_OUT_xls]) if name_input != '' else CHAR_STD_INOUT
-    file_output      = None
-    file_output      = file_output_csv   if (file_output is None) and (type_output == TYPE_OUT_csv) else file_output
-    file_output      = file_output_xls   if (file_output is None) and (type_output == TYPE_OUT_xls) else file_output
-
-    type_input       = _root_combo_get(root_combo_out, type_input)
-
-    self_type_input .set(type_input)
-    self_file_input .set(file_input)
-    self_name_input .set(name_input)
-    self_file_output.set(file_output)
-    self_type_output.set(type_output)
-
-    if _trim(name_input) == '':
-        logs_info('Choose text file report, please!')
+def _root_load_file_addcsv():
+    filename = askopenfilename(filetypes=root_filetypes)
+    if filename:
+        try:
+            root_path_file_addcsv.set(filename)
+        except:
+            logs_error('Failed to read file\n%s' % filename, 'Open Source File')
         return
 
-    if not _fileExist(file_input):
-        logs_info("File report '%s' not exist!" % file_input)
+
+###############################################################################
+def _root__execute_():
+    file_input_master = root_path_file_master.get()
+    file_input_addcsv = root_path_file_addcsv.get()
+    type_input        = root_choose_in.get()
+    type_output       = root_chooseext.get()
+
+    name_input_master = _basenameNotExt(file_input_master)
+    name_input_addcsv = _basenameNotExt(file_input_addcsv)
+    name_output       = _basenameFullPathNotExt(file_input_master)
+    name_output       = ''.join([name_output, '+merged+', name_input_addcsv])
+#CZ#file_output_csv   = '.'.join([name_output, TYPE_OUT_csv]) if name_input != '' else CHAR_STD_INOUT
+#CZ#file_output_xls   = '.'.join([name_output, TYPE_OUT_xls]) if name_input != '' else CHAR_STD_INOUT
+    file_output_csv   = '.'.join([name_output, TYPE_OUT_csv]) if name_input_master != '' else CHAR_STD_INOUT
+#CZ#file_output       = None
+    file_output       = None              if (args.file_output == CHAR_STD_INOUT) else args.file_output
+    file_output       = file_output_csv   if (file_output is None) and (type_output == TYPE_OUT_csv) else file_output
+#CZ#file_output       = file_output_xls   if (file_output is None) and (type_output == TYPE_OUT_xls) else file_output
+
+    type_input        = _root_combo_get(root_combo_out, type_input)
+
+    self_type_input       .set(type_input)
+    self_file_input_master.set(file_input_master)
+    self_file_input_addcsv.set(file_input_addcsv)
+    self_name_input_master.set(name_input_master)
+    self_name_input_addcsv.set(name_input_addcsv)
+    self_file_output      .set(file_output)
+    self_type_output      .set(type_output)
+
+    if _trim(name_input_master) == '':
+        logs_info('Choose csv file Master, please!')
+        return
+
+    if _trim(name_input_addcsv) == '':
+        logs_info('Choose csv file AddCSV, please!')
+        return
+
+    if not _fileExist(file_input_master):
+        logs_info("File Master '%s' not exist!" % file_input_master)
+        return
+
+    if not _fileExist(file_input_addcsv):
+        logs_info("File AddCSV '%s' not exist!" % file_input_addcsv)
         return
 
     manipulate()
 
 ###############################################################################
-def _root_translate_entry_on_change(a, b, c):
-    if root_path_file.get() == '':
-        self_translate_entry.get().config(state=DISABLED)
+def _root__execute__entry_on_change(a, b, c):
+    if root_path_file_master.get() == '':
+        self__execute__entry.get().config(state=DISABLED)
     else:
-        self_translate_entry.get().config(state=NORMAL)
+        self__execute__entry.get().config(state=NORMAL)
+
+    if root_path_file_addcsv.get() == '':
+        self__execute__entry.get().config(state=DISABLED)
+    else:
+        self__execute__entry.get().config(state=NORMAL)
 
 ###############################################################################
 def _root_destroy():
@@ -171,9 +210,10 @@ def main_gui():
 #CZ#from MergeTwoCsv2One.src.version     import the_version
 #CZ#root.title('Manipulation Text Report (ver. %s)' % the_version())
     from MergeTwoCsv2One import VERSION as version
-    root.title('Manipulation Text Report (ver. %s)' % version)
+    root.title('Merge 2 file CSV in one file (ver. %s)' % version)
     root.resizable(0,0)
-    root.bind('<Return>', _root_load_file)
+    root.bind('<Return>', _root_load_file_master)
+    root.bind('<Return>', _root_load_file_addcsv)
 
     mainframe = ttk.Frame(root, padding='3 3 12 12')
     mainframe.columnconfigure(0, weight=1)
@@ -187,42 +227,58 @@ def main_gui():
 
     style = ttk.Style()
     style.configure('.', padding=len_padding, relief='flat', font=('Helvetica', len_font_MF), foreground='black', background='#ccc')
-    style.map('root_translate_entry.TButton', foreground=[('pressed', 'green'), ('active', 'green')]
+    style.map('root__execute__entry.TButton', foreground=[('pressed', 'green'), ('active', 'green')]
                                             , background=[('pressed', '!disabled', 'black'), ('active', 'white')]
     )
     style.map('root_cancel_entry.TButton', foreground=[('pressed', 'red'), ('active', 'red')]
                                          , background=[('pressed', '!disabled', 'black'), ('active', 'white')]
     )
 
-    root_path_file_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file)
-    root_path_file_entry.focus()
-    root_path_file.trace('w', _root_translate_entry_on_change) # rwua
+    root_path_file_master_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file_master)
+    root_path_file_master_entry.focus()
+    root_path_file_master.trace('w', _root__execute__entry_on_change) # rwua
+
+    root_path_file_addcsv_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file_addcsv)
+    root_path_file_addcsv_entry.focus()
+    root_path_file_addcsv.trace('w', _root__execute__entry_on_change)  # rwua
 
     root_choose_in_entry = ttk.Combobox(mainframe, width=len_with_EC, textvariable=root_choose_in, state='readonly')
     root_choose_in_entry['values'] = _root_combo_set(root_combo_out)
     root_choose_in_entry.current(0)
 
-    root_choosecsv_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_csv.upper(), value=TYPE_OUT_csv, variable=root_chooseext)
-    root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_xls.upper(), value=TYPE_OUT_xls, variable=root_chooseext)
-    root_chooseext.set(TYPE_OUT_xls)
+#CZ#root_choosecsv_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_csv.upper(), value=TYPE_OUT_csv, variable=root_chooseext)
+#CZ#root_choosexls_entry = ttk.Radiobutton(mainframe, text='output in %s' % TYPE_OUT_xls.upper(), value=TYPE_OUT_xls, variable=root_chooseext)
+#CZ#root_chooseext.set(TYPE_OUT_xls)
+    root_chooseext.set(TYPE_OUT_csv)
 
-    root_fsbrowser_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file)
-    root_translate_entry = ttk.Button(mainframe, text='Translate', width=len_with_B2, command=_root_translate, state=DISABLED, style='root_translate_entry.TButton')
-    self_translate_entry.set(root_translate_entry)
+#CZ#root_fsbrowser_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file)
+    root_fb_master_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file_master)
+    root_fb_addcsv_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file_addcsv)
+    root__execute__entry = ttk.Button(mainframe, text='Merge File', width=len_with_B2, command=_root__execute_, state=DISABLED, style='root__execute__entry.TButton')
+    self__execute__entry.set(root__execute__entry)
 
     root_cancel_entry = ttk.Button(mainframe, text='CANCEL', width=len_with_B1, command=_root_destroy , style='root_cancel_entry.TButton')
 
-    mainframe                                              .grid(column=0, row=0, sticky=(N, W, E, S))
-    ttk.Label (mainframe, text="Choose text file through:").grid(column=1, row=1, sticky=W)
-    root_fsbrowser_entry                                   .grid(column=1, row=2, sticky=W)
-    ttk.Label (mainframe, text="or enter")                 .grid(column=2, row=2, sticky=W)
-    root_path_file_entry                                   .grid(column=3, row=2, sticky=(W, E))
-    root_choose_in_entry                                   .grid(column=3, row=3, sticky=(W, E))
-    ttk.Label (mainframe, text="Choose type report text:") .grid(column=1, row=3, sticky=W)
-    root_choosecsv_entry                                   .grid(column=3, row=4, sticky=(W, E))
-    root_choosexls_entry                                   .grid(column=3, row=5, sticky=(W, E))
-    root_translate_entry                                   .grid(column=3, row=6, sticky=W)
-    root_cancel_entry                                      .grid(column=3, row=8, sticky=E)
+    mainframe                                             .grid(column=0, row=0, sticky=(N, W, E, S))
+    ttk.Label (mainframe, text="Choose CSV file through:").grid(column=1, row=1 , sticky=W)
+
+    ttk.Label (mainframe, text=" · file CSV MASTER")      .grid(column=1, row=2 , sticky=W)
+    root_fb_master_entry                                  .grid(column=2, row=2 , sticky=W)
+    ttk.Label (mainframe, text="or enter")                .grid(column=3, row=2 , sticky=W)
+    root_path_file_master_entry                           .grid(column=4, row=2 , sticky=(W, E))
+
+
+    ttk.Label(mainframe, text=" · file CSV Add.Month")    .grid(column=1, row=3, sticky=W)
+    root_fb_addcsv_entry                                  .grid(column=2, row=3, sticky=W)
+    ttk.Label(mainframe, text="or enter")                 .grid(column=3, row=3, sticky=W)
+    root_path_file_addcsv_entry                           .grid(column=4, row=3, sticky=(W, E))
+
+    root_choose_in_entry                                  .grid(column=4, row=6 , sticky=(W, E))
+    ttk.Label (mainframe, text="Choose type report text:").grid(column=1, row=6 , sticky=W)
+#CZ#root_choosecsv_entry                                  .grid(column=4, row=7 , sticky=(W, E))
+#CZ#root_choosexls_entry                                  .grid(column=4, row=8 , sticky=(W, E))
+    root__execute__entry                                  .grid(column=4, row=9 , sticky=W)
+    root_cancel_entry                                     .grid(column=4, row=11, sticky=E)
 
     for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
 
@@ -245,174 +301,206 @@ def main():
 ###############################################################################
 def manipulate():
     if args.debug >= 1:
-        logs.info('type_input  = %s' % self_type_input.get())
-        logs.info('file_input  = %s' % self_file_input.get())
-        logs.info('file_output = %s' % self_file_output.get())
-        logs.info('type_output = %s' % self_type_output.get())
-        logs.info('-------------')
+        logs.info('type_input        = %s' % self_type_input.get())
+        logs.info('file_input_master = %s' % self_file_input_master.get())
+        logs.info('file_input_addcsv = %s' % self_file_input_addcsv.get())
+        logs.info('file_output       = %s' % self_file_output.get())
+        logs.info('type_output       = %s' % self_type_output.get())
+        logs.info('-------------------')
 
     try:
-        txt_lines = read_filein()
+        csv_lines_master = read_filein_master()
+        csv_lines_addcsv = read_filein_addcsv()
 
         dat_lines = None
-       #if type_input ==  TYPE_IN_av8p:
-        if self_type_input.get() ==  TYPE_IN_av8p:
-            dat_lines = manipulate_av8p(txt_lines)
+       #if type_input ==  TYPE_IN_mmam:
+        if self_type_input.get() ==  TYPE_IN_mmam:
+            dat_lines = manipulate_mmam(csv_lines_master, csv_lines_addcsv)
         else:
            #logs_error("Type input '%s' can't be configurate!" % type_input)
             logs_error("Type input '%s' can't be configurate!" % self_type_input.get())
 
         write_fileout(dat_lines)
 
-       #logs_info('Translate completed!\n\nOpen file output on:\n%s' % file_output)
-        logs_info('Translate completed!\n\nOpen file output on:\n%s' % self_file_output.get())
+       #logs_info('Merge CSV completed!\n\nOpen file output on:\n%s' % file_output)
+        logs_info('Merge CSV completed!\n\nOpen file output on:\n%s' % self_file_output.get())
 
     except ValueError:
         pass
 
 ###############################################################################
-def manipulate_av8p(txt_lines):
-    tmp_lines = []
-    dat_lines = []
+def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
+    keys = _stringToList(key_columns_merge, CHAR_KEY_SPLIT)
+#CZ#keys = [map(lambda value: value.upper(), keys)]
+    keys = [value.upper() for value in keys]
+    kadd = {}
+    #__________________________________________________________________________
+    #
+    Ckeys = []
+    Vkeys = []
+    first = True
+    count_row = 0
+    count_col = 0
+    lines_add = {}
+    #==========================================================================
+    for csv_line_addcsv in csv_lines_addcsv:
+        count_row = count_row +1
 
-    dat_head_0 = True
-    dat_body_1 = False
-    dat_body_2 = False
+        if first:
+            first = False
+            count_col = 0
+            for value in csv_line_addcsv:
+                count_col = count_col +1
+                finds = [key for key in keys if key == value.upper()]
+                if len(finds) > 0:
+                    Ckeys.append(count_col-1)
+                if args.debug >= 3:
+                    logs_info("AddCSV line %3s.%2s [%s]" % (count_row, count_col, value))
+            if args.debug >= 2:
+                logs_info('AddCSV:')
 
-    row_head_0 = None
-    row_body_1 = None
-    row_body_2 = None
+        else:
+            if args.debug >= 3:
+                logs_info("AddCSV line %3s.   [%s]" % (count_row, csv_line_addcsv))
 
-    fld_first  = 45
-    fld_code   = 10
-    fld_name   = fld_first - fld_code
-    frm_first  = '%'+str(fld_code)+'s' + csv_delimiter + '%-'+str(fld_name)+'s'
+            Vkeys = []
+            for k in Ckeys:
+                Vkeys.append(csv_line_addcsv[Ckeys[k]])
+            Skeys = _joinChar(Vkeys, CHAR_KEY_SPLIT)
+            debug = 'read'
 
-    reg_head_0 = 'DAL .* TOTALI'
-    reg_body_1 = '\d{1,'+str(fld_code)+'}\s\s?\w'
+            lines_row = [csv_line_addcsv]
+            if Skeys in lines_add:
+                lines_row = lines_add[Skeys]
+                lines_row.append(csv_line_addcsv)
+            lines_add[Skeys] = lines_row
 
-   #rec_head_0 = re.compile(reg_head_0, re.I|re.L|re.M|re.U|re.S)
-   #rec_body_1 = re.compile(reg_body_1, re.I|re.L|re.M|re.U|re.S)
+            if args.debug >= 2:
+                logs_info('AddCSV %-5s (%s) == (%s)' % (debug, Skeys, csv_line_addcsv))
 
     #__________________________________________________________________________
-    for txt_line in txt_lines:
-        txt_line = _remove(txt_line, "\f\r\n")
-        txt_line = normalize_string(txt_line)
+    #
+    Ckeys = []
+    Vkeys = []
+    first = True
+    count_row = 0
+    count_col = 0
+    lines_out = []
+    #==========================================================================
+    for csv_line_master in csv_lines_master:
+        count_row = count_row +1
 
-        if args.debug >= 2:
-            print("#-|"+txt_line)
-        #______________________________________________________________________
-       #if dat_head_0 and rec_head_0.search(txt_line):
-        if dat_head_0 and _search(reg_head_0, txt_line):
-            dat_head_0 = False
-            dat_body_1 = True
+        if first:
+            first = False
+            count_col = 0
+            for value in csv_line_master:
+                count_col = count_col +1
+                finds = [key for key in keys if key == value.upper()]
+                if len(finds) > 0:
+                    Ckeys.append(count_col-1)
+                if args.debug >= 3:
+                    logs_info("Master line %3s.%2s [%s]" % (count_row, count_col, value))
+            if args.debug >= 2:
+                 logs_info('Master:')
 
-            row_head_0 = (frm_first % ('Codice', 'Prodotto')) + txt_line
+            lines_out.append(csv_line_master)
+        else:
+            if args.debug >= 3:
+                logs_info("Master line %3s.   [%s]" % (count_row, csv_line_master))
 
-            tmp_lines.append(row_head_0)
-            if args.debug >= 1:
-                print("#1#" + row_head_0)
-        #______________________________________________________________________
-        if dat_body_2:
-            dat_body_1 = True
-            dat_body_2 = False
+            Vkeys = []
+            for k in Ckeys:
+                Vkeys.append(csv_line_master[Ckeys[k]])
+            Skeys = _joinChar(Vkeys, CHAR_KEY_SPLIT)
+            debug = ''
 
-            row_body_2 = row_body_1 + txt_line
+            if Skeys in lines_add:
+                if Skeys in kadd:
+                    debug = 'SKIP!'
+                else:
+                    debug = 'REPL.'
+                    for key, row in lines_add.items():
+                        if key == Skeys:
+                            for line in row:
+                                lines_out.append(line)
+                                if args.debug >= 2:
+                                    logs_info('Master %-5s (%s) == (%s)' % (debug, Skeys, line))
+                    kadd[Skeys] = True
+                    del(lines_add[Skeys])
+            else:
+                if Skeys in kadd:
+                    debug = 'SKIP!'
+                else:
+                    debug = 'write'
+                    lines_out.append(csv_line_master)
 
-            tmp_lines.append(row_body_2)
-            if args.debug >= 1:
-                print("#1|" + row_body_2)
-        #______________________________________________________________________
-       #if dat_body_1 and rec_body_1.search(txt_line) and len(txt_line)<=fld_first:
-        if dat_body_1 and _search(reg_body_1, txt_line) and len(txt_line)<=fld_first:
-            dat_body_1 = False
-            dat_body_2 = True
+            if args.debug >= 2:
+                logs_info('Master %-5s (%s) == (%s)' % (debug, Skeys, csv_line_master))
 
-            list = _stringToListOnSpace(_trim(txt_line))
+    for key, row in lines_add.items():
+        for line in row:
+            lines_out.append(line)
 
-            code = list[0]                     if len(list) > 0 else None
-            name = _trim(_joinSpace(list[1:])) if len(list) > 1 else None
+    if args.debug >= 1:
+        logs.info('out values=')
+        logs_info(_joinChar(str(values) for values in lines_out))
 
-            row_body_1 = frm_first % (code, name)
-
-    #__________________________________________________________________________
-    for txt_line in tmp_lines:
-        txt_line = string_to_csv(txt_line, csv_delimiter, fld_first, 6, 14)
-        if args.debug >= 1:
-            print("#2|" + txt_line)
-        cvs_line = _stringToList(txt_line, csv_delimiter)
-        cvs_line = _trimList(cvs_line)
-        dat_lines.append(cvs_line)
-    return(dat_lines)
-
-###############################################################################
-def normalize_string(string_old):
-    string_new = string_old
-    re_compile = re.compile("^(.*)\s(\d{1,3}),(\d.*)$")
-    while _search(re_compile, string_new):
-        findall = _findall(re_compile, string_new)
-        if len(findall) > 0:
-            string_new = '%s  %s%s' % findall[0]
-    return(string_new)
-
-###############################################################################
-def string_to_csv(string, csv_delimiter, fld_first, length, step):
-    r = csv_delimiter
-    f = fld_first
-    l = length
-    s = step
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 1
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 2
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 3
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 4
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 5
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 6
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 7
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 8
-    i = f+l; string = string[:i]+r+string[i:] if len(string) > i else string; l+=s+len(r) # col. 9
-    return(string)
+    return(lines_out)
 
 ###############################################################################
-def read_filein():
-   #txt_filename = file_input
-    txt_filename = self_file_input.get()
+def read_filein(file_csv):
+   #csv_filename = file_input_master
+   #csv_filename = self_file_input_master.get()
+    csv_filename = file_csv
 
     filein = None
     std_in = False
-    if txt_filename == CHAR_STD_INOUT:
+    if csv_filename == CHAR_STD_INOUT:
         filein = sys.stdin
         std_in = True
-        logs.info('Read txt rows on STDIN:')
+        logs.info('Read csv rows on STDIN:')
     else:
-        if not _fileExist(txt_filename):
-            logs_error("Can't read file '%s', exist?" % txt_filename)
+        if not _fileExist(csv_filename):
+            logs_error("Can't read file '%s', exist?" % csv_filename)
         try:
-            filein = open(txt_filename, 'r')
-            logs.info('Read on file txt: %s' % txt_filename)
+            filein = open(csv_filename, 'r')
+            logs.info('Read on file csv: %s' % csv_filename)
         except:
             filein = sys.stdin
             std_in = True
-            logs.info('File txt not set, read on STDIN:')
+            logs.info('File csv not set, read on STDIN:')
 
     if std_in:
         logs.info(LINE_PARTITION)
-   #csv_lines = list(csv.reader(filein, delimiter=csv_delimiter))
-    txt_lines = filein.readlines()
+
+#CZ#txt_lines = filein.readlines()
+    csv_lines = list(csv.reader(filein, delimiter=csv_delimiter))
     if std_in:
         logs.info(LINE_PARTITION)
 
     if args.debug >= 3:
-        logs.info('txt values=')
-        for values in txt_lines:
-            logs.info(values)
+        logs.info('csv values=')
+#CZ#    for values in txt_lines:
+#CZ#        logs.info(values)
+       #logs_info('\n'.join(str(values) for values in csv_lines))
+        logs_info(_joinChar(str(values) for values in csv_lines))
 
-    return(txt_lines)
+#CZ#return(txt_lines)
+    return(csv_lines)
+
+###############################################################################
+def read_filein_master():
+    return(read_filein(self_file_input_master.get()))
+
+###############################################################################
+def read_filein_addcsv():
+    return(read_filein(self_file_input_addcsv.get()))
 
 ###############################################################################
 def write_fileout(dat_lines):
-   #txt_filename = file_input
+   #txt_filename = file_input_master
    #out_filename = file_output
-    txt_filename = self_file_input.get()
+    txt_filename = self_file_input_master.get()
     out_filename = self_file_output.get()
 
     fileout = None
@@ -433,17 +521,17 @@ def write_fileout(dat_lines):
             std_out = True
             logs.info('File out not set, write on STDOUT:')
 
-    name_ws = None
-    if txt_filename != CHAR_STD_INOUT:
-       #name_ws = name_input
-        name_ws = self_name_input.get()
+#CZ#name_ws = None
+#CZ#if txt_filename != CHAR_STD_INOUT:
+#CZ#   #name_ws = name_input_master
+#CZ#    name_ws = self_name_input_master.get()
 
     if std_out:
         logs.info(LINE_PARTITION)
     if typeout == TYPE_OUT_csv:
         write_filecsv(dat_lines, fileout)
-    if typeout == TYPE_OUT_xls:
-        write_filexls(dat_lines, name_ws)
+#CZ#if typeout == TYPE_OUT_xls:
+#CZ#    write_filexls(dat_lines, name_ws)
     if std_out:
         logs.info(LINE_PARTITION)
 
@@ -453,30 +541,30 @@ def write_filecsv(dat_lines, fileout):
     csv_values = csv.writer(fileout, delimiter=csv_delimiter, quotechar=csv_quotechar, quoting=csv_quoting, lineterminator=csv_lineterminator)
     csv_values.writerows(dat_lines)
 
-###############################################################################
-def write_filexls(dat_lines, name_ws='Report'):
-   #out_filename = file_output
-    out_filename = self_file_output.get()
-
-    workbook = xlsxwriter.Workbook(out_filename)
-    worksheet = workbook.add_worksheet(name_ws)
-
-    format_head = workbook.add_format({'bold': True, 'italic': True, 'shrink': True, 'font_color': 'white', 'bg_color': 'black'})
-
-    row = 0
-    for dat_line in dat_lines:
-        col = 0
-        for value in dat_line:
-            if (col >= 2) and value.isdigit():
-                value = float(value)
-            if (row == 0):
-                worksheet.write(row, col, value, format_head)
-            else:
-                worksheet.write(row, col, value)
-            col += 1
-        row += 1
-
-    workbook.close()
+#CZ################################################################################
+#CZ#def write_filexls(dat_lines, name_ws='Report'):
+#CZ#   #out_filename = file_output
+#CZ#    out_filename = self_file_output.get()
+#CZ#
+#CZ#    workbook = xlsxwriter.Workbook(out_filename)
+#CZ#    worksheet = workbook.add_worksheet(name_ws)
+#CZ#
+#CZ#    format_head = workbook.add_format({'bold': True, 'italic': True, 'shrink': True, 'font_color': 'white', 'bg_color': 'black'})
+#CZ#
+#CZ#    row = 0
+#CZ#    for dat_line in dat_lines:
+#CZ#        col = 0
+#CZ#        for value in dat_line:
+#CZ#            if (col >= 2) and value.isdigit():
+#CZ#                value = float(value)
+#CZ#            if (row == 0):
+#CZ#                worksheet.write(row, col, value, format_head)
+#CZ#            else:
+#CZ#                worksheet.write(row, col, value)
+#CZ#            col += 1
+#CZ#        row += 1
+#CZ#
+#CZ#    workbook.close()
 
 ###############################################################################
 def logs_info(message, title='Info'):

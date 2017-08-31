@@ -22,10 +22,10 @@ file_logs = _pathAbs(_pathJoin([path_logs, name_logs]))
 
 default_stdin   = CHAR_STD_INOUT
 default_stdout  = CHAR_STD_INOUT
-default_typein  = TYPE_IN_av8p
+default_typein  = TYPE_IN_mmam
 default_typeout = TYPE_OUT_csv
 default_typeout = None
-list_typein     = [TYPE_IN_av8p]
+list_typein     = [TYPE_IN_mmam]
 list_typeout    = [TYPE_OUT_csv,TYPE_OUT_xls]
 
 ###############################################################################
@@ -53,7 +53,8 @@ class parser_args(object):
         parser.add_argument('-rg'    , '--run_gui'           , help='run GUI (Graphical User Interface)', action='store_true')
         parser.add_argument('-rc'    , '--run_cmd'           , help='run Command Console'               , action='store_true')
         parser.add_argument('-ti'    , '--type_input'        , help='file type  input'                  , type=str, choices=list_typein , default=default_typein)
-        parser.add_argument('-fi'    , '--file_input'        , help='file read  input'                  , type=str                      , default=default_stdin , required=False)
+        parser.add_argument('-fim'   , '--file_input_master' , help='file read  input Master'           , type=str                      , default=default_stdin , required=False)
+        parser.add_argument('-fia'   , '--file_input_addcsv' , help='file read  input AddFile'          , type=str                      , default=default_stdin , required=False)
         parser.add_argument('-fo'    , '--file_output'       , help='file write output'                 , type=str                      , default=default_stdout)
         parser.add_argument('-to'    , '--type_output'       , help='file type  output'                 , type=str, choices=list_typeout, default=default_typeout)
         parser.add_argument('-cdl'   , '--csv_delimiter'     , help='CSV file delimiter char fields'    , type=str                      , default=None)

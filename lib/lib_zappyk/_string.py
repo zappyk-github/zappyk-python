@@ -44,6 +44,9 @@ def _replace(string, search, replace):
 def _joinSpace(string_list):
     return(one_space.join(string_list))
 ###########################################################################
+def _joinChar(string_list, join_char="\n"):
+    return(join_char.join(string_list))
+###########################################################################
 def _removeFirstEmptyLine(string, char="\n"):
     if type(string) is str:
         # deleting first line (if only spaces!) of message :-)

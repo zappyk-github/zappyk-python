@@ -15,16 +15,17 @@ buildOptions = dict(packages = [], excludes = [])
 
 base = 'Console'
 base = 'Win32GUI'
+exec = name
 
 if os.name == 'nt':
-    name = '%s.exe' % name
+    exec = '%s.exe' % name
 
 executables = [
-    Executable(os.path.join(name, 'main.py'), base=base, targetName=name)
+    Executable(os.path.join(name, 'main.py'), base=base, targetName=exec)
 ]
 
 setup(name=name,
       version=version,
-      description='Merge 2 file CSV in one file depending a columns keys',
+      description=description,
       options=dict(build_exe = buildOptions),
       executables=executables)

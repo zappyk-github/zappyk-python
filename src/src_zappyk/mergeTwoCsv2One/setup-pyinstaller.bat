@@ -1,9 +1,16 @@
 @echo off
 call set-env-windows.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+rem pyinstall=pyinstaller.exe
+set pyinstall=C:\Python34\Scripts\pyinstaller.exe
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+rem pyvrpatch=verpatch.exe
+set pyvrpatch=C:\Python34\verpatch.exe
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set name_prog=MergeTwoCsv2One
 set prog_main=MergeTwoCsv2One\main.py
+rem prog_main=C:\Python34\python.exe MergeTwoCsv2One\main.py
 set file_gear=images\gear.ico
 set file_vers=setup-pyinstaller-version.txt
 
@@ -14,8 +21,8 @@ set verp_prod=MergeTwoCsv2One
 set verp_copy=zappyk@gmail.com, 2017
 set verp_comp=Carlo Zappacosta
 
-set pyinstaller=pyinstaller.exe --clean --onefile            --log-level=DEBUG
-set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG
+set pyinstaller=%pyinstall% --clean --onefile            --log-level=DEBUG
+set pyinstaller=%pyinstall% --clean --onefile --windowed --log-level=DEBUG
 
 rem %pyinstaller% --icon %file_gear% --version-file %file_vers% --name %name_prog% %prog_main%
     %pyinstaller% --icon %file_gear%                            --name %name_prog% %prog_main%
@@ -25,7 +32,7 @@ set EXIT_CODE=%errorlevel%
 if %EXIT_CODE% == 0 (
     echo _______________________________________________________________________________
     echo.
-    verpatch.exe "%verp_dist%" %verp_vers% /va /pv %verp_vers% /s description "%verp_desc%" /s product "%verp_prod%" /s copyright "%verp_copy%" /s company "%verp_comp%"
+    %pyvrpatch% "%verp_dist%" %verp_vers% /va /pv %verp_vers% /s description "%verp_desc%" /s product "%verp_prod%" /s copyright "%verp_copy%" /s company "%verp_comp%"
     if %errorlevel% == 0 (
         echo    Assegnazione Versione/Patch eseguita con successo :D
     ) else (
@@ -37,7 +44,9 @@ if %EXIT_CODE% == 0 (
     echo _______________________________________________________________________________
 	echo.
 	echo    COMPILAZINE RIUSCITA :D
-	timeout /t 10 /nobreak
+rem	timeout /t 10 /nobreak
+	echo.
+	pause
 ) else (
     echo _______________________________________________________________________________
 	echo.

@@ -15,16 +15,17 @@ buildOptions = dict(packages = [], excludes = [])
 
 base = 'Console'
 base = 'Win32GUI'
+exec = name
 
 if os.name == 'nt':
-    name = '%s.exe' % name
+    exec = '%s.exe' % name
 
 executables = [
-    Executable(os.path.join(name, 'main.py'), base=base, targetName=name)
+    Executable(os.path.join(name, 'main.py'), base=base, targetName=exec)
 ]
 
 setup(name=name,
       version=version,
-      description='Turn a report in TXT to a CSV/XLS file',
+      description=description,
       options=dict(build_exe = buildOptions),
       executables=executables)

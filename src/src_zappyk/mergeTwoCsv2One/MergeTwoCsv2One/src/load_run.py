@@ -208,7 +208,7 @@ def _root_destroy():
 ###############################################################################
 def main_gui():
 #CZ#from MergeTwoCsv2One.src.version     import the_version
-#CZ#root.title('Manipulation Text Report (ver. %s)' % the_version())
+#CZ#root.title(''Merge 2 file CSV in one file (ver. %s)' % the_version())
     from MergeTwoCsv2One import VERSION as version
     root.title('Merge 2 file CSV in one file (ver. %s)' % version)
     root.resizable(0,0)

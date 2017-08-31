@@ -14,13 +14,13 @@ def get_project():
 def get_description():
     return(DESCRIPTION)
 ###########################################################
-#def get_version():
-#   return(VERSION)
+def get_version():
+   return(VERSION)
 ###########################################################
 #def get_version(*arg, **kwargs):
 #   from MergeTwoCsv2One.src.version import get_version
 #   return(get_version(*arg, **kwargs))
 ###########################################################
-def get_version():
-    from MergeTwoCsv2One.src.version import the_version
-    return(get_version())
+#def get_version():
+#    from MergeTwoCsv2One.src.version import the_version
+#    return(get_version())

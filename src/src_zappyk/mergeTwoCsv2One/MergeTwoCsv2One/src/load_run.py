@@ -73,6 +73,7 @@ root_path_file_master = StringVar()
 root_path_file_addcsv = StringVar()
 root_choose_in        = StringVar()
 root_chooseext        = StringVar()
+root_key_columns      = key_columns_merge
 root_combo_out        = [('Merge file master with file month', TYPE_IN_mmam)
                         ,('...another report layout...'      , 'xxxx')]
 root_filetypes        = (('Text files', '*.csv')
@@ -124,7 +125,6 @@ def _root_load_file_master():
     filename = askopenfilename(filetypes=root_filetypes)
     if filename:
         try:
-            print("*** qui *** ((%s))" % filename)
             root_path_file_master.set(filename)
         except:
             logs_error('Failed to read file\n%s' % filename, 'Open Source File')
@@ -171,19 +171,23 @@ def _root__execute_():
     self_type_output      .set(type_output)
 
     if _trim(name_input_master) == '':
-        logs_info('Choose csv file Master, please!')
+        logs_error('Choose csv file Master, please!')
         return
 
     if _trim(name_input_addcsv) == '':
-        logs_info('Choose csv file AddCSV, please!')
+        logs_error('Choose csv file AddCSV, please!')
         return
 
     if not _fileExist(file_input_master):
-        logs_info("File Master '%s' not exist!" % file_input_master)
+        logs_error("File Master '%s' not exist!" % file_input_master)
         return
 
     if not _fileExist(file_input_addcsv):
-        logs_info("File AddCSV '%s' not exist!" % file_input_addcsv)
+        logs_error("File AddCSV '%s' not exist!" % file_input_addcsv)
+        return
+
+    if _fileExist(file_output):
+        logs_error("File output '%s' exist!\nDelete or move/rename and retry..." % file_output)
         return
 
     manipulate()
@@ -210,12 +214,17 @@ def main_gui():
 #CZ#from MergeTwoCsv2One.src.version     import the_version
 #CZ#root.title(''Merge 2 file CSV in one file (ver. %s)' % the_version())
     from MergeTwoCsv2One import VERSION as version
-    root.title('Merge 2 file CSV in one file (ver. %s)' % version)
+    window_title = 'Merge 2 file CSV in one file (ver. %s)' % version
+    window_sub_t = 'Choose CSV files, they will be merged through these key columns:'
+    window_sub_k = '[ %s ]' % root_key_columns.replace(CHAR_KEY_SPLIT, ' + ')
+
+    root.title(window_title)
     root.resizable(0,0)
     root.bind('<Return>', _root_load_file_master)
     root.bind('<Return>', _root_load_file_addcsv)
 
-    mainframe = ttk.Frame(root, padding='3 3 12 12')
+#CZ#mainframe = ttk.Frame(root, padding='3 3 12 12')
+    mainframe = ttk.Frame(root, padding='1 1  1  1')
     mainframe.columnconfigure(0, weight=1)
     mainframe.rowconfigure(0, weight=1)
 
@@ -227,7 +236,7 @@ def main_gui():
 
     style = ttk.Style()
     style.configure('.', padding=len_padding, relief='flat', font=('Helvetica', len_font_MF), foreground='black', background='#ccc')
-    style.map('root__execute__entry.TButton', foreground=[('pressed', 'green'), ('active', 'green')]
+    style.map('root__execute__entry.TButton', foreground=[('pressed', 'blue'), ('active', 'blue')]
                                             , background=[('pressed', '!disabled', 'black'), ('active', 'white')]
     )
     style.map('root_cancel_entry.TButton', foreground=[('pressed', 'red'), ('active', 'red')]
@@ -240,7 +249,7 @@ def main_gui():
 
     root_path_file_addcsv_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file_addcsv)
     root_path_file_addcsv_entry.focus()
-    root_path_file_addcsv.trace('w', _root__execute__entry_on_change)  # rwua
+    root_path_file_addcsv.trace('w', _root__execute__entry_on_change) # rwua
 
     root_choose_in_entry = ttk.Combobox(mainframe, width=len_with_EC, textvariable=root_choose_in, state='readonly')
     root_choose_in_entry['values'] = _root_combo_set(root_combo_out)
@@ -254,31 +263,31 @@ def main_gui():
 #CZ#root_fsbrowser_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file)
     root_fb_master_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file_master)
     root_fb_addcsv_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file_addcsv)
-    root__execute__entry = ttk.Button(mainframe, text='Merge File', width=len_with_B2, command=_root__execute_, state=DISABLED, style='root__execute__entry.TButton')
+    root__execute__entry = ttk.Button(mainframe, text='Merge Files', width=len_with_B2, command=_root__execute_, state=DISABLED, style='root__execute__entry.TButton')
     self__execute__entry.set(root__execute__entry)
 
     root_cancel_entry = ttk.Button(mainframe, text='CANCEL', width=len_with_B1, command=_root_destroy , style='root_cancel_entry.TButton')
 
-    mainframe                                             .grid(column=0, row=0, sticky=(N, W, E, S))
-    ttk.Label (mainframe, text="Choose CSV file through:").grid(column=1, row=1 , sticky=W)
+    mainframe                                            .grid(column=0, row=0 , sticky=(N, W, E, S))
+    ttk.Label(mainframe, text=window_sub_t)              .grid(column=1, row=0 , sticky=(N, W, E, S), columnspan=4)
+    ttk.Label(mainframe, text=window_sub_k, font=('Times', 16), foreground='red').grid(column=4, row=0 , sticky=(N, W, E, S))
 
-    ttk.Label (mainframe, text=" · file CSV MASTER")      .grid(column=1, row=2 , sticky=W)
-    root_fb_master_entry                                  .grid(column=2, row=2 , sticky=W)
-    ttk.Label (mainframe, text="or enter")                .grid(column=3, row=2 , sticky=W)
-    root_path_file_master_entry                           .grid(column=4, row=2 , sticky=(W, E))
+    ttk.Label(mainframe, text=" · file CSV MASTER")      .grid(column=1, row=2 , sticky=W)
+    root_fb_master_entry                                 .grid(column=2, row=2 , sticky=W)
+    ttk.Label(mainframe, text="or enter")                .grid(column=3, row=2 , sticky=W)
+    root_path_file_master_entry                          .grid(column=4, row=2 , sticky=(W, E))
 
+    ttk.Label(mainframe, text=" · file CSV Add.Month")   .grid(column=1, row=3, sticky=W)
+    root_fb_addcsv_entry                                 .grid(column=2, row=3, sticky=W)
+    ttk.Label(mainframe, text="or enter")                .grid(column=3, row=3, sticky=W)
+    root_path_file_addcsv_entry                          .grid(column=4, row=3, sticky=(W, E))
 
-    ttk.Label(mainframe, text=" · file CSV Add.Month")    .grid(column=1, row=3, sticky=W)
-    root_fb_addcsv_entry                                  .grid(column=2, row=3, sticky=W)
-    ttk.Label(mainframe, text="or enter")                 .grid(column=3, row=3, sticky=W)
-    root_path_file_addcsv_entry                           .grid(column=4, row=3, sticky=(W, E))
-
-    root_choose_in_entry                                  .grid(column=4, row=6 , sticky=(W, E))
-    ttk.Label (mainframe, text="Choose type report text:").grid(column=1, row=6 , sticky=W)
-#CZ#root_choosecsv_entry                                  .grid(column=4, row=7 , sticky=(W, E))
-#CZ#root_choosexls_entry                                  .grid(column=4, row=8 , sticky=(W, E))
-    root__execute__entry                                  .grid(column=4, row=9 , sticky=W)
-    root_cancel_entry                                     .grid(column=4, row=11, sticky=E)
+    root_choose_in_entry                                 .grid(column=4, row=6 , sticky=(W, E))
+    ttk.Label(mainframe, text="Choose type report text:").grid(column=1, row=6 , sticky=W)
+#CZ#root_choosecsv_entry                                 .grid(column=4, row=7 , sticky=(W, E))
+#CZ#root_choosexls_entry                                 .grid(column=4, row=8 , sticky=(W, E))
+    root__execute__entry                                 .grid(column=2, row=9 , sticky=W, columnspan=2)
+    root_cancel_entry                                    .grid(column=4, row=11, sticky=E)
 
     for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
 
@@ -568,15 +577,15 @@ def write_filecsv(dat_lines, fileout):
 
 ###############################################################################
 def logs_info(message, title='Info'):
-    logs.info(message)
     if run_gui:
         showinfo(title, message)
+    logs.info(message)
 
 ###############################################################################
 def logs_error(message, title='Error'):
-    logs.error(message)
     if run_gui:
         showerror(title, message)
+    logs.error(message)
 
 ###############################################################################
 def make_question(rows):

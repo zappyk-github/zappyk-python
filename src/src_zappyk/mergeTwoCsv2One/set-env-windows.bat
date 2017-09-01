@@ -4,8 +4,12 @@ set PROMPT=$P$G$_$D$S$T$_#
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set PROJECTDIR=C:\Users\zappyk\PycharmProjects\zappyk-python
+if "%COMPUTERNAME%" == "VM-IT-002" (
+    set PROJECTDIR=U:\IT\Devel\Python\PyCharmProject\zappyk-python
+)
+echo Set Project Directory on %PROJECTDIR% ...
 
-if not defined PROJECTDIR set PROJECTDIR=%~dp0\..
+if not defined PROJECTDIR set PROJECTDIR=%~dp0\..\..
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 

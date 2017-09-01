@@ -1,16 +1,18 @@
 @echo off
 call set-env-windows.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+rem pythondir=C:\Python34
+set pythondir=C:\Python33
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 rem pyinstall=pyinstaller.exe
-set pyinstall=C:\Python34\Scripts\pyinstaller.exe
+set pyinstall=%pythondir%\Scripts\pyinstaller.exe
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 rem pyvrpatch=verpatch.exe
-set pyvrpatch=C:\Python34\verpatch.exe
+set pyvrpatch=%pythondir%\verpatch.exe
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set name_prog=MergeTwoCsv2One
 set prog_main=MergeTwoCsv2One\main.py
-rem prog_main=C:\Python34\python.exe MergeTwoCsv2One\main.py
 set file_gear=images\gear.ico
 set file_vers=setup-pyinstaller-version.txt
 

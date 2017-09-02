@@ -8,7 +8,7 @@ LINE_SEPARATOR = '#' * LINE_LENGTH
 LINE_PARTITION = '=' * LINE_LENGTH
 
 CHAR_STD_INOUT = '-'
-CHAR_KEY_SPLIT = '|'
+CHAR_KEY_MERGE = '+'
 
 TYPE_IN_mmam = 'mmam' # Merge file master with file month
 

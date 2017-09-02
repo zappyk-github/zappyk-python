@@ -215,18 +215,37 @@ def _root_destroy():
     sys.exit(0)
 
 ###############################################################################
+def _root_hello():
+#CZ#from StringIO import StringIO  # Python2
+    from io import StringIO        # Python3
+    old_stdout = sys.stdout
+    sys.stdout = help = StringIO()
+    parser_args().args_parser.print_help()
+    sys.stdout = old_stdout
+
+#CZ#logs_info(help.getvalue())
+    from tkinter import messagebox
+    messagebox.showinfo(title='Help', message=help.getvalue())
+
+###############################################################################
 def main_gui():
 #CZ#from MergeTwoCsv2One.src.version     import the_version
 #CZ#root.title(''Merge 2 file CSV in one file (ver. %s)' % the_version())
     from MergeTwoCsv2One import VERSION as version
     window_title = 'Merge 2 file CSV in one file (ver. %s)' % version
     window_sub_t = 'Choose CSV files, they will be merged through these key columns:'
-    window_sub_k = '[ %s ]' % root_key_columns.replace(CHAR_KEY_SPLIT, ' + ')
+    window_sub_k = '[ %s ]' % root_key_columns.replace(CHAR_KEY_MERGE, ' %s ' % CHAR_KEY_MERGE)
+
+    menubar = Menu(root)
+    helpmenu = Menu(menubar, tearoff=0)
+    helpmenu.add_command(label='Help', command=_root_hello)
+    menubar.add_cascade(label='About', menu=helpmenu)
 
     root.title(window_title)
     root.resizable(0,0)
-    root.bind('<Return>', _root_load_file_master)
-    root.bind('<Return>', _root_load_file_addcsv)
+    root.config(menu=menubar)
+#CZ#root.bind('<Return>', _root_load_file_master)
+#CZ#root.bind('<Return>', _root_load_file_addcsv)
 
 #CZ#mainframe = ttk.Frame(root, padding='3 3 12 12')
     mainframe = ttk.Frame(root, padding='1 1  1  1')
@@ -346,7 +365,7 @@ def manipulate():
 
 ###############################################################################
 def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
-    keys = _stringToList(key_columns_merge, CHAR_KEY_SPLIT)
+    keys = _stringToList(key_columns_merge, CHAR_KEY_MERGE)
 #CZ#keys = [map(lambda value: value.upper(), keys)]
     keys = [value.upper() for value in keys]
     kadd = {}
@@ -382,7 +401,7 @@ def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
             Vkeys = []
             for k in Ckeys:
                 Vkeys.append(csv_line_addcsv[Ckeys[k]])
-            Skeys = _joinChar(Vkeys, CHAR_KEY_SPLIT)
+            Skeys = _joinChar(Vkeys, CHAR_KEY_MERGE)
             debug = 'read'
 
             lines_row = [csv_line_addcsv]
@@ -427,7 +446,7 @@ def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
             Vkeys = []
             for k in Ckeys:
                 Vkeys.append(csv_line_master[Ckeys[k]])
-            Skeys = _joinChar(Vkeys, CHAR_KEY_SPLIT)
+            Skeys = _joinChar(Vkeys, CHAR_KEY_MERGE)
             debug = ''
 
             if Skeys in lines_add:

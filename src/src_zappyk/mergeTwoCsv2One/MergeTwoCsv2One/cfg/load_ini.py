@@ -5,5 +5,5 @@ csv_delimiter      = ';'
 csv_quotechar      = None
 csv_quoting        = None
 csv_lineterminator = "\n"
-key_columns_merge  = 'Codice|Key'
+key_columns_merge  = 'Codice+Key'
 ###############################################################################

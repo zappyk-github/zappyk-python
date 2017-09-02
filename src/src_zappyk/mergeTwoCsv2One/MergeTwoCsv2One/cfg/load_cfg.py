@@ -67,6 +67,7 @@ class parser_args(object):
         args = parser.parse_args()
 
         self.args = args
+        self.args_parser = parser
 
 ###############################################################################
 class parser_conf(object):

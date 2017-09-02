@@ -7,7 +7,7 @@ import csv
 from tkinter            import *
 from tkinter            import ttk
 from tkinter.filedialog import askopenfilename
-from tkinter.messagebox import showinfo, showerror
+from tkinter.messagebox import showinfo, showerror, askyesno
 from collections        import defaultdict
 
 from lib_zappyk          import _initializeVariable
@@ -187,8 +187,13 @@ def _root__execute_():
         return
 
     if _fileExist(file_output):
-        logs_error("File output '%s' exist!\nDelete or move/rename and retry..." % file_output)
-        return
+    #CZ#logs_error("File output '%s' exist!\n\nDelete or move/rename and retry..." % file_output)
+    #CZ#return
+        result = askyesno('question', "File output '%s' exist!\n\nOverwrite?" % file_output)
+        if result == False:
+            return
+    #CZ#else:
+    #CZ#    logs_info("File output '%s' set overwrite!" % file_output)
 
     manipulate()
 
@@ -270,14 +275,16 @@ def main_gui():
 
     mainframe                                            .grid(column=0, row=0 , sticky=(N, W, E, S))
     ttk.Label(mainframe, text=window_sub_t)              .grid(column=1, row=0 , sticky=(N, W, E, S), columnspan=4)
-    ttk.Label(mainframe, text=window_sub_k, font=('Times', 16), foreground='red').grid(column=4, row=0 , sticky=(N, W, E, S))
+    ttk.Label(mainframe, text=window_sub_k
+                       , font=('Times', 16)
+                       , foreground='red')               .grid(column=4, row=0 , sticky=(N, W, E, S))
 
-    ttk.Label(mainframe, text=" · file CSV MASTER")      .grid(column=1, row=2 , sticky=W)
+    ttk.Label(mainframe, text=" · file CSV Master Base") .grid(column=1, row=2 , sticky=W)
     root_fb_master_entry                                 .grid(column=2, row=2 , sticky=W)
     ttk.Label(mainframe, text="or enter")                .grid(column=3, row=2 , sticky=W)
     root_path_file_master_entry                          .grid(column=4, row=2 , sticky=(W, E))
 
-    ttk.Label(mainframe, text=" · file CSV Add.Month")   .grid(column=1, row=3, sticky=W)
+    ttk.Label(mainframe, text=" · file CSV add. Month")  .grid(column=1, row=3, sticky=W)
     root_fb_addcsv_entry                                 .grid(column=2, row=3, sticky=W)
     ttk.Label(mainframe, text="or enter")                .grid(column=3, row=3, sticky=W)
     root_path_file_addcsv_entry                          .grid(column=4, row=3, sticky=(W, E))

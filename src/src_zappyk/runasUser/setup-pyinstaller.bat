@@ -18,7 +18,7 @@ set file_vers=setup-pyinstaller-version.txt
 
 set verp_dist=.\dist\RunasUser.exe
 set verp_vers=0.1.0.0
-set verp_desc=Runas user program
+set verp_desc=Run program as specified user
 set verp_prod=RunasUser
 set verp_copy=zappyk@gmail.com, 2017
 set verp_comp=Carlo Zappacosta

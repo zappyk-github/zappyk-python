@@ -1,8 +1,8 @@
 @echo off
 call set-env-windows.bat
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-set pythondir=C:\Python34
-rem pythondir=C:\Python33
+rem pythondir=C:\Python34
+set pythondir=C:\Python33
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 rem pyinstall=pyinstaller.exe
 set pyinstall=%pythondir%\Scripts\pyinstaller.exe

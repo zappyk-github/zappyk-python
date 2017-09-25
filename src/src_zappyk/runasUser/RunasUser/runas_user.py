@@ -10,7 +10,9 @@ print(' | platform processor: %s' % platform.processor())
 ########################################################################################################################
 runas_prog=r"C:\Windows\notepad.exe"
 runas_prog=r"C:\Windows\write.exe"
-runas_prog=sys.argv[1]
+runas_prog=sys.argv[1] if len(sys.argv)>1 else None
+#=======================================================================================================================
+runas_path=sys.argv[2] if len(sys.argv)>2 else None
 #=======================================================================================================================
 runas_user=r"PAYROLL\Administrator"
 runas_pswd=r"!P@yr01l!"
@@ -38,6 +40,24 @@ WshShell.SendKeys "{ENTER}"
 ' Add the key-function:
 'WshShell.SendKeys "{F5}"
 """
+#=======================================================================================================================
+if runas_prog is None:
+    print("Specifica il programma da lanciare come utente \"%s\"..." % runas_user)
+    sys.exit(1)
+#=======================================================================================================================
+if runas_path is not None:
+    from shutil import copy2
+    runas_prog
+    runas_name = os.path.basename(runas_prog)
+    runas_copy = os.path.join(runas_path, runas_name)
+    print("...copy file \"%s\" on directory \"%s\"..." % (runas_name, runas_path))
+    try:
+        copy2(runas_prog, runas_copy)
+#CZ#except:
+    except Exception as e:
+        print("ERROR: %s" % str(e))
+        sys.exit(1)
+    runas_prog = runas_copy
 #=======================================================================================================================
 print("runas... [%s] process [%s]" % (runas_user, runas_prog))
 ########################################################################################################################

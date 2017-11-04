@@ -12,7 +12,7 @@ from lib_zappyk._os_file import _basename, _makeDir, _pathJoin, _fileExist, _fil
 from lib_zappyk._log     import _log
 from lib_zappyk._date    import _dateNowFormat
 from lib_zappyk._email   import _email
-from lib_zappyk._string  import _findall
+from lib_zappyk._string  import _findall, _crypting
 
 _version = '0.1'
 
@@ -38,7 +38,8 @@ _http_tag_flowName    = 'X-BOS-MFT-CLIENTID'
 _http_tag_flowBosMft  = 'X-BOS-MFT'
 _http_tag_fileUpload  = 'file'
 _save_tag_fileUpload  = '%Y%m%d_%H-%M.%S_'
-_code_key_cripting    = '1!S03r2v19c33s!8.!4P@8yr5017l!6'
+_code_key_crypting    = '1!S03r2v19c33s!8.!4P@8yr5017l!6'
+_code_utf_codec       = 'utf-8'
 
 _mail_message_sep = '''
 _______________________________________________________________________________
@@ -53,21 +54,26 @@ End Point = [<font color="red">%s</font>]
 Flow User = [<font color="red">%s</font>]
 Path File = [<font color="red">%s</font>]
 Path Save = [<font color="red">%s</font>]
-<i>WExeMFT on $host_name$ generate messagge:</i>
+<i>WExeMFT on $host_name$ notify messagge:</i>
 _______________________________________________________________________________
 
 %s
-_______________________________________________________________________________
+
+--
+
+​( Information Technology )
+P&S Srl - Payroll Services
 """
 
-_message_error = 'Upload file "%s" failed error! :-('
-_message_moved = 'Upload file "%s" is not moved! :-/'
-_message_check = 'Detect file "%s" moved 4 send? :-@'
-_message_alert = 'Upload file "%s" is not found! :-|'
-_message_butok = '%s\n\nBut something is failed! :-|\n\n%s'
-_message_allok = 'Upload file "%s" successfully! :-)'
+_message_error = """Upload file "%s" failed error! :-("""
+_message_moved = """Upload file "%s" is not moved! :-/"""
+_message_check = """Detect file "%s" moved 4 send? :-@"""
+_message_alert = """Upload file "%s" is not found! :-|"""
+_message_butok = """%s\n\nBut something is failed! :-|\n\n%s"""
+_message_allok = """Upload file "%s" successfully! :-)"""
 
 logs = _log()
+logs.setFormat('%Y%m%d %H:%M.%S| ')
 
 ###############################################################################
 def _sendmail_prepare(args, message_email):
@@ -130,9 +136,9 @@ def _sendmail(args):
             send_email._setMailAuthPswd    (emailAuthPswd)
             send_email._setMailFrom        (email__from__)
             send_email._setMailHtmlBodySend(False)
-            logs.info("email send true!")
+            logs.info("...email send true!")
         else:
-            logs.info("email send true, on Gmail!")
+            logs.info("...email send true, over Gmail!")
 
         if args.verbose:
         #CZ#logs.info('___________________')
@@ -158,9 +164,9 @@ def _sendmail(args):
 
     else:
         logs.warning("Send mail detect, but not check!")
-
+'''
 ###############################################################################
-def _getmount(path_save):
+def _getMount(path_save):
     path_base = os.path.normpath(path_save)
     path_base_split = path_base.split(os.sep)
 
@@ -172,7 +178,7 @@ def _getmount(path_save):
             path_mount = path_name
 
     return(path_mount)
-
+'''
 ###############################################################################
 def _replaces(string, _flow_user='', _flow_name='', _path_save='', _path_file=''):
     string = string.replace('$host_name$', _os_host_name)
@@ -222,24 +228,8 @@ def _save_file(path_file, path_save, name_zip_):
         _fileRemove(file_save)
 
 ###############################################################################
-def _crypting(data, key=_code_key_cripting, codec=_http_contents_decode, encode=False):
-    import binascii
-    from itertools import cycle
-    #--------------------------------------------------------------------------
-    #key = _code_key_cripting
-    #codec = _http_contents_decode # 'utf-8'
-
-    bin_key = key.encode(codec)
-    bin_data = data.encode(codec)
-
-    if not encode: bin_data = binascii.unhexlify(bin_data)
-
-    bin_xored = bytes([x ^ y for x, y in zip(bin_data, cycle(bin_key))])
-    #--------------------------------------------------------------------------
-    if encode:
-        return(binascii.hexlify(bin_xored).decode(codec))
-    else:
-        return(bin_xored.decode(codec))
+def _crypt(data, encode=False):
+    return(_crypting(data, _code_key_crypting, _code_utf_codec, encode))
 
 ###############################################################################
 def _getargs():
@@ -296,17 +286,18 @@ if __name__ == '__main__':
     flow_bos_mft = '1'
 
     if cryptpswd:
-        logs.error('%s : [%s]== crypted >>[%s]' % (flow_name, url_pswd_md5, _crypting(url_pswd_md5, encode=True)))
+        logs.error('%s : [%s]== crypted >>[%s]' % (flow_name, url_pswd_md5, _crypt(url_pswd_md5, encode=True)))
     else:
         try:
-            url_password = _crypting(url_pswd_md5)
+            url_password = _crypt(url_pswd_md5)
         except Exception as e:
         #CZ#logs.warning(str(e))
             logs.error("Password [%s] is crypted?" % url_pswd_md5)
-
-#CZ#if path_save is None:
-#CZ#    path_save = os.getcwd()
-#CZ#path_save = _getmount(path_save)
+    '''
+    if path_save is None:
+        path_save = os.getcwd()
+    path_save = _getMount(path_save)
+    '''
 #_______________________________________________________________________________________________________________________________________________________________
 #                                                                                                                                                              #
 # curl --digest -u "url_username:url_password" -F "file=@path_file" -H "X-BOS-MFT=1" -H "X-BOS-MFT-CLIENTID=flow_name" url_address                             #
@@ -360,8 +351,8 @@ if __name__ == '__main__':
             htmlpage = contents.decode(_http_contents_decode)
             exitcode = _checkExitCode(htmlpage)
 
-        #CZ#messages = """<body style="border: 5px solid red;">%s</body>""" % html.escape(htmlpage)
-            messages = """<body style="border: 5px solid red;">%s</body>""" % htmlpage
+        #CZ#messages = """<body style="border: 3px solid red;">%s</body>""" % html.escape(htmlpage)
+            messages = """<body style="border: 3px solid red;">%s</body>""" % htmlpage
 
             data_file.close()
 

@@ -39,23 +39,20 @@ _http_tag_flowBosMft  = 'X-BOS-MFT'
 _http_tag_fileUpload  = 'file'
 _save_tag_fileUpload  = '%Y%m%d_%H-%M.%S_'
 _code_key_cripting    = '1!S03r2v19c33s!8.!4P@8yr5017l!6'
-_code_key_cripting    = '!S3rv1c3s!.!P@yr01l!'
-#_code_key_cripting    = ' !S 3r v1 c3 s! !P @y r0 1l!'
-                      #  1  0  2  9  3  8  4  7  5  6
-_code_key_cripting    = '1029384756'
 
 _mail_message_sep = '''
 _______________________________________________________________________________
 '''
 
 _mail_host    = 'smtp.payroll.it'
-_mail_from    = 'it@payroll.it'
-_mail_subject = 'WExeMFT: Alert, flow $flow_user$ uploader file on $host_name$ ($host_type$)'
+_mail_from    = 'admin@payroll.it'
+_mail_to      = 'it@payroll.it'
+_mail_subject = 'WExeMFT: Alert, flow $flow_name$ uploader file on $host_name$ ($host_type$)'
 _mail_message = """
-Flow User = [<b>%s</b>]
-Flow Name = [<b>%s</b>]
-Path File = [<b>%s</b>]
-Path Save = [<b>%s</b>]
+End Point = [<font color="red">%s</font>]
+Flow User = [<font color="red">%s</font>]
+Path File = [<font color="red">%s</font>]
+Path Save = [<font color="red">%s</font>]
 <i>WExeMFT on $host_name$ generate messagge:</i>
 _______________________________________________________________________________
 
@@ -64,6 +61,8 @@ _______________________________________________________________________________
 """
 
 _message_error = 'Upload file "%s" failed error! :-('
+_message_moved = 'Upload file "%s" is not moved! :-/'
+_message_check = 'Detect file "%s" moved 4 send? :-@'
 _message_alert = 'Upload file "%s" is not found! :-|'
 _message_butok = '%s\n\nBut something is failed! :-|\n\n%s'
 _message_allok = 'Upload file "%s" successfully! :-)'
@@ -108,7 +107,6 @@ def _sendmail(args):
     email__body__ = args.mail_message
 
     if email__send__:
-        print("email send true!")
         send_email = _email()
     #CZ#send_email._setMailSmtp        (email__smtp__)
     #CZ#send_email._setMailAuthUser    (emailAuthUser)
@@ -131,6 +129,10 @@ def _sendmail(args):
             send_email._setMailAuthUser    (emailAuthUser)
             send_email._setMailAuthPswd    (emailAuthPswd)
             send_email._setMailFrom        (email__from__)
+            send_email._setMailHtmlBodySend(False)
+            logs.info("email send true!")
+        else:
+            logs.info("email send true, on Gmail!")
 
         if args.verbose:
         #CZ#logs.info('___________________')
@@ -221,23 +223,23 @@ def _save_file(path_file, path_save, name_zip_):
 
 ###############################################################################
 def _crypting(data, key=_code_key_cripting, codec=_http_contents_decode, encode=False):
-        import binascii
-        from itertools import cycle
-        #----------------------------------------------------------------------
-        key = _code_key_cripting
-        codec = _http_contents_decode # 'utf-8'
+    import binascii
+    from itertools import cycle
+    #--------------------------------------------------------------------------
+    #key = _code_key_cripting
+    #codec = _http_contents_decode # 'utf-8'
 
-        bin_key = key.encode(codec)
-        bin_data = data.encode(codec)
+    bin_key = key.encode(codec)
+    bin_data = data.encode(codec)
 
-        if not encode: bin_data = binascii.unhexlify(bin_data)
+    if not encode: bin_data = binascii.unhexlify(bin_data)
 
-        bin_xored = bytes([x ^ y for x, y in zip(bin_data, cycle(bin_key))])
-        #----------------------------------------------------------------------
-        if encode:
-            return(binascii.hexlify(bin_xored).decode(codec))
-        else:
-            return(bin_xored.decode(codec))
+    bin_xored = bytes([x ^ y for x, y in zip(bin_data, cycle(bin_key))])
+    #--------------------------------------------------------------------------
+    if encode:
+        return(binascii.hexlify(bin_xored).decode(codec))
+    else:
+        return(bin_xored.decode(codec))
 
 ###############################################################################
 def _getargs():
@@ -258,7 +260,7 @@ def _getargs():
     parser.add_argument('-ua',  '--url_address' , help='URL address for uploader file'        , type=str           , required=True)
     parser.add_argument('-uu',  '--url_username', help='URL authentication username'          , type=str           , required=True)
     parser.add_argument('-up',  '--url_password', help='URL authentication password'          , type=str           , required=True)
-    parser.add_argument('-cp',  '--cryptpswd'   , help='return crypted URL password'          , action='store_true')
+    parser.add_argument('-cp',  '--cryptpswd'   , help='return crypted URL_PASSWORD'          , action='store_true')
     parser.add_argument('-sm',  '--send_mail'   , help='send mail notification'               , action='store_true')
     parser.add_argument('-gm',  '--gmail'       , help='set Gmail SMTP'                       , action='store_true')
     parser.add_argument('-mh',  '--mail_host'   , help='mail host SMTP (default: %(default)s)', type=str           , default=_mail_host)
@@ -288,17 +290,19 @@ if __name__ == '__main__':
 #CZ#url_password = args.url_password
 #CZ#url_pswd_md5 = hashlib.md5(url_password.encode()).hexdigest()
     url_pswd_md5 = args.url_password
-    if cryptpswd: logs.error('[%s]=[%s]' % (url_pswd_md5, _crypting(url_pswd_md5, encode=True)))
 #CZ#url_password = hashlib.md5(url_pswd_md5.encode()).hexdigest()
 #CZ#url_password = hashlib.md5(url_pswd_md5.encode()).digest()
-    url_password = _crypting(url_pswd_md5)
+    url_password = None
     flow_bos_mft = '1'
 
-    #s = 'brumft0'
-    #e = _crypting(s, encode=True)
-    #d = _crypting(e)
-    #print("[%s:%s=%s]" % (s, e, d))
-    #print("[%s:%s=%s]" % (url_username, url_password, url_pswd_md5))
+    if cryptpswd:
+        logs.error('%s : [%s]== crypted >>[%s]' % (flow_name, url_pswd_md5, _crypting(url_pswd_md5, encode=True)))
+    else:
+        try:
+            url_password = _crypting(url_pswd_md5)
+        except Exception as e:
+        #CZ#logs.warning(str(e))
+            logs.error("Password [%s] is crypted?" % url_pswd_md5)
 
 #CZ#if path_save is None:
 #CZ#    path_save = os.getcwd()
@@ -316,9 +320,30 @@ if __name__ == '__main__':
     exitcode = None
     messages = None
 
-    if _fileExist(path_file):
+    move_file = None
+    send_file = _pathJoin([path_save, ('%s_send2payroll_%s' % (flow_name, _basename(path_file)))])
+
+    if _fileExist(send_file):
+        move_file = send_file
+
+        messages = (_message_check % send_file)
+        logs.info(messages)
+    else:
+        if _fileExist(path_file):
+            try:
+                _fileMove(path_file, send_file)
+                move_file = path_file
+            except Exception as e:
+                exitcode = True
+                messages = _message_moved % path_file
+                logs.warning(messages)
+
+#CZ#if _fileExist(path_file):
+#CZ#if _fileExist(send_file):
+    if move_file is not None:
         try:
-            data_file = open(path_file, 'rb')
+        #CZ#data_file = open(path_file, 'rb')
+            data_file = open(send_file, 'rb')
 
         #CZ#from requests.auth import HTTPDigestAuth
             from requests.auth import HTTPBasicAuth
@@ -333,34 +358,41 @@ if __name__ == '__main__':
             response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True)
             contents = response.content
             htmlpage = contents.decode(_http_contents_decode)
-            messages = html.escape(htmlpage)
-            exitcode = _checkExitCode(messages)
+            exitcode = _checkExitCode(htmlpage)
+
+        #CZ#messages = """<body style="border: 5px solid red;">%s</body>""" % html.escape(htmlpage)
+            messages = """<body style="border: 5px solid red;">%s</body>""" % htmlpage
 
             data_file.close()
 
             if not exitcode:
-                messages = _message_allok % path_file
+            #CZ#messages = _message_allok % path_file
+                messages = _message_allok % move_file
 
                 if path_save is not None:
-                    _save_file(path_file, path_save, url_username)
+                #CZ#_save_file(path_file, path_save, flow_name)
+                    _save_file(send_file, path_save, flow_name)
 
                 logs.info(messages)
 
         except Exception as e:
             exitcode = True
             if messages is None:
-                messages = _message_error % path_file
+            #CZ#messages = _message_error % path_file
+                messages = _message_error % move_file
             else:
                 messages = _message_butok % (messages, str(e))
             logs.warning(messages)
 
     else:
-        exitcode = False
-        messages = _message_alert % path_file
-        logs.warning(messages)
+        if exitcode is None:
+            exitcode = False
+            messages = _message_alert % path_file
+            logs.warning(messages)
 
     if exitcode:
-        message_email = _mail_message % (url_username, flow_name, path_file, path_save, messages)
+    #CZ#message_email = _mail_message % (url_address, url_username, path_file, path_save, messages)
+        message_email = _mail_message % (url_address, url_username, move_file, path_save, messages)
         logs.warning(message_email)
 
         _sendmail(_sendmail_prepare(args, [message_email]))

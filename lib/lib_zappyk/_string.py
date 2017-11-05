@@ -4,6 +4,8 @@ __author__ = 'zappyk'
 import re
 
 one_space = ' '
+key_crypt = '1!S03r2v19c33s!8.!4P@8yr5017l!6'
+utf_codec = 'utf-8'
 
 ###########################################################################
 def _trim(string):
@@ -67,3 +69,19 @@ def _stringToList(string, char="\n"):
 ###########################################################################
 def _stringToListOnSpace(string):
     return(_stringToList(string, one_space))
+###############################################################################
+def _crypting(data, key=key_crypt, codec=utf_codec, encode=False):
+    import binascii
+    from itertools import cycle
+    #--------------------------------------------------------------------------
+    bin_key = key.encode(codec)
+    bin_data = data.encode(codec)
+
+    if not encode: bin_data = binascii.unhexlify(bin_data)
+
+    bin_xored = bytes([x ^ y for x, y in zip(bin_data, cycle(bin_key))])
+    #--------------------------------------------------------------------------
+    if encode:
+        return(binascii.hexlify(bin_xored).decode(codec))
+    else:
+        return(bin_xored.decode(codec))

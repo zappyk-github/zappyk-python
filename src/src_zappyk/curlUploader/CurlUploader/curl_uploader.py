@@ -209,7 +209,7 @@ def _save_file(path_file, path_save, name_zip_):
         save_date = _dateNowFormat(_save_tag_fileUpload)
         name_save = '%s%s' % (save_date, _basename(path_file))
         file_save = _pathJoin([path_save, name_save])
-        name_zip_ = '%s.zip' % name_zip_
+        name_zip_ = '%s-bak.zip' % name_zip_
         file_zip_ = _pathJoin([path_save, name_zip_])
 
         _fileMove(path_file, file_save)

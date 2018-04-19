@@ -354,7 +354,7 @@ if __name__ == '__main__':
                 "http" : "10.10.1.10:3128",
                 "https": "10.10.1.10:1080",
             }
-            response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True, proxies = proxies)
+            response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True, proxies=proxies)
             '''
 
             response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True)

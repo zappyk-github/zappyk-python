@@ -346,6 +346,17 @@ if __name__ == '__main__':
             file = { _http_tag_fileUpload: data_file }
             head = { _http_tag_flowName: flow_name, _http_tag_flowBosMft: flow_bos_mft }
 
+            '''
+            $ export HTTP_PROXY = "10.10.1.10:3128"
+            $ export HTTPS_PROXY = "10.10.1.10:1080"
+            proxies = {
+                "http" : "http://user:pass@10.10.1.10:3128/",
+                "http" : "10.10.1.10:3128",
+                "https": "10.10.1.10:1080",
+            }
+            response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True, proxies = proxies)
+            '''
+
             response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True)
             contents = response.content
             htmlpage = contents.decode(_http_contents_decode)

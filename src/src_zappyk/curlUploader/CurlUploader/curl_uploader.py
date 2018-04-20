@@ -356,8 +356,14 @@ if __name__ == '__main__':
             }
             response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True, proxies=proxies)
             '''
+            proxies = {}
+            if os.getenv("HTTP_PROXY") is not None:
+                proxies['http'] = os.environ['HTTP_PROXY']
+            if os.getenv("HTTPS_PROXY") is not None:
+                proxies['https'] = os.environ['HTTPS_PROXY']
 
-            response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True)
+        #CZ#response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True)
+            response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True, proxies=proxies)
             contents = response.content
             htmlpage = contents.decode(_http_contents_decode)
             exitcode = _checkExitCode(htmlpage)

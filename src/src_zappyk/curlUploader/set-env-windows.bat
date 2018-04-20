@@ -3,7 +3,8 @@
 set PROMPT=$P$G$_$D$S$T$_#
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-set PROJECTDIR=C:\Users\zappyk\PycharmProjects\zappyk-python
+rem PROJECTDIR=C:\Users\zappyk\PycharmProjects\zappyk-python
+set PROJECTDIR=C:\Users\CarloZappacosta\Programmi\Python\PycharmProjects\zappyk-python-projects\zappyk-python
 
 if not defined PROJECTDIR set PROJECTDIR=%~dp0\..
 

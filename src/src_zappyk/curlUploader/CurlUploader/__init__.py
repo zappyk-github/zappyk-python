@@ -7,6 +7,7 @@ Simulate curl program for upload file.
 """
 VERSION     = (0, 1, 0, 'rc'  , 1)
 VERSION     = '0.1'
+VERSION     = '0.2'
 
 ###########################################################
 def get_project():

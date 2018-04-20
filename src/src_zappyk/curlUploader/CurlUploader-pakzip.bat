@@ -2,7 +2,8 @@
 
 set PATH_BUILD=build
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-set VERS_PROGRAM=0.1
+rem VERS_PROGRAM=0.1
+set VERS_PROGRAM=0.2
 set NAME_EXE_BAT=CurlUploader-launch.bat
 set PATH_PROGRAM=CurlUploader-%VERS_PROGRAM%
 set NAME_PAK_ZIP=%PATH_PROGRAM%-win32

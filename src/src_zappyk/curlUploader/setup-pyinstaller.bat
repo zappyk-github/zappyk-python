@@ -8,10 +8,12 @@ set file_gear=images\gear.ico
 set file_vers=setup-pyinstaller-version.txt
 
 set verp_dist=.\dist\CurlUploader.exe
-set verp_vers=0.1.0.0
+rem verp_vers=0.1.0.0
+set verp_vers=0.2.0.0
 set verp_desc=Simulate curl program for upload file.
 set verp_prod=CurlUploader
 set verp_copy=zappyk@gmail.com, 2017
+set verp_copy=zappyk@gmail.com, 2018
 set verp_comp=Carlo Zappacosta
 
 set pyinstaller=pyinstaller.exe --clean --onefile --windowed --log-level=DEBUG

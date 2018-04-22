@@ -58,7 +58,7 @@ class parser_args(object):
         parser.add_argument('-aww'   , '--action_write_wait' , help='action wait through Write'         , action='store_true')
         parser.add_argument('-sww'   , '--second_write_wait' , help='second wait through Write'         , type=str                       , default=def_second_write_wait)
     #CZ#parser.add_argument('name'   , help='Name')
-    #CZ#parser.add_argument('surname', help='Surnamename')
+    #CZ#parser.add_argument('surname', help='Surname')
 
         args = parser.parse_args()
 

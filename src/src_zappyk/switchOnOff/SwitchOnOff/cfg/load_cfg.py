@@ -53,7 +53,7 @@ class parser_args(object):
         group2.add_argument('-on' , '--is-on'     , help='Question flag is On'               , action='store_true', default=False)
         group2.add_argument('-off', '--is-off'    , help='Question flag is Off'              , action='store_true', default=False)
     #CZ#parser.add_argument('name'               , help='Name')
-    #CZ#parser.add_argument('surname'            , help='Surnamename')
+    #CZ#parser.add_argument('surname'            , help='Surname')
 
         args = parser.parse_args()
 

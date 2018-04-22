@@ -132,7 +132,7 @@ def _getargs():
     parser.add_argument('-us', '--unit_sheet'  , help='grouped sheet by first char'         , type=int           , default=_group_sheet)
     parser.add_argument('-as', '--archive_set' , help='select archive format'               , type=str           , default=_archive_set, choices=_archive_ext)
 #CZ#parser.add_argument('name'                 , help='Name')
-#CZ#parser.add_argument('surname'              , help='Surnamename')
+#CZ#parser.add_argument('surname'              , help='Surname')
 
     args = parser.parse_args()
 

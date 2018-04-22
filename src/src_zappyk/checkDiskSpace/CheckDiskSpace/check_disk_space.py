@@ -205,7 +205,7 @@ def _getargs():
     parser.add_argument('-ms', '--mail_subject', help='mail subject (default: %(default)s)'  , type=str           , default=_mail_subject)
     parser.add_argument('-mm', '--mail_message', help='mail message'                         , type=str)
 #CZ#parser.add_argument('name'                 , help='Name')
-#CZ#parser.add_argument('surname'              , help='Surnamename')
+#CZ#parser.add_argument('surname'              , help='Surname')
 
     args = parser.parse_args()
 

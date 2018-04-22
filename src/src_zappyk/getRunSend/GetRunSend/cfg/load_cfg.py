@@ -42,7 +42,7 @@ class parser_args(object):
         parser.add_argument('-d', '--debug'  , help='increase output debug'             , action='count', default=0)
         parser.add_argument('-v', '--verbose', help='output verbosity'                  , action='store_true')
     #CZ#parser.add_argument('name'           , help='Name')
-    #CZ#parser.add_argument('surname'        , help='Surnamename')
+    #CZ#parser.add_argument('surname'        , help='Surname')
 
         args = parser.parse_args()
 

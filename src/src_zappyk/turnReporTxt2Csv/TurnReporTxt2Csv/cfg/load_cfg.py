@@ -60,7 +60,7 @@ class parser_args(object):
         parser.add_argument('-cqc'   , '--csv_quotechar'     , help='CSV file quote char fields'        , type=str                      , default=None)
         parser.add_argument('-clt'   , '--csv_lineterminator', help='CSV file line terminator'          , type=str                      , default=None)
     #CZ#parser.add_argument('name'   , help='Name')
-    #CZ#parser.add_argument('surname', help='Surnamename')
+    #CZ#parser.add_argument('surname', help='Surname')
 
         args = parser.parse_args()
 

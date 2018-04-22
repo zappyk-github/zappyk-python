@@ -233,34 +233,44 @@ def _crypt(data, encode=False):
 
 ###############################################################################
 def _getargs():
+    _note_epilog = '''
+Note: Proxy set environments   [ HTTP_PROXY | HTTPS_PROXY ]
+         or set ref. options   [XXXX://[user:pass]@]host:port   where XXXX are [ http | https | socks5 | socks5h ]
+      in this order of importance.
+
+%s
+''' % _epilog
 #CZ#parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=120)
     formatter = lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=50, width=120)
     formatter = lambda prog: argparse.RawDescriptionHelpFormatter(prog, max_help_position=50, width=120)
-    parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
+#CZ#parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
+    parser = argparse.ArgumentParser(description=_description, epilog=_note_epilog, formatter_class=formatter)  # , argument_default=not argparse.SUPPRESS)
 
-#CZ#pgroup.add_argument('-p' ,  '--power'       , help='display a power of a given number'    , type=int           , choices=[1,2,3,4,5])
-#CZ#pgroup.add_argument('-s' ,  '--square'      , help='display a square of a given number'   , type=int)
-    parser.add_argument('-d' ,  '--debug'       , help='increase output debug'                , action='count'     , default=0)
-    parser.add_argument('-v' ,  '--verbose'     , help='output verbosity'                     , action='store_true')
-    parser.add_argument('-V' ,  '--version'     , help='print version number'                 , action='version'   , version='%(prog)s '+_version)
-    parser.add_argument('-ps',  '--path_save'   , help='path or save file uploader'           , type=str)
-    parser.add_argument('-pf',  '--path_file'   , help='path file for uploader'               , type=str           , required=True)
-    parser.add_argument('-fn',  '--flow_name'   , help='flow name for uploader'               , type=str           , required=True)
-    parser.add_argument('-ua',  '--url_address' , help='URL address for uploader file'        , type=str           , required=True)
-    parser.add_argument('-uu',  '--url_username', help='URL authentication username'          , type=str           , required=True)
-    parser.add_argument('-up',  '--url_password', help='URL authentication password'          , type=str           , required=True)
-    parser.add_argument('-cp',  '--cryptpswd'   , help='return crypted URL_PASSWORD'          , action='store_true')
-    parser.add_argument('-sm',  '--send_mail'   , help='send mail notification'               , action='store_true')
-    parser.add_argument('-gm',  '--gmail'       , help='set Gmail SMTP'                       , action='store_true')
-    parser.add_argument('-mh',  '--mail_host'   , help='mail host SMTP (default: %(default)s)', type=str           , default=_mail_host)
-    parser.add_argument('-mf',  '--mail_from'   , help='mail from (default: %(default)s)'     , type=str           , default=_mail_from)
-    parser.add_argument('-mt',  '--mail_to'     , help='mail to (default: %(default)s)'       , type=str           , default=_mail_from)
-    parser.add_argument('-mc',  '--mail_cc'     , help='mail cc'                              , type=str)
-    parser.add_argument('-ms',  '--mail_subject', help='mail subject (default: %(default)s)'  , type=str           , default=_mail_subject)
-    parser.add_argument('-mm',  '--mail_message', help='mail message'                         , type=str)
-#CZ#parser.add_argument('name'                  , help='Name')
-#CZ#parser.add_argument('surname'               , help='Surnamename')
+#CZ#pgroup.add_argument('-p' ,  '--power'          , help='display a power of a given number'    , type=int           , choices=[1,2,3,4,5])
+#CZ#pgroup.add_argument('-s' ,  '--square'         , help='display a square of a given number'   , type=int)
+    parser.add_argument('-d' ,  '--debug'          , help='increase output debug'                , action='count'     , default=0)
+    parser.add_argument('-v' ,  '--verbose'        , help='output verbosity'                     , action='store_true')
+    parser.add_argument('-V' ,  '--version'        , help='print version number'                 , action='version'   , version='%(prog)s '+_version)
+    parser.add_argument('-ps',  '--path_save'      , help='path or save file uploader'           , type=str)
+    parser.add_argument('-pf',  '--path_file'      , help='path file for uploader'               , type=str           , required=True)
+    parser.add_argument('-fn',  '--flow_name'      , help='flow name for uploader'               , type=str           , required=True)
+    parser.add_argument('-uph', '--url_proxy_http' , help='URL set proxy http'                   , type=str)
+    parser.add_argument('-uphs','--url_proxy_https', help='URL set proxy https'                  , type=str)
+    parser.add_argument('-ua',  '--url_address'    , help='URL address for uploader file'        , type=str           , required=True)
+    parser.add_argument('-uu',  '--url_username'   , help='URL authentication username'          , type=str           , required=True)
+    parser.add_argument('-up',  '--url_password'   , help='URL authentication password'          , type=str           , required=True)
+    parser.add_argument('-cp',  '--cryptpswd'      , help='return crypted URL_PASSWORD'          , action='store_true')
+    parser.add_argument('-sm',  '--send_mail'      , help='send mail notification'               , action='store_true')
+    parser.add_argument('-gm',  '--gmail'          , help='set Gmail SMTP'                       , action='store_true')
+    parser.add_argument('-mh',  '--mail_host'      , help='mail host SMTP (default: %(default)s)', type=str           , default=_mail_host)
+    parser.add_argument('-mf',  '--mail_from'      , help='mail from (default: %(default)s)'     , type=str           , default=_mail_from)
+    parser.add_argument('-mt',  '--mail_to'        , help='mail to (default: %(default)s)'       , type=str           , default=_mail_from)
+    parser.add_argument('-mc',  '--mail_cc'        , help='mail cc'                              , type=str)
+    parser.add_argument('-ms',  '--mail_subject'   , help='mail subject (default: %(default)s)'  , type=str           , default=_mail_subject)
+    parser.add_argument('-mm',  '--mail_message'   , help='mail message'                         , type=str)
+#CZ#parser.add_argument('name'                     , help='Name')
+#CZ#parser.add_argument('surname'                  , help='Surname')
 
     args = parser.parse_args()
 
@@ -347,20 +357,21 @@ if __name__ == '__main__':
             head = { _http_tag_flowName: flow_name, _http_tag_flowBosMft: flow_bos_mft }
 
             '''
-            $ export HTTP_PROXY = "10.10.1.10:3128"
-            $ export HTTPS_PROXY = "10.10.1.10:1080"
             proxies = {
-                "http" : "http://user:pass@10.10.1.10:3128/",
-                "http" : "10.10.1.10:3128",
-                "https": "10.10.1.10:1080",
+                'http' : 'http://user:pass@host:port',
+                'https': 'https://user:pass@host:port',
+                'http' : 'socks5://user:pass@host:port',
+                'https': 'socks5://user:pass@host:port',
+                'http' : 'socks5h://user:pass@host:port',
+                'https': 'socks5h://user:pass@host:port',
             }
             response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True, proxies=proxies)
             '''
             proxies = {}
-            if os.getenv("HTTP_PROXY") is not None:
-                proxies['http'] = os.environ['HTTP_PROXY']
-            if os.getenv("HTTPS_PROXY") is not None:
-                proxies['https'] = os.environ['HTTPS_PROXY']
+            if os.getenv('HTTP_PROXY')  is not None: proxies['http']  = os.environ['HTTP_PROXY']
+            if os.getenv("HTTPS_PROXY") is not None: proxies['https'] = os.environ['HTTPS_PROXY']
+            if args.url_proxy_http      is not None: proxies['http']  = args.url_proxy_http
+            if args.url_proxy_https     is not None: proxies['https'] = args.url_proxy_https
 
         #CZ#response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True)
             response = requests.post(addr, auth=auth, data=data, files=file, headers=head, allow_redirects=True, proxies=proxies)

@@ -88,7 +88,7 @@ def _getargs():
     parser.add_argument('-r' , '--run'         , help='run execute, read below for more info', type=str           , required=True)
     parser.add_argument('-s' , '--sql'         , help=('sql execute, %s for STDIN' % _sdtin_), type=str           , required=True)
 #CZ#parser.add_argument('name'                 , help='Name')
-#CZ#parser.add_argument('surname'              , help='Surnamename')
+#CZ#parser.add_argument('surname'              , help='Surname')
 
     args = parser.parse_args()
 

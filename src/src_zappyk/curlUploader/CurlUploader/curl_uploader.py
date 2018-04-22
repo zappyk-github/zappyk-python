@@ -15,6 +15,7 @@ from lib_zappyk._email   import _email
 from lib_zappyk._string  import _findall, _crypting
 
 _version = '0.1'
+_version = '0.2'
 
 _project = 'CurlUploader'
 
@@ -234,8 +235,8 @@ def _crypt(data, encode=False):
 ###############################################################################
 def _getargs():
     _note_epilog = '''
-Note: Proxy set environments   [ HTTP_PROXY | HTTPS_PROXY ]
-         or set ref. options   [XXXX://[user:pass]@]host:port   where XXXX are [ http | https | socks5 | socks5h ]
+Note: Proxy set ref. options   [XXXX://[user:pass]@]host:port   where XXXX are ( http | https | socks5 | socks5h )
+         or set environments   ( HTTP_PROXY | HTTPS_PROXY )
       in this order of importance.
 
 %s
@@ -247,30 +248,30 @@ Note: Proxy set environments   [ HTTP_PROXY | HTTPS_PROXY ]
 #CZ#parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
     parser = argparse.ArgumentParser(description=_description, epilog=_note_epilog, formatter_class=formatter)  # , argument_default=not argparse.SUPPRESS)
 
-#CZ#pgroup.add_argument('-p' ,  '--power'          , help='display a power of a given number'    , type=int           , choices=[1,2,3,4,5])
-#CZ#pgroup.add_argument('-s' ,  '--square'         , help='display a square of a given number'   , type=int)
-    parser.add_argument('-d' ,  '--debug'          , help='increase output debug'                , action='count'     , default=0)
-    parser.add_argument('-v' ,  '--verbose'        , help='output verbosity'                     , action='store_true')
-    parser.add_argument('-V' ,  '--version'        , help='print version number'                 , action='version'   , version='%(prog)s '+_version)
-    parser.add_argument('-ps',  '--path_save'      , help='path save file uploader'              , type=str           )#, required=True)
-    parser.add_argument('-pf',  '--path_file'      , help='path file for uploader'               , type=str           )#, required=True)
-    parser.add_argument('-fn',  '--flow_name'      , help='flow name for uploader'               , type=str           )#, required=True)
-    parser.add_argument('-uph', '--url_proxy_http' , help='URL set proxy http'                   , type=str)
-    parser.add_argument('-uphs','--url_proxy_https', help='URL set proxy https'                  , type=str)
-    parser.add_argument('-ua',  '--url_address'    , help='URL address for uploader file'        , type=str           )#, required=True)
-    parser.add_argument('-uu',  '--url_username'   , help='URL authentication username'          , type=str           )#, required=True)
-    parser.add_argument('-up',  '--url_password'   , help='URL authentication password'          , type=str           )#, required=True)
-    parser.add_argument('-cp',  '--cryptpswd'      , help='return crypted URL_PASSWORD'          , action='store_true')
-    parser.add_argument('-sm',  '--send_mail'      , help='send mail notification'               , action='store_true')
-    parser.add_argument('-gm',  '--gmail'          , help='set Gmail SMTP'                       , action='store_true')
-    parser.add_argument('-mh',  '--mail_host'      , help='mail host SMTP (default: %(default)s)', type=str           , default=_mail_host)
-    parser.add_argument('-mf',  '--mail_from'      , help='mail from (default: %(default)s)'     , type=str           , default=_mail_from)
-    parser.add_argument('-mt',  '--mail_to'        , help='mail to (default: %(default)s)'       , type=str           , default=_mail_from)
-    parser.add_argument('-mc',  '--mail_cc'        , help='mail cc'                              , type=str)
-    parser.add_argument('-ms',  '--mail_subject'   , help='mail subject (default: %(default)s)'  , type=str           , default=_mail_subject)
-    parser.add_argument('-mm',  '--mail_message'   , help='mail message'                         , type=str)
-#CZ#parser.add_argument('name'                     , help='Name')
-#CZ#parser.add_argument('surname'                  , help='Surname')
+#CZ#pgroup.add_argument('-p' ,  '--power'          , help='| display a power of a given number'    , type=int           , choices=[1,2,3,4,5])
+#CZ#pgroup.add_argument('-s' ,  '--square'         , help='| display a square of a given number'   , type=int)
+    parser.add_argument('-d' ,  '--debug'          , help='| increase output debug'                , action='count'     , default=0)
+    parser.add_argument('-v' ,  '--verbose'        , help='| output verbosity'                     , action='store_true')
+    parser.add_argument('-V' ,  '--version'        , help='| print version number'                 , action='version'   , version='%(prog)s '+_version)
+    parser.add_argument('-ps',  '--path_save'      , help='* path save file uploader'              , type=str           )#, required=True)
+    parser.add_argument('-pf',  '--path_file'      , help='* path file for uploader'               , type=str           )#, required=True)
+    parser.add_argument('-fn',  '--flow_name'      , help='* flow name for uploader'               , type=str           )#, required=True)
+    parser.add_argument('-ua',  '--url_address'    , help='* URL address for uploader file'        , type=str           )#, required=True)
+    parser.add_argument('-uu',  '--url_username'   , help='* URL authentication username'          , type=str           )#, required=True)
+    parser.add_argument('-up',  '--url_password'   , help='* URL authentication password'          , type=str           )#, required=True)
+    parser.add_argument('-uph', '--url_proxy_http' , help='| URL set proxy HTTP reference'         , type=str)
+    parser.add_argument('-uphs','--url_proxy_https', help='| URL set proxy HTTPS reference'        , type=str)
+    parser.add_argument('-cp',  '--cryptpswd'      , help='| return crypted URL_PASSWORD'          , action='store_true')
+    parser.add_argument('-sm',  '--send_mail'      , help='| send mail notification'               , action='store_true')
+    parser.add_argument('-gm',  '--gmail'          , help='| set Gmail SMTP'                       , action='store_true')
+    parser.add_argument('-mh',  '--mail_host'      , help='| mail host SMTP (default: %(default)s)', type=str           , default=_mail_host)
+    parser.add_argument('-mf',  '--mail_from'      , help='| mail from (default: %(default)s)'     , type=str           , default=_mail_from)
+    parser.add_argument('-mt',  '--mail_to'        , help='| mail to (default: %(default)s)'       , type=str           , default=_mail_from)
+    parser.add_argument('-mc',  '--mail_cc'        , help='| mail cc'                              , type=str)
+    parser.add_argument('-ms',  '--mail_subject'   , help='| mail subject (default: %(default)s)'  , type=str           , default=_mail_subject)
+    parser.add_argument('-mm',  '--mail_message'   , help='| mail message'                         , type=str)
+#CZ#parser.add_argument('name'                     , help='| Name')
+#CZ#parser.add_argument('surname'                  , help='| Surname')
 
     args = parser.parse_args()
 
@@ -334,19 +335,21 @@ if __name__ == '__main__':
     send_file = _pathJoin([path_save, ('%s_send2payroll_%s' % (flow_name, _basename(path_file)))])
 
     if _fileExist(send_file):
-        move_file = send_file
+        messages = _message_check % send_file ; logs.info(messages)
 
-        messages = (_message_check % send_file)
-        logs.info(messages)
+        move_file = send_file
     else:
+
         if _fileExist(path_file):
             try:
+            #CZ#messages = _message_check % path_file ; logs.info(messages)
+
                 _fileMove(path_file, send_file)
                 move_file = path_file
             except Exception as e:
+                logs.warning(str(e))
+                messages = _message_moved % path_file ; logs.warning(messages)
                 exitcode = True
-                messages = _message_moved % path_file
-                logs.warning(messages)
 
 #CZ#if _fileExist(path_file):
 #CZ#if _fileExist(send_file):
@@ -394,34 +397,31 @@ if __name__ == '__main__':
             data_file.close()
 
             if not exitcode:
-            #CZ#messages = _message_allok % path_file
-                messages = _message_allok % move_file
+            #CZ#messages = _message_allok % path_file ; logs.info(messages)
+                messages = _message_allok % move_file ; logs.info(messages)
 
-                if path_save is not None:
-                #CZ#_save_file(path_file, path_save, flow_name)
-                    _save_file(send_file, path_save, flow_name)
-
-                logs.info(messages)
+            #CZ#_save_file(path_file, path_save, flow_name)
+                _save_file(send_file, path_save, flow_name)
 
         except Exception as e:
-            exitcode = True
+            logs.warning(str(e))
             if messages is None:
             #CZ#messages = _message_error % path_file
                 messages = _message_error % move_file
             else:
                 messages = _message_butok % (messages, str(e))
             logs.warning(messages)
+            exitcode = True
 
     else:
         if exitcode is None:
+        #CZ#messages = _message_alert % path_file ; logs.warning(messages)
+            messages = _message_alert % move_file ; logs.warning(messages)
             exitcode = False
-            messages = _message_alert % path_file
-            logs.warning(messages)
 
     if exitcode:
-    #CZ#message_email = _mail_message % (url_address, url_username, path_file, path_save, messages)
-        message_email = _mail_message % (url_address, url_username, move_file, path_save, messages)
-        logs.warning(message_email)
+    #CZ#message_email = _mail_message % (url_address, url_username, path_file, path_save, messages) ; logs.warning(message_email)
+        message_email = _mail_message % (url_address, url_username, move_file, path_save, messages) ; logs.warning(message_email)
 
         _sendmail(_sendmail_prepare(args, [message_email]))
 

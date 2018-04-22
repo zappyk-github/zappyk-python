@@ -4,7 +4,7 @@ __author__ = 'zappyk'
 import os
 
 from os     import path, walk, listdir
-from shutil import copy2, rmtree, make_archive
+from shutil import copy2, rmtree, make_archive, move
 
 ###############################################################################
 def _copy2(file_from, file_to):
@@ -44,7 +44,8 @@ def _fileExist(file_name):
     return(path.isfile(file_name))
 ###############################################################################
 def _fileMove(file_name_from, file_name_to):
-    return(os.rename(file_name_from, file_name_to))
+#CZ#return(os.rename(file_name_from, file_name_to))
+    return(move(file_name_from, file_name_to))
 ###############################################################################
 def _fileRemove(file_name):
     return(os.remove(file_name))

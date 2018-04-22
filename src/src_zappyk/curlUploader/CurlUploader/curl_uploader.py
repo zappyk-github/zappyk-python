@@ -252,14 +252,14 @@ Note: Proxy set environments   [ HTTP_PROXY | HTTPS_PROXY ]
     parser.add_argument('-d' ,  '--debug'          , help='increase output debug'                , action='count'     , default=0)
     parser.add_argument('-v' ,  '--verbose'        , help='output verbosity'                     , action='store_true')
     parser.add_argument('-V' ,  '--version'        , help='print version number'                 , action='version'   , version='%(prog)s '+_version)
-    parser.add_argument('-ps',  '--path_save'      , help='path or save file uploader'           , type=str)
-    parser.add_argument('-pf',  '--path_file'      , help='path file for uploader'               , type=str           , required=True)
-    parser.add_argument('-fn',  '--flow_name'      , help='flow name for uploader'               , type=str           , required=True)
+    parser.add_argument('-ps',  '--path_save'      , help='path save file uploader'              , type=str           )#, required=True)
+    parser.add_argument('-pf',  '--path_file'      , help='path file for uploader'               , type=str           )#, required=True)
+    parser.add_argument('-fn',  '--flow_name'      , help='flow name for uploader'               , type=str           )#, required=True)
     parser.add_argument('-uph', '--url_proxy_http' , help='URL set proxy http'                   , type=str)
     parser.add_argument('-uphs','--url_proxy_https', help='URL set proxy https'                  , type=str)
-    parser.add_argument('-ua',  '--url_address'    , help='URL address for uploader file'        , type=str           , required=True)
-    parser.add_argument('-uu',  '--url_username'   , help='URL authentication username'          , type=str           , required=True)
-    parser.add_argument('-up',  '--url_password'   , help='URL authentication password'          , type=str           , required=True)
+    parser.add_argument('-ua',  '--url_address'    , help='URL address for uploader file'        , type=str           )#, required=True)
+    parser.add_argument('-uu',  '--url_username'   , help='URL authentication username'          , type=str           )#, required=True)
+    parser.add_argument('-up',  '--url_password'   , help='URL authentication password'          , type=str           )#, required=True)
     parser.add_argument('-cp',  '--cryptpswd'      , help='return crypted URL_PASSWORD'          , action='store_true')
     parser.add_argument('-sm',  '--send_mail'      , help='send mail notification'               , action='store_true')
     parser.add_argument('-gm',  '--gmail'          , help='set Gmail SMTP'                       , action='store_true')
@@ -273,6 +273,15 @@ Note: Proxy set environments   [ HTTP_PROXY | HTTPS_PROXY ]
 #CZ#parser.add_argument('surname'                  , help='Surname')
 
     args = parser.parse_args()
+
+    roll = True
+    if args.cryptpswd:
+        if args.url_password is None:
+            parser.error('with -cp/--cryptpswd argument, -up/--url_password is required')
+        else:
+            roll = False
+    if roll and (args.path_save is None or args.path_file is None or args.flow_name is None or args.url_address is None or args.url_username is None or args.url_password is None):
+        parser.error('the following arguments are required: -ps/--path_save, -pf/--path_file, -fn/--flow_name, -ua/--url_address, -uu/--url_username, -up/--url_password')
 
     return(args)
 

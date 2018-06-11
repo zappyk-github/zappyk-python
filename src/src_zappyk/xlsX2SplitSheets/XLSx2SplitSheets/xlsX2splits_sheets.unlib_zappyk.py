@@ -84,7 +84,7 @@ class _log(object):
         traceback.print_tb(exc_traceback, limit=limit, file=file)
 ###########################################################################
 def _replace(string, search, replace):
-    # CZ#return(string.replace(search, replace))
+#CZ#return(string.replace(search, replace))
     return (re.sub(search, replace, string))
 ###############################################################################
 def _makeDir(path_name):

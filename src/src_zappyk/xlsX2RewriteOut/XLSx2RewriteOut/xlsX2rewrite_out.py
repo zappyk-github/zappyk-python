@@ -11,7 +11,7 @@ import openpyxl
 from xlutils import copy
 
 from lib_zappyk._os_file import _basename, _fileExist, _copy2
-from lib_zappyk._string  import _trim
+from lib_zappyk._string  import _trim, _stringToNumber
 from lib_zappyk._log     import _log
 
 _version = '0.1'
@@ -226,7 +226,7 @@ if __name__ == '__main__':
                 while col < len(readcsv[row]):
                     val = readcsv[row][col]
                     if _trim(val) != '':
-                        worksheet.cell(row=row+1, column=col+1).value = val
+                        worksheet.cell(row=row+1, column=col+1).value = _stringToNumber(val)
                         if args.debug >= 2:
                             logs.info("write [r.%3s|c.%3s]=[%s]" % (row, col, val))
                     col += 1
@@ -240,7 +240,7 @@ if __name__ == '__main__':
                     ,cell_col
                     ,cell_x_y
                     ,cell_val)= split_cell_story(cell_value)
-                    worksheet.cell(row=cell_row, column=cell_col).value = cell_val
+                    worksheet.cell(row=cell_row, column=cell_col).value = _stringToNumber(cell_val)
             #worksheet['J2']  = 999
             #worksheet['J9']  = '!!! PROVA !!!'
             #worksheet['J46'] = 99.99
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                     ,cell_col
                     ,cell_x_y
                     ,cell_val)= split_cell_story(cell_value)
-                    worksheet.cell(cell_row, cell_col).value = cell_val
+                    worksheet.cell(cell_row, cell_col).value = _stringToNumber(cell_val)
             #worksheet.cell(      2,         10).value = 999
             #worksheet.cell(      9,         10).value = '!!! PROVA !!!'
             #worksheet.cell(     46,         10).value = 99.99

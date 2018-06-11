@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from builtins import setattr
+
 __author__ = 'zappyk'
 
 import os, sys, time, traceback
@@ -8,17 +10,21 @@ import logging.config
 ###############################################################################
 class _log(object):
     ###########################################################################
-    def __init__(self, name=None, file=None):
-        if file != None:
+    def __init__(self, name=None, file=None, format=None):
+    #CZ#if file != None:
+        if file is not None:
             if os.path.isfile(file):
                 logging.config.fileConfig(file)
 
-        if name != None:
+    #CZ#if name != None:
+        if name is not None:
             self = logging.getLogger(name)
         else:
             self = logging.getLogger(__name__)
 
-        self.format = None
+    #CZ#self.format = None
+    #CZ#setattr(self, 'format', format)
+        self.format = format
 
     ###########################################################################
     def info(self, string=None, end=None):

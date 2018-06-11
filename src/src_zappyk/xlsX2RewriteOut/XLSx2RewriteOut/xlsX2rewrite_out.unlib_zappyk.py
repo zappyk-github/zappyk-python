@@ -3,13 +3,15 @@
 __author__ = 'zappyk'
 
 import sys, argparse #, configparser
+import csv
+import PIL
 import xlrd #, xlwt
 import openpyxl
 
 from xlutils import copy
 
-#CZ#from lib_zappyk._os_file import _makeDir, _pathSep, _pathExist, _pathRemove, _basename, _copy2, _makeArchive
-#CZ#from lib_zappyk._string  import _replace
+#CZ#from lib_zappyk._os_file import _basename, _fileExist, _copy2
+#CZ#from lib_zappyk._string  import _trim, _stringToNumber
 #CZ#from lib_zappyk._log     import _log
 import os
 import re
@@ -34,9 +36,8 @@ Rewrite a Spreadsheet ( .xls / .xlsx ) on source CSV file.
 
 _epilog = "Version: %s" % _version
 
-_group_sheet = 6
-_archive_ext = ['zip', 'tar', 'gztar', 'bztar', 'xztar']
-_archive_set = _archive_ext[0]
+_default_csv_delimiter = ';'
+_default_csv_quotechar = None
 
 ########################################################################################################################
 
@@ -81,34 +82,27 @@ class _log(object):
     ###########################################################################
     def traceback(self, exc_traceback=None, limit=1, file=sys.stderr):
         traceback.print_tb(exc_traceback, limit=limit, file=file)
-###########################################################################
-def _replace(string, search, replace):
-    # CZ#return(string.replace(search, replace))
-    return (re.sub(search, replace, string))
 ###############################################################################
-def _makeDir(path_name):
-    if not os.path.exists(path_name):
-        return(os.makedirs(path_name))
-    return(True)
+def _trim(string):
+    return(string.strip())
 ###############################################################################
-def _pathSep():
-    return(path.sep)
-###############################################################################
-def _pathRemove(path_name):
-#CZ#return(rmtree(path_name, ignore_errors=True))
-    return(rmtree(path_name))
-###############################################################################
-def _pathExist(path_name):
-    return(path.isdir(path_name))
-###############################################################################
-def _copy2(file_from, file_to):
-    copy2(file_from, file_to)
+def _stringToNumber(string, StringInit0=True):
+    try:
+        if StringInit0:
+            import re
+            pattern = re.compile('^0')
+            if pattern.match(string):
+                return(string)
+
+        return(float(string))
+    except ValueError:
+        return(string)
 ###############################################################################
 def _basename(path_file):
     return(path.basename(path_file))
 ###############################################################################
-def _makeArchive(file_name, file_type='zip', path_name=None):
-    return(make_archive(file_name, file_type, path_name))
+def _fileExist(file_name):
+    return(path.isfile(file_name))
 ########################################################################################################################
 ########################################################################################################################
 
@@ -122,16 +116,20 @@ def _getargs():
 #CZ#formatter = lambda prog: argparse.RawDescriptionHelpFormatter(prog, max_help_position=50, width=120)
     parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
 
-#CZ#pgroup.add_argument('-p' , '--power'       , help='display a power of a given number'   , type=int           , choices=[1,2,3,4,5])
-#CZ#pgroup.add_argument('-s' , '--square'      , help='display a square of a given number'  , type=int)
-    parser.add_argument('-d' , '--debug'       , help='increase output debug'               , action='count'     , default=0)
-    parser.add_argument('-v' , '--verbose'     , help='output verbosity'                    , action='store_true')
-    parser.add_argument('-V' , '--version'     , help='print version number'                , action='version'   , version='%(prog)s '+_version)
-    parser.add_argument('-fi', '--file_input'  , help='file spreadsheet (only .xls/.xlsx)'  , type=str           , required=True)
-    parser.add_argument('-us', '--unit_sheet'  , help='grouped sheet by first char'         , type=int           , default=_group_sheet)
-    parser.add_argument('-as', '--archive_set' , help='select archive format'               , type=str           , default=_archive_set, choices=_archive_ext)
-#CZ#parser.add_argument('name'                 , help='Name')
-#CZ#parser.add_argument('surname'              , help='Surname')
+#CZ#pgroup.add_argument('-p' , '--power'        , help='display a power of a given number'   , type=int           , choices=[1,2,3,4,5])
+#CZ#pgroup.add_argument('-s' , '--square'       , help='display a square of a given number'  , type=int)
+    parser.add_argument('-d' , '--debug'        , help='increase output debug'               , action='count'     , default=0)
+    parser.add_argument('-v' , '--verbose'      , help='output verbosity'                    , action='store_true')
+    parser.add_argument('-V' , '--version'      , help='print version number'                , action='version'   , version='%(prog)s '+_version)
+    parser.add_argument('-fs', '--file_source'  , help='file source CSV for rewrite layout'  , type=str           , required=True)
+    parser.add_argument('-fl', '--file_layout'  , help='file spreadsheet (only .xls/.xlsx)'  , type=str           , required=True)
+    parser.add_argument('-fo', '--file_output'  , help='file output merge on source-layout'  , type=str           , required=True)
+    parser.add_argument('-cv', '--cell_values'  , help='modify cell value format: "1,1=test"', type=str           , nargs='+')
+    parser.add_argument('-ci', '--cell_images'  , help='insert cell image format: "1,1=file"', type=str           , nargs='+')
+    parser.add_argument('-cs', '--csv_delimiter', help='csv delimiter char'                  , type=str           , default=_default_csv_delimiter)
+    parser.add_argument('-cd', '--csv_quotechar', help='csv quote char'                      , type=str           , default=_default_csv_quotechar)
+#CZ#parser.add_argument('name'                  , help='Name')
+#CZ#parser.add_argument('surname'               , help='Surname')
 
     args = parser.parse_args()
 
@@ -197,7 +195,8 @@ def open_file_input(file_input):
 
 ###############################################################################
 def open_file_xlsx(file_input):
-    workbook = openpyxl.load_workbook(file_input, data_only=True)
+#CZ#workbook = openpyxl.load_workbook(file_input, data_only=True)
+    workbook = openpyxl.load_workbook(file_input)
     return(workbook)
 
 ###############################################################################
@@ -207,128 +206,177 @@ def open_file_xls_(file_input):
     return(workbook)
 
 ###############################################################################
-def make_name_input(name_input):
-    name_input = _replace(name_input, '.xlsx$', '')
-    name_input = _replace(name_input, '.xls$' , '')
-    return(name_input)
+def split_cell_story(string):
+    if args.debug:
+        log.info("#=coordinate=> [ %s ]" % (string))
 
-###############################################################################
-def make_path_split(path_split):
-    if _pathExist(path_split):
-        _pathRemove(path_split)
-        if _pathExist(path_split):
-            logs.error('Cannot remove directory [%s]' % path_split)
-        else:
-            _makeDir(path_split)
-    else:
-        _makeDir(path_split)
-    return(path_split)
+    char_split_1 = '='
+    char_split_2 = ','
+    string_coordinate = string.split(char_split_1)[0]
+    string_cell_story = string.split(char_split_1)[1:]
+    coordinate = string_coordinate.split(char_split_2)
+    cell_story = char_split_1.join(string_cell_story)
+
+    coordinate_XY = None
+    if len(coordinate) == 1:
+        from openpyxl.utils import coordinate_from_string, column_index_from_string
+        x_y = coordinate_from_string(coordinate[0])      # returns ('A',4)
+        col = column_index_from_string(x_y[0])  # returns 1
+        row = x_y[1]
+        coordinate_XY = coordinate[0]
+        coordinate[0] = row
+        coordinate.append(col)
+
+    if args.debug:
+        log.info("#=coordinate=> [ %s | %s ]=[%s]" % (coordinate[0], coordinate[1], cell_story))
+
+    return(coordinate[0], coordinate[1], coordinate_XY, cell_story)
 
 ###############################################################################
 if __name__ == '__main__':
     args = _getargs()
 
-    unit_sheet = args.unit_sheet
-    file_input = args.file_input
-    archiveset = args.archive_set
+    file_source   = args.file_source
+    file_layout   = args.file_layout
+    file_output   = args.file_output
+    cell_values   = args.cell_values
+    cell_images   = args.cell_images
+    csv_delimiter = args.csv_delimiter
+    csv_quotechar = args.csv_quotechar
 
-    name_input = _basename(file_input)
+    name_source = _basename(file_source)
+    name_layout = _basename(file_layout)
+    name_output = _basename(file_output)
+
+    open_layout = file_layout
 
     try:
-        logs.info('Splits first %s characters by sheets name and create %s archive' % (unit_sheet, archiveset))
-        logs.info('Open file "%s" for splits:' % file_input)
-        (workbook
-        ,xlsx_ext) = open_file_input(file_input)
+        logs.info('Rewrite name layout %s from %s file and marge on %s file output' % (name_layout, name_source, name_output))
 
-        path_input = make_name_input(file_input)
-        path_split = make_path_split(path_input + '.d')
-        file_press = path_input
+    #CZ#logs.info('Copy file layout "%s" for layout in "%s" file output:' % (file_layout, file_output))
+    #CZ#_copy2(file_layout, file_output); open_layout = file_output
+
+        logs.info('Opened file layout "%s" for rewrite:' % open_layout)
+        (workbook
+        ,xlsx_ext) = open_file_input(open_layout)
+
+        readcsv = []
+        with open(file_source, 'r') as fs:
+            linecsv = csv.reader(fs, delimiter=csv_delimiter, quotechar=csv_quotechar)
+            readcsv = list(linecsv)
 #CZ#except ExceptionFileInputNotParsed as e:
 #CZ#    logs.error(str(e))
     except Exception as e:
         logs.error(str(e))
 
-    sheet_names = None
+    workbook_output = None
+    workbook_outxls = None
     if xlsx_ext:
-        sheet_names = workbook.get_sheet_names()
+    #CZ#workbook_output = open_file_xlsx(file_output)
+    #CZ#workbook_output = open_file_xlsx(open_layout)
+        workbook_output = workbook
     else:
-        sheet_names = workbook.sheet_names()
+    #CZ#logs.info('Copy file layout "%s" for layout in "%s" file output:' % (file_layout, file_output))
+    #CZ#_copy2(file_layout, file_output); open_layout = file_output
 
-    sheet_first = None
-    sheet_group = {}
-    sheet_puorg = {}
-    for sheet_name_ in sheet_names:
-        sheet_first = sheet_name_[:unit_sheet]
-        sheet_tuple = sheet_group.get(sheet_first, [])
-        sheet_tuple.append(sheet_name_)
-        sheet_group[sheet_first] = sheet_tuple
-        sheet_puorg[sheet_name_] = sheet_first
-        if args.debug:
-            logs.info('Sheets[%s] = %s' % (sheet_first, sheet_name_))
-
-    #-------------------------------------------------------------------------------------------------------------------
-    if args.debug:
-        for sheet_first in sheet_group:
-            logs.info('___________')
-            logs.info('Group     [%s]' % sheet_first)
-            for sheet_name in sheet_group[sheet_first]:
-               logs.info('     Sheet[%s]' % sheet_name)
-    # ------------------------------------------------------------------------------------------------------------------
+    #CZ#workbook_output = open_file_xls_(file_output)
+        workbook_output = open_file_xls_(open_layout)
+    #CZ#workbook_output = workbook
+    #CZ#workbook_outxls = copy.copy(workbook_output)
 
     try:
-        for sheet_first in sheet_group:
-            logs.info('___________')
-            logs.info('Group     [%s]' % sheet_first)
-
-            name_output = _replace(name_input, '.xls', (' # %s.xls' % sheet_first))
-            file_output = path_split + _pathSep() + name_output
-
-            _copy2(file_input, file_output)
-
-            workbook_output = None
-            workbook_outxls = None
-            if xlsx_ext:
-                workbook_output = open_file_xlsx(file_output)
-            else:
-                workbook_output = open_file_xls_(file_output)
-                workbook_outxls = copy.copy(workbook_output)
-
-            for sheet_name_ in sheet_names:
-                sheet_keep = sheet_puorg.get(sheet_name_, '')
-                if sheet_first == sheet_keep:
-                    logs.info('  ++ Sheet[%s]' % sheet_name_)
-                else:
-                    logs.info('  -- Sheet[%s]' % sheet_name_)
-                    if xlsx_ext:
-                        workbook_output.remove_sheet(workbook_output.get_sheet_by_name(sheet_name_))
-                    else:
-                        workbook_outxls._Workbook__worksheets = [ worksheet for worksheet in workbook_outxls._Workbook__worksheets if worksheet.name != sheet_name_ ]
-
-            logs.info('Write Out [%s]' % file_output)
-            if xlsx_ext:
-                workbook_output.active = 0
-                workbook_output.save(file_output)
-            else:
-                workbook_outxls.active = 0
-                workbook_outxls.save(file_output)
-    except Exception as e:
-        logs.info('Something is wrong when delete (-- Sheets[···]) or (Write Out [···]) file :-|')
+        logs.info(' * Set worksheet 0...')
         if xlsx_ext:
-            logs.warning('[%s]' % workbook_output.get_sheet_names())
+            workbook_output.active = 0
+            worksheet = workbook_output.active
         else:
-            logs.warning('[%s]' % [worksheet.name for worksheet in workbook_outxls._Workbook__worksheets])
-        logs.error(str(e))
+            worksheet = workbook_output.sheet_by_index(0)
 
-    try:
-        logs.info()
-        logs.info('Create %s archive %s' % (archiveset, file_press + '.' + archiveset))
-        _makeArchive(file_press, archiveset, path_split)
-        logs.info('Create %s archive successfully' % archiveset)
+        logs.info(' * Modify values...')
+        if xlsx_ext:
+            #______________
+            # fill   CSV  :
+            ####################################################################
+            row = 0
+            while row < len(readcsv):
+                if args.debug:
+                    logs.info("line row %3s. = %s" % (row, readcsv[row]))
+                col = 0
+                while col < len(readcsv[row]):
+                    val = readcsv[row][col]
+                    if _trim(val) != '':
+                        worksheet.cell(row=row+1, column=col+1).value = _stringToNumber(val)
+                        if args.debug >= 2:
+                            logs.info("write [r.%3s|c.%3s]=[%s]" % (row, col, val))
+                    col += 1
+                row += 1
+            #______________
+            # cell values :
+            ####################################################################
+            if cell_values is not None:
+                for cell_value in cell_values:
+                    (cell_row
+                    ,cell_col
+                    ,cell_x_y
+                    ,cell_val)= split_cell_story(cell_value)
+                    worksheet.cell(row=cell_row, column=cell_col).value = _stringToNumber(cell_val)
+            #worksheet['J2']  = 999
+            #worksheet['J9']  = '!!! PROVA !!!'
+            #worksheet['J46'] = 99.99
+            #worksheet.cell(row=  2, column= 10).value = 99
+            #worksheet.cell(row=  9, column= 10).value = '!!! PROVA !!!'
+            #worksheet.cell(row= 46, column= 10).value = 99.99
+            #______________
+            # cell images :
+            ####################################################################
+            if cell_images is not None:
+                for cell_image in cell_images:
+                    (cell_row
+                    ,cell_col
+                    ,cell_x_y
+                    ,cell_img)= split_cell_story(cell_image)
+                    if _fileExist(cell_img):
+                        logs.info(' * Insert image %s ...' % _basename(cell_img))
+                        load_img = openpyxl.drawing.image.Image(cell_img)
+                    #CZ#load_img.anchor(worksheet.cell('A1')); worksheet.add_image(load_img)
+                    #CZ#worksheet.add_image(load_img, 'A1')
+                        worksheet.add_image(load_img, cell_x_y)
+                    else:
+                        logs.info(' * Insert image %s NOT FOUND!' % _basename(cell_img))
+        else:
+            #______________
+            # fill   CSV  :
+            ####################################################################
+            #______________
+            # cell values :
+            ####################################################################
+            if cell_values is not None:
+                for cell_value in cell_values:
+                    (cell_row
+                    ,cell_col
+                    ,cell_x_y
+                    ,cell_val)= split_cell_story(cell_value)
+                    worksheet.cell(cell_row, cell_col).value = _stringToNumber(cell_val)
+            #worksheet.cell(      2,         10).value = 999
+            #worksheet.cell(      9,         10).value = '!!! PROVA !!!'
+            #worksheet.cell(     46,         10).value = 99.99
+            #______________
+            # cell images :
+            ####################################################################
 
-        if not args.debug:
-            _pathRemove(path_split)
+        logs.info(' * Write output!')
+        if xlsx_ext:
+            workbook_output.save(file_output)
+        else:
+            workbook_outxls = copy.copy(workbook_output)
+            workbook_outxls.save(file_output)
+
     except Exception as e:
-        logs.info('Create %s archive failed  :-( ' % archiveset)
+    #CZ#logs.info('Something is wrong when delete (-- Sheets[···]) or (Write Out [···]) file :-|')
+    #CZ#if xlsx_ext:
+    #CZ#    logs.warning('[%s]' % workbook_output.get_sheet_names())
+    #CZ#else:
+    #CZ#    logs.warning('[%s]' % [worksheet.name for worksheet in workbook_outxls._Workbook__worksheets])
         logs.error(str(e))
 
     sys.exit(0)

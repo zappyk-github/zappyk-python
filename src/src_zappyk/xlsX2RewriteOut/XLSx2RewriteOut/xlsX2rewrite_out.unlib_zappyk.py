@@ -20,11 +20,11 @@ import logging
 import logging.config
 from os     import path
 #CZ#from shutil import copy2, rmtree, make_archive
-try:
-    from shutil import copy2, rmtree, make_archive
-except ImportError:
-    from shutil import copy2, rmtree #, make_archive
-    from shutil_zappyk.shutil_zappyk import make_archive
+#CZ#try:
+#CZ#    from shutil import copy2, rmtree, make_archive
+#CZ#except ImportError:
+#CZ#    from shutil import copy2, rmtree #, make_archive
+#CZ#    from shutil_zappyk.shutil_zappyk import make_archive
 
 _version = '0.1'
 

@@ -74,8 +74,20 @@ def _stringToNumber(string, StringInit0=True):
     try:
         if StringInit0:
             import re
-            pattern = re.compile('^0')
-            if pattern.match(string):
+            isString = False
+            pattern0 = re.compile('^0')
+            if pattern0.match(string):
+                isString = True
+                pattern0 = re.compile('^0.')
+                if pattern0.match(string):
+                    isString = False
+                pattern0 = re.compile('^0,')
+                if pattern0.match(string):
+                    isString = False
+                pattern0 = re.compile('^0$')
+                if pattern0.match(string):
+                    isString = False
+            if isString:
                 return(string)
 
         return(float(string))

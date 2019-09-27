@@ -78,7 +78,7 @@ def _stringToNumber(string, StringInit0=True):
             pattern0 = re.compile('^0')
             if pattern0.match(string):
                 isString = True
-                pattern0 = re.compile('^0.')
+                pattern0 = re.compile('^0\.')
                 if pattern0.match(string):
                     isString = False
                 pattern0 = re.compile('^0,')

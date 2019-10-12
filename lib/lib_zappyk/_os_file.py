@@ -10,6 +10,9 @@ from shutil import copy2, rmtree, make_archive, move
 def _copy2(file_from, file_to):
     copy2(file_from, file_to)
 ###############################################################################
+def _basepath(path_file):
+    return(path.dirname(path_file))
+###############################################################################
 def _basename(path_file):
     return(path.basename(path_file))
 ###############################################################################

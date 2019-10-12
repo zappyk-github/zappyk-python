@@ -57,8 +57,11 @@ class _log(object):
         return(self.format)
     #--------------------------------------------------------------------------
     def _putFormat(self, string=None):
-        if self.format is not None:
+    #CZ#if self.format is not None:
+        try:
             string = '%s%s' % (self._tagFormat(self.format), '' if string is None else string)
+        except:
+            pass
         return(string)
     #--------------------------------------------------------------------------
     def _tagFormat(self, string=None):

@@ -10,7 +10,7 @@ LINE_PARTITION = '=' * LINE_LENGTH
 CHAR_STD_INOUT = '-'
 CHAR_KEY_MERGE = '+'
 
-TYPE_IN_mmam = 'mmam' # Merge file master with file month
+TYPE_IN_mmam = 'mmam' # Merge file main with file month
 
 TYPE_OUT_csv = 'csv'
 TYPE_OUT_xls = 'xls'

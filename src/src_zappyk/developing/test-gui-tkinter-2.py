@@ -7,8 +7,8 @@ import tkinter as tk
 ###############################################################################
 class Application(tk.Frame):
     ###########################################################################
-    def __init__(self, master=None):
-        tk.Frame.__init__(self, master)
+    def __init__(self, main=None):
+        tk.Frame.__init__(self, main)
         self.pack()
         self.createWidgets()
     ###########################################################################
@@ -27,5 +27,5 @@ class Application(tk.Frame):
 ###############################################################################
 
 root = tk.Tk()
-app = Application(master=root)
+app = Application(main=root)
 app.mainloop()

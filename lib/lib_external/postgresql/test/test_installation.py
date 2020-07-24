@@ -65,7 +65,7 @@ class test_installation(unittest.TestCase):
 			i.version_info, (2,2,3,'final',0)
 		)
 		self.assertEqual(i.postgres, None)
-		self.assertEqual(i.postmaster, None)
+		self.assertEqual(i.postmain, None)
 
 	def test_exec(self):
 		# check the executable

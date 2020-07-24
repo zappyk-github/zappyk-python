@@ -39,7 +39,7 @@ key_columns_merge  = args.key_columns_merge  if args.key_columns_merge  is not N
 run_gui            = args.run_gui
 run_cmd            = args.run_cmd
 type_input         = args.type_input
-file_input_master  = args.file_input_master
+file_input_main  = args.file_input_main
 file_input_addcsv  = args.file_input_addcsv
 file_output        = args.file_output
 type_output        = args.type_output
@@ -47,14 +47,14 @@ type_output        = args.type_output
 run_gui            = True  if sys.platform == 'win32' else run_gui
 run_gui            = False if run_cmd                 else run_gui
 
-name_input_master  = _basenameNotExt(file_input_master)
+name_input_main  = _basenameNotExt(file_input_main)
 name_input_addcsv  = _basenameNotExt(file_input_addcsv)
 exte_output        = _basenameGetExt(file_output)
 type_output        = TYPE_OUT_csv      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_csv) else type_output
 #CZ#type_output        = TYPE_OUT_xls      if (type_output is None)           and (exte_output[1:] == TYPE_OUT_xls) else type_output
 
-file_output_csv    = '.'.join([_basenameFullPathNotExt(file_input_master), TYPE_OUT_csv])
-#CZ#file_output_xls    = '.'.join([_basenameFullPathNotExt(file_input_master), TYPE_OUT_xls])
+file_output_csv    = '.'.join([_basenameFullPathNotExt(file_input_main), TYPE_OUT_csv])
+#CZ#file_output_xls    = '.'.join([_basenameFullPathNotExt(file_input_main), TYPE_OUT_xls])
 
 file_output        = file_output_csv   if (file_output is None)           and (type_output     == TYPE_OUT_csv) else file_output
 #CZ#file_output        = file_output_xls   if (file_output is None)           and (type_output     == TYPE_OUT_xls) else file_output
@@ -69,12 +69,12 @@ csv_quoting        = csv.QUOTE_NONE    if csv_quoting        is None else csv_qu
 #key_columns_merge = ''                if key_columns_merge  is None else key_columns_merge
 
 root                  = Tk()
-root_path_file_master = StringVar()
+root_path_file_main = StringVar()
 root_path_file_addcsv = StringVar()
 root_choose_in        = StringVar()
 root_chooseext        = StringVar()
 root_key_columns      = key_columns_merge
-root_combo_out        = [('Merge file master with file month', TYPE_IN_mmam)
+root_combo_out        = [('Merge file main with file month', TYPE_IN_mmam)
                         ,('...another report layout...'      , 'xxxx')]
 root_filetypes        = (('Text files', '*.csv')
                         ,('All files' , '*.*'  ))
@@ -82,21 +82,21 @@ root_filetypes        = (('Text files', '*.csv')
 self__execute__entry   = _initializeVariable()
 
 self_type_input        = _initializeVariable(); self_type_input       .set(type_input)
-self_file_input_master = _initializeVariable(); self_file_input_master.set(file_input_master)
+self_file_input_main = _initializeVariable(); self_file_input_main.set(file_input_main)
 self_file_input_addcsv = _initializeVariable(); self_file_input_addcsv.set(file_input_addcsv)
-self_name_input_master = _initializeVariable(); self_name_input_master.set(name_input_master)
+self_name_input_main = _initializeVariable(); self_name_input_main.set(name_input_main)
 self_name_input_addcsv = _initializeVariable(); self_name_input_addcsv.set(name_input_addcsv)
 self_file_output       = _initializeVariable(); self_file_output      .set(file_output)
 self_type_output       = _initializeVariable(); self_type_output      .set(type_output)
 
-if file_input_master == file_output != CHAR_STD_INOUT:
-    logs.error("File input '%s' can't be the same file output!" % file_input_master)
+if file_input_main == file_output != CHAR_STD_INOUT:
+    logs.error("File input '%s' can't be the same file output!" % file_input_main)
 
 if args.debug >= 1:
     logs.info('run_gui            = %s' % repr(run_gui))
     logs.info('run_cmd            = %s' % repr(run_cmd))
     logs.info('type_input         = %s' % repr(type_input))
-    logs.info('file_input_master  = %s' % repr(file_input_master))
+    logs.info('file_input_main  = %s' % repr(file_input_main))
     logs.info('file_input_addcsv  = %s' % repr(file_input_addcsv))
     logs.info('file_output        = %s' % repr(file_output))
     logs.info('type_output        = %s' % repr(type_output))
@@ -121,11 +121,11 @@ def _root_combo_get(root_combo_out, type_input):
     return(type_input)
 
 ###############################################################################
-def _root_load_file_master():
+def _root_load_file_main():
     filename = askopenfilename(filetypes=root_filetypes)
     if filename:
         try:
-            root_path_file_master.set(filename)
+            root_path_file_main.set(filename)
         except:
             logs_error('Failed to read file\n%s' % filename, 'Open Source File')
         return
@@ -143,18 +143,18 @@ def _root_load_file_addcsv():
 
 ###############################################################################
 def _root__execute_():
-    file_input_master = root_path_file_master.get()
+    file_input_main = root_path_file_main.get()
     file_input_addcsv = root_path_file_addcsv.get()
     type_input        = root_choose_in.get()
     type_output       = root_chooseext.get()
 
-    name_input_master = _basenameNotExt(file_input_master)
+    name_input_main = _basenameNotExt(file_input_main)
     name_input_addcsv = _basenameNotExt(file_input_addcsv)
-    name_output       = _basenameFullPathNotExt(file_input_master)
+    name_output       = _basenameFullPathNotExt(file_input_main)
     name_output       = ''.join([name_output, '+merged+', name_input_addcsv])
 #CZ#file_output_csv   = '.'.join([name_output, TYPE_OUT_csv]) if name_input != '' else CHAR_STD_INOUT
 #CZ#file_output_xls   = '.'.join([name_output, TYPE_OUT_xls]) if name_input != '' else CHAR_STD_INOUT
-    file_output_csv   = '.'.join([name_output, TYPE_OUT_csv]) if name_input_master != '' else CHAR_STD_INOUT
+    file_output_csv   = '.'.join([name_output, TYPE_OUT_csv]) if name_input_main != '' else CHAR_STD_INOUT
 #CZ#file_output       = None
     file_output       = None              if (args.file_output == CHAR_STD_INOUT) else args.file_output
     file_output       = file_output_csv   if (file_output is None) and (type_output == TYPE_OUT_csv) else file_output
@@ -163,23 +163,23 @@ def _root__execute_():
     type_input        = _root_combo_get(root_combo_out, type_input)
 
     self_type_input       .set(type_input)
-    self_file_input_master.set(file_input_master)
+    self_file_input_main.set(file_input_main)
     self_file_input_addcsv.set(file_input_addcsv)
-    self_name_input_master.set(name_input_master)
+    self_name_input_main.set(name_input_main)
     self_name_input_addcsv.set(name_input_addcsv)
     self_file_output      .set(file_output)
     self_type_output      .set(type_output)
 
-    if _trim(name_input_master) == '':
-        logs_error('Choose csv file Master, please!')
+    if _trim(name_input_main) == '':
+        logs_error('Choose csv file Main, please!')
         return
 
     if _trim(name_input_addcsv) == '':
         logs_error('Choose csv file AddCSV, please!')
         return
 
-    if not _fileExist(file_input_master):
-        logs_error("File Master '%s' not exist!" % file_input_master)
+    if not _fileExist(file_input_main):
+        logs_error("File Main '%s' not exist!" % file_input_main)
         return
 
     if not _fileExist(file_input_addcsv):
@@ -199,7 +199,7 @@ def _root__execute_():
 
 ###############################################################################
 def _root__execute__entry_on_change(a, b, c):
-    if root_path_file_master.get() == '':
+    if root_path_file_main.get() == '':
         self__execute__entry.get().config(state=DISABLED)
     else:
         self__execute__entry.get().config(state=NORMAL)
@@ -244,7 +244,7 @@ def main_gui():
     root.title(window_title)
     root.resizable(0,0)
     root.config(menu=menubar)
-#CZ#root.bind('<Return>', _root_load_file_master)
+#CZ#root.bind('<Return>', _root_load_file_main)
 #CZ#root.bind('<Return>', _root_load_file_addcsv)
 
 #CZ#mainframe = ttk.Frame(root, padding='3 3 12 12')
@@ -267,9 +267,9 @@ def main_gui():
                                          , background=[('pressed', '!disabled', 'black'), ('active', 'white')]
     )
 
-    root_path_file_master_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file_master)
-    root_path_file_master_entry.focus()
-    root_path_file_master.trace('w', _root__execute__entry_on_change) # rwua
+    root_path_file_main_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file_main)
+    root_path_file_main_entry.focus()
+    root_path_file_main.trace('w', _root__execute__entry_on_change) # rwua
 
     root_path_file_addcsv_entry = ttk.Entry(mainframe, width=len_with_EC, textvariable=root_path_file_addcsv)
     root_path_file_addcsv_entry.focus()
@@ -285,7 +285,7 @@ def main_gui():
     root_chooseext.set(TYPE_OUT_csv)
 
 #CZ#root_fsbrowser_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file)
-    root_fb_master_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file_master)
+    root_fb_main_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file_main)
     root_fb_addcsv_entry = ttk.Button(mainframe, text='filesystem browser', width=len_with_B1, command=_root_load_file_addcsv)
     root__execute__entry = ttk.Button(mainframe, text='Merge Files', width=len_with_B2, command=_root__execute_, state=DISABLED, style='root__execute__entry.TButton')
     self__execute__entry.set(root__execute__entry)
@@ -298,10 +298,10 @@ def main_gui():
                        , font=('Times', 16)
                        , foreground='red')               .grid(column=4, row=0 , sticky=(N, W, E, S))
 
-    ttk.Label(mainframe, text=" · file CSV Master Base") .grid(column=1, row=2 , sticky=W)
-    root_fb_master_entry                                 .grid(column=2, row=2 , sticky=W)
+    ttk.Label(mainframe, text=" · file CSV Main Base") .grid(column=1, row=2 , sticky=W)
+    root_fb_main_entry                                 .grid(column=2, row=2 , sticky=W)
     ttk.Label(mainframe, text="or enter")                .grid(column=3, row=2 , sticky=W)
-    root_path_file_master_entry                          .grid(column=4, row=2 , sticky=(W, E))
+    root_path_file_main_entry                          .grid(column=4, row=2 , sticky=(W, E))
 
     ttk.Label(mainframe, text=" · file CSV add. Month")  .grid(column=1, row=3, sticky=W)
     root_fb_addcsv_entry                                 .grid(column=2, row=3, sticky=W)
@@ -337,20 +337,20 @@ def main():
 def manipulate():
     if args.debug >= 1:
         logs.info('type_input        = %s' % self_type_input.get())
-        logs.info('file_input_master = %s' % self_file_input_master.get())
+        logs.info('file_input_main = %s' % self_file_input_main.get())
         logs.info('file_input_addcsv = %s' % self_file_input_addcsv.get())
         logs.info('file_output       = %s' % self_file_output.get())
         logs.info('type_output       = %s' % self_type_output.get())
         logs.info('-------------------')
 
     try:
-        csv_lines_master = read_filein_master()
+        csv_lines_main = read_filein_main()
         csv_lines_addcsv = read_filein_addcsv()
 
         dat_lines = None
        #if type_input ==  TYPE_IN_mmam:
         if self_type_input.get() ==  TYPE_IN_mmam:
-            dat_lines = manipulate_mmam(csv_lines_master, csv_lines_addcsv)
+            dat_lines = manipulate_mmam(csv_lines_main, csv_lines_addcsv)
         else:
            #logs_error("Type input '%s' can't be configurate!" % type_input)
             logs_error("Type input '%s' can't be configurate!" % self_type_input.get())
@@ -364,7 +364,7 @@ def manipulate():
         pass
 
 ###############################################################################
-def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
+def manipulate_mmam(csv_lines_main, csv_lines_addcsv):
     keys = _stringToList(key_columns_merge, CHAR_KEY_MERGE)
 #CZ#keys = [map(lambda value: value.upper(), keys)]
     keys = [value.upper() for value in keys]
@@ -422,30 +422,30 @@ def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
     count_col = 0
     lines_out = []
     #==========================================================================
-    for csv_line_master in csv_lines_master:
+    for csv_line_main in csv_lines_main:
         count_row = count_row +1
 
         if first:
             first = False
             count_col = 0
-            for value in csv_line_master:
+            for value in csv_line_main:
                 count_col = count_col +1
                 finds = [key for key in keys if key == value.upper()]
                 if len(finds) > 0:
                     Ckeys.append(count_col-1)
                 if args.debug >= 3:
-                    logs_info("Master line %3s.%2s [%s]" % (count_row, count_col, value))
+                    logs_info("Main line %3s.%2s [%s]" % (count_row, count_col, value))
             if args.debug >= 2:
-                 logs_info('Master:')
+                 logs_info('Main:')
 
-            lines_out.append(csv_line_master)
+            lines_out.append(csv_line_main)
         else:
             if args.debug >= 3:
-                logs_info("Master line %3s.   [%s]" % (count_row, csv_line_master))
+                logs_info("Main line %3s.   [%s]" % (count_row, csv_line_main))
 
             Vkeys = []
             for k in Ckeys:
-                Vkeys.append(csv_line_master[Ckeys[k]])
+                Vkeys.append(csv_line_main[Ckeys[k]])
             Skeys = _joinChar(Vkeys, CHAR_KEY_MERGE)
             debug = ''
 
@@ -459,7 +459,7 @@ def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
                             for line in row:
                                 lines_out.append(line)
                                 if args.debug >= 2:
-                                    logs_info('Master %-5s (%s) == (%s)' % (debug, Skeys, line))
+                                    logs_info('Main %-5s (%s) == (%s)' % (debug, Skeys, line))
                     kadd[Skeys] = True
                     del(lines_add[Skeys])
             else:
@@ -467,10 +467,10 @@ def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
                     debug = 'SKIP!'
                 else:
                     debug = 'write'
-                    lines_out.append(csv_line_master)
+                    lines_out.append(csv_line_main)
 
             if args.debug >= 2:
-                logs_info('Master %-5s (%s) == (%s)' % (debug, Skeys, csv_line_master))
+                logs_info('Main %-5s (%s) == (%s)' % (debug, Skeys, csv_line_main))
 
     for key, row in lines_add.items():
         for line in row:
@@ -484,8 +484,8 @@ def manipulate_mmam(csv_lines_master, csv_lines_addcsv):
 
 ###############################################################################
 def read_filein(file_csv):
-   #csv_filename = file_input_master
-   #csv_filename = self_file_input_master.get()
+   #csv_filename = file_input_main
+   #csv_filename = self_file_input_main.get()
     csv_filename = file_csv
 
     filein = None
@@ -524,8 +524,8 @@ def read_filein(file_csv):
     return(csv_lines)
 
 ###############################################################################
-def read_filein_master():
-    return(read_filein(self_file_input_master.get()))
+def read_filein_main():
+    return(read_filein(self_file_input_main.get()))
 
 ###############################################################################
 def read_filein_addcsv():
@@ -533,9 +533,9 @@ def read_filein_addcsv():
 
 ###############################################################################
 def write_fileout(dat_lines):
-   #txt_filename = file_input_master
+   #txt_filename = file_input_main
    #out_filename = file_output
-    txt_filename = self_file_input_master.get()
+    txt_filename = self_file_input_main.get()
     out_filename = self_file_output.get()
 
     fileout = None
@@ -558,8 +558,8 @@ def write_fileout(dat_lines):
 
 #CZ#name_ws = None
 #CZ#if txt_filename != CHAR_STD_INOUT:
-#CZ#   #name_ws = name_input_master
-#CZ#    name_ws = self_name_input_master.get()
+#CZ#   #name_ws = name_input_main
+#CZ#    name_ws = self_name_input_main.get()
 
     if std_out:
         logs.info(LINE_PARTITION)

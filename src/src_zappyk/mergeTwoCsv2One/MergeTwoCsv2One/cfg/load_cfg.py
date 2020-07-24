@@ -53,7 +53,7 @@ class parser_args(object):
         parser.add_argument('-rg'    , '--run_gui'           , help='run GUI (Graphical User Interface)', action='store_true')
         parser.add_argument('-rc'    , '--run_cmd'           , help='run Command Console'               , action='store_true')
         parser.add_argument('-ti'    , '--type_input'        , help='file type  input'                  , type=str, choices=list_typein , default=default_typein)
-        parser.add_argument('-fim'   , '--file_input_master' , help='file read  input Master'           , type=str                      , default=default_stdin , required=False)
+        parser.add_argument('-fim'   , '--file_input_main' , help='file read  input Main'           , type=str                      , default=default_stdin , required=False)
         parser.add_argument('-fia'   , '--file_input_addcsv' , help='file read  input AddFile'          , type=str                      , default=default_stdin , required=False)
         parser.add_argument('-fo'    , '--file_output'       , help='file write output'                 , type=str                      , default=default_stdout)
         parser.add_argument('-to'    , '--type_output'       , help='file type  output'                 , type=str, choices=list_typeout, default=default_typeout)

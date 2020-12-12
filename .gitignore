@@ -21,6 +21,8 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+etc/set-env-linux.load-source
+src/src_zappyk/developing/resources
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

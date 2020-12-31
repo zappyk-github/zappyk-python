@@ -60,7 +60,7 @@ df = 6
 p2t_1 = pdf2txt(file_name=file_name_1)
 awc_1 = p2t_1._pdf2txt()
 
-#p2t_2 = pdf2txt(file_name=file_name_2)
+#p2t_2 = pdf2Txt(file_name=file_name_2)
 #awc_2 = p2t_2._pdf2txt()
 
 for i in range(len(awc_1)):
@@ -71,7 +71,7 @@ for i in range(len(awc_1)):
     ymax = awc_1[i]['ymax']
     word = awc_1[i]['word']
 
-    #print(awc[i])
+    #print(awc_1[i])
     for e in setup:
         eY    = int(re.search(setup_pattern, setup[e]).group(1))
         eXmin = int(re.search(setup_pattern, setup[e]).group(2))

@@ -14,10 +14,11 @@ from pdfminer.converter import PDFPageAggregator
 from pdfminer.pdfdocument import PDFDocument
 
 def_file_name = None
-def_out_sort = True
-def_out_version = 2  # 1=out every | 2=out normal
-def_max_space_union = 2
-def_word_encode = 'utf-8'
+def_out_sort = True        # True=sort output coordinates
+def_out_version = 2        # 1=out every | 2=out normal
+def_max_space_union = 2    # consecutive spaces that will be considered united
+def_word_encode = 'utf-8'  # character encoding
+def_view = False
 def_debug = 0
 
 class pdf2txt():
@@ -37,7 +38,7 @@ class pdf2txt():
         self.word_encode = word_encode
 
     ###############################################################################
-    def _pdf2txt(self, view=False):
+    def _pdf2txt(self, view=def_view):
         awc = []
 
         # Open a PDF file.
@@ -115,7 +116,7 @@ class pdf2txt():
 
                 if view >= 1:
                     print("#%s" % owc)
-        return (awc)
+        return(awc)
 
     ###############################################################################
     def __parse_obj(self, lt_objs):

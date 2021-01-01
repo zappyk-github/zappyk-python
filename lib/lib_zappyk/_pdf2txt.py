@@ -23,7 +23,7 @@ def_debug = 0
 
 class pdf2txt():
 
-    ###############################################################################
+    ####################################################################################################################
     def __init__(self, file_name=def_file_name, out_sort=def_out_sort, out_version=def_out_version, max_space_union=def_max_space_union, word_encode=def_word_encode, debug=def_debug):
         if file_name is None:
             raise Exception("Specifica il file PDF da tradurre!")
@@ -37,7 +37,7 @@ class pdf2txt():
         self.max_space_union = max_space_union
         self.word_encode = word_encode
 
-    ###############################################################################
+    ####################################################################################################################
     def _pdf2txt(self, view=def_view):
         awc = []
 
@@ -118,7 +118,7 @@ class pdf2txt():
                     print("#%s" % owc)
         return(awc)
 
-    ###############################################################################
+    ####################################################################################################################
     def __parse_obj(self, lt_objs):
         words = []
 
@@ -146,7 +146,7 @@ class pdf2txt():
                 self.__parse_obj(obj._objs)
         return(words)
 
-    ###############################################################################
+    ####################################################################################################################
     def __get_ymax(self, coord):
         # maximxum y-coordinate of a character
         comma = 0
@@ -159,7 +159,7 @@ class pdf2txt():
             pos += 1
         return(coord[pos+1:])
 
-    ###############################################################################
+    ####################################################################################################################
     def __get_ymin(self, coord):
         # minimum y-coordinate of a character
         comma = 0
@@ -175,7 +175,7 @@ class pdf2txt():
                 break
         return(coord[comma1:pos-1])
 
-    ###############################################################################
+    ####################################################################################################################
     def __get_xmin(self, coord):
         # maximxum x-coordinate of a character
         pos = 0
@@ -185,7 +185,7 @@ class pdf2txt():
                 break
         return(coord[:pos-1])
 
-    ###############################################################################
+    ####################################################################################################################
     def __get_xmax(self, coord):
         # minimum x-coordinate of a character
         comma = 0
@@ -201,7 +201,7 @@ class pdf2txt():
                 break
         return(coord[comma1:pos-1])
 
-    ###############################################################################
+    ####################################################################################################################
     def __max(self, y):
         # max(y[i]), maximum y coordinate of a word
         max = 0
@@ -212,7 +212,7 @@ class pdf2txt():
                 max = float(y[i])
         return(max)
 
-    ###############################################################################
+    ####################################################################################################################
     def __words_coord(self, words):
         # separates characters in words and returns a matrix in the format:
         # words_fin[i] = [word, minimum x-coord, minimum y-coord, max x-coord of the last character and maximum value of y in the word]
@@ -245,7 +245,7 @@ class pdf2txt():
             else:
                 if self.debug == 2:
                     print("#else: [%s] space(%s) word[%s]" % (a, cnt_space, word))
-                #___________________________________________________________________________________________________________
+                #_______________________________________________________________________________________________________
                 if self.out_version == 1:
                     if (word != ""):
                         words_fin.append([word, x, self.__get_ymin(words[i-1][0]), self.__get_xmax(words[i-1][0]), max(y)])
@@ -254,7 +254,7 @@ class pdf2txt():
                             word += " "
                         else:
                             word = ""
-                #___________________________________________________________________________________________________________
+                #_______________________________________________________________________________________________________
                 elif self.out_version == 2:
                     if (cnt_space > 0 and cnt_space <= max_space):
                         word += " "
@@ -265,14 +265,14 @@ class pdf2txt():
 
         return(words_fin)
 
-    ###############################################################################
+    ####################################################################################################################
     def __words_coord_list2dict(self, words, word_encode):
         elements = []
         for i in range(len(words)):
             element = self.__words_coord_array2dict(words[i], word_encode)
             elements.append(element)
         return(elements)
-    ###############################################################################
+    ####################################################################################################################
     def __words_coord_array2dict(self, word, word_encode):
         element = {}
         element['word'] = str(word[0].encode(word_encode))

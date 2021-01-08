@@ -8,7 +8,6 @@ import csv
 import cv2
 import pytesseract
 
-from collections import OrderedDict
 from pdf2image import convert_from_path
 
 # https://towardsdatascience.com/extracting-text-from-scanned-pdf-using-pytesseract-open-cv-cd670ee38052
@@ -18,17 +17,19 @@ def_path_work      = None
 ref_DPI_resolution = 600  # DPI>=300 for best quality
 def_DPI_resolution = ref_DPI_resolution
 
+fix_text_value = ''
 def_text_crops = {}
 def_text_color = (0, 0, 255)
 def_type_color = (0, 255, 0)
 chr_type_check = '*'
 chr_counterdot = '.'
 
-def_CMD_tesseract  = None
-def_tesseract_lang = 'ita'
-def_tesseract_set  = '--psm 3'
-def_tesseract_conf = '--psm 6'
-def_tesseract_rwal = '--psm 13'
+def_CMD_tesseract       = None
+def_tesseract_lang      = 'ita'
+def_tesseract_lang      = 'ita+eng'
+def_tesseract_conf_set  = '--psm 3'
+def_tesseract_conf_base = '--psm 6'
+def_tesseract_conf_rwal = '--psm 13'
 '''
 --psm  0    Orientation and script detection (OSD) only.
 --psm  1    Automatic page segmentation with OSD.
@@ -46,13 +47,16 @@ def_tesseract_rwal = '--psm 13'
 --psm 13    Raw line. Treat the image as a single text line, bypassing hacks that are Tesseract-specific.
 '''
 
+def_IMG_extension = 'TIFF'
 def_IMG_extension = 'JPEG'
 def_name_image    = 'Page_%05i%s.%s'
-def_name_work     = '-pdf2img2txt'
+def_name_work     = '___pdf2img2txt'
+def_name_markup   = '___markup'
 def_debug         = 0
+def_force         = 0
 def_view          = 0
 
-rex_page_key       = '^K(\d+)\.'
+str_page_key_regex = '^K(\d+)\.'
 chr_page_key       = '::'
 chr_file_stdout    = '-'
 csv_delimiter      = ';'
@@ -60,16 +64,33 @@ csv_quotechar      = '"'
 csv_quoting        = csv.QUOTE_MINIMAL
 csv_lineterminator = os.linesep
 
+def_string_warning ='''\
++-----------+
+| ATTENTION : %s
++-----------+\
+'''
+
+set_debug_markup          = False
+set_debug_markup_fontsize = 24
+set_debug_markup_fontname = '/usr/share/fonts/google-droid/DroidSansMono.ttf'
+set_debug_markup_fontname = '/usr/share/fonts/dejavu/DejaVuSansMono.ttf'
+set_debug_markup_strregex = 'VoceVariabile_01_Sogg.(IRPEF|INPS)'
+set_debug_markup_strregex = 'VoceVariabile_0(3|4)_Sogg.INPS'
+set_debug_markup_imagestr = '/tmp/pdf2img2txt-debug-markup-image-string.jpg'
+set_debug_markup_imgetthr = '/tmp/pdf2img2txt-debug-markup-image-getval-thresh.jpg'
+set_debug_markup_imgetres = '/tmp/pdf2img2txt-debug-markup-image-getval-result.jpg'
+
 class pdf2img2txt():
 
     ####################################################################################################################
-    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, debug=def_debug, view=def_view):
+    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, view=def_view, force=def_force, debug=def_debug):
         if file_name is None:
             raise Exception("Specifica il file PDF da tradurre!")
         if not(os.path.isfile(file_name)):
             raise Exception("Attenzione, il file PDF '%s` non esiste!" % file_name)
         #
         self.view = view
+        self.force = force
         self.debug = debug
         self.file_name = file_name
         self.path_work = path_work
@@ -78,6 +99,8 @@ class pdf2img2txt():
         #
         self.text_crops = def_text_crops
         self.type_check = chr_type_check
+        self.set_detect = None
+        self.autodetect = None
         #
         if self.path_work is None:
             self.path_work = file_name + def_name_work
@@ -158,6 +181,103 @@ class pdf2img2txt():
         return(image_draw)
 
     ####################################################################################################################
+    def _image_markup_debug(self, text_merge):
+        #
+        # import numpy
+        # text_nparr = numpy.fromstring(text_merge, numpy.uint8)
+        # text_image = numpy.fromstring(text_merge, numpy.uint8)  # .reshape(h, w, nb_planes)
+        # text_image = cv2.imdecode(text_nparr, cv2.IMREAD_COLOR)
+        # text_image = numpy.fromstring(text_merge, numpy.uint8).reshape()
+        # text_image = numpy.fromstring('1 2', dtype=int, sep=' ')
+        # textbase64 = base64.b64decode(text_merge)
+        # textbase64 = text_merge
+        # text_numpy = numpy.frombuffer(textbase64, dtype=numpy.uint8)
+        # text_image = cv2.imdecode(text_numpy, flags=1)
+        # return (text_image)
+        #________________________________________________________________________________
+        #
+        from PIL import Image
+        from PIL import ImageDraw
+        from PIL import ImageFont
+        fontsize = set_debug_markup_fontsize
+        fontname = set_debug_markup_fontname
+        colorText = "black"
+        colorOutline = "red"
+        colorBackground = "white"
+        #
+        fontImg = ImageFont.truetype(fontname, fontsize)
+        testImg = Image.new('RGB', (1, 1))
+        testDraw = ImageDraw.Draw(testImg)
+        #
+       #(width, height) = testDraw.textsize(text_merge, fontImg)
+        width = 1000
+        height = 100
+        image = Image.new('RGB', (width + 1, height + 1), colorBackground)
+        image_draw = ImageDraw.Draw(image)
+        image_draw.text((2, height / 2), text_merge, fill=colorText, font=fontImg)
+        image_draw.rectangle((0, 0, width, height), outline=colorOutline)
+        image.save(set_debug_markup_imagestr)
+        text_image = cv2.imread(set_debug_markup_imagestr, 0)
+        #
+        return(text_image)
+
+    ####################################################################################################################
+    def _read_markup(self, image_crop, tesseract_lang, tesseract_conf, text_key):
+        #
+       #(text, thresh, result) = self._read_markup_Good(image_crop, tesseract_lang, tesseract_conf)
+        (text, thresh, result) = self._read_markup_Test(image_crop, tesseract_lang, tesseract_conf)
+        #
+        text_strip = text.strip()
+        #
+        if set_debug_markup:
+            if re.search(set_debug_markup_strregex, text_key):
+                #
+                # Convert to images
+                text_merge = "[%s] %s" % (text_strip, text_key)
+                text_image = self._image_markup_debug(text_merge)
+                #
+                cv2.imwrite(set_debug_markup_imgetthr, thresh)
+                cv2.imwrite(set_debug_markup_imgetres, result)
+                #
+                cv2.imshow('markup:', text_image)
+                cv2.imshow('thresh:', thresh)
+                cv2.imshow('result:', result)
+                cv2.waitKey(delay=10000)
+        #
+        return(text_strip)
+
+    ####################################################################################################################
+    def _read_markup_Good(self, image_crop, tesseract_lang, tesseract_conf):
+        #
+        # convert the image to black and white for better OCR
+        (ret, thresh) = cv2.threshold(image_crop, 120, 255, cv2.THRESH_BINARY)
+        #
+        blur = cv2.GaussianBlur(thresh, (3, 3), 0)
+        result = 255 - blur
+        #
+        # pytesseract image to string to get results
+        text = str(pytesseract.image_to_string(thresh, lang=tesseract_lang, config=tesseract_conf))
+        #
+        return(text, thresh, result)
+
+    ####################################################################################################################
+    def _read_markup_Test(self, image_crop, tesseract_lang, tesseract_conf):
+        #
+        # convert the image to black and white for better OCR
+    #CZ#      thresh  = cv2.threshold(image_crop,   0, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)[1]
+       #(ret, thresh) = cv2.threshold(image_crop,   0, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)
+        (ret, thresh) = cv2.threshold(image_crop, 120, 255, cv2.THRESH_BINARY)
+        #
+        blur = cv2.GaussianBlur(thresh, (3, 3), 0)
+        result = 255 - blur
+        #
+        # pytesseract image to string to get results
+        text = str(pytesseract.image_to_string(thresh, lang=tesseract_lang, config=tesseract_conf, nice=0, timeout=0))
+       #text = str(pytesseract.image_to_pdf_or_hocr(thresh, lang=tesseract_lang, config=tesseract_conf, nice=0, timeout=0))
+        #
+        return (text, thresh, result)
+
+    ####################################################################################################################
     def _make_file_image(self, page_number=0, more_detail=''):
         name_image = def_name_image % (page_number, more_detail, def_IMG_extension)
         file_image = os.path.sep.join((self.path_work, name_image))
@@ -214,23 +334,30 @@ class pdf2img2txt():
                 (x0, y0, x1, y1) = self._coord_make(x, y, l, h)
                 #
                 # cropping image img = image[y0:y1, x0:x1]
-            #CZ#image_crop = image_read[coordinate[0][1]:coordinate[1][1], coordinate[0][0]:coordinate[1][0]]
                 image_crop = image_read[y0:y1, x0:x1]
                 #
-                # convert the image to black and white for better OCR
-                (ret, thresh1) = cv2.threshold(image_crop, 120, 255, cv2.THRESH_BINARY)
+                text_read = self._read_markup(image_crop, tesseract_lang, tesseract_conf, text_key)
                 #
-                # pytesseract image to string to get results
-                text = str(pytesseract.image_to_string(thresh1, lang=tesseract_lang, config=tesseract_conf))
+                if self.debug >= 1:
+                        print(" debug read => [%s][%s][%s]" % (page_number, text_key, text_read))
                 #
-                text_read = text.strip()
+                text_read_val = text_crops[page_number][text_key]['TextRead']
                 if text_key == self.type_check:
-                    text_read_val = text_crops[page_number][text_key]['TextRead']
                     if (text_read_val != text_key) and (text_read_val != text_read):
-                        raise Exception("Il file \"%s\" non e' del tipo \"%s\"!" % (file_image, text_read_val))
-                text_crops[page_number][text_key]['TextRead'] = text_read
+                        stradd_exception = ''
+                        if self.view:
+                            stradd_exception = "; not references \"%s\" is found! ([%s]=>%s)" % (text_read_val, text_read, file_image)
+                        string_exception = def_string_warning % ("file image %s, page %05d, not appear to be specified type %s%s" % (def_IMG_extension, page_number, self.set_detect, stradd_exception))
+                        if not(autodetect):
+                            print(string_exception)
+                            if not(self.force):
+                                return
+                        else:
+                            raise Exception(string_exception)
+                if (text_read_val == fix_text_value) and (text_read != fix_text_value):
+                    text_crops[page_number][text_key]['TextRead'] = text_read
                 #
-                m = re.search(rex_page_key, text_key)
+                m = re.search(str_page_key_regex, text_key)
                 if m:
                     i = int(m.group(1))
                     page_keys.update({ i: text_read })
@@ -240,7 +367,7 @@ class pdf2img2txt():
                 #
                 if not(autodetect):
                     if self.debug >= 1:
-                    #CZ#print("page[%-5s]coordinates[%-30s] => key[%-30s] => val[%s]" % (text_page, [(y0,y1), (x0,x1)], text_crop['Key'], text_crop['Val']))
+                    #CZ#print("page[%-5s] coordinates[%-30s] => key[%-30s] => val[%s]" % (text_page, [(y0,y1), (x0,x1)], text_crop['Key'], text_crop['Val']))
                     #CZ#print("page[%-5s] coordinates[%-30s] => key[%-30s] => val[%s]" % (text_page, coordinate, text_crop['Key'], text_crop['Val']))
                     #CZ#print("page[%-5s] coordinates[%-30s] => key[%-30s] => val[%s]" % (text_page, coordinate, text_key, text_read))
                         print("page[%-5s] coord[%-30s] tesseract[%-3s %-26s] key[%-30s] => val[%s]" % (page_number, coordinate, tesseract_lang, tesseract_conf, text_key, text_read))
@@ -274,7 +401,7 @@ class pdf2img2txt():
             #
             if save_image and (mark_text_coord or mark_grid_image):
             #CZ#name_image_draw = file_image
-                file_image_draw = self._make_file_image(page_number, '_markup')
+                file_image_draw = self._make_file_image(page_number, def_name_markup)
                 cv2.imwrite(file_image_draw, image_draw)
         #
         return(text_crops)
@@ -308,7 +435,7 @@ class pdf2img2txt():
                 file_out.close()
 
     ####################################################################################################################
-    def make_text_crops_page(self, pag=0, key=None, coord=[], color=def_text_color, ta_lang=def_tesseract_lang, ta_conf=def_tesseract_conf, val='', pag_key=''):
+    def make_text_crops_page(self, pag=0, key=None, coord=[], color=def_text_color, ta_lang=def_tesseract_lang, ta_conf=def_tesseract_conf_base, val=fix_text_value, pag_key=fix_text_value):
         #        (x, y) l = length
     #CZ#coord = [ x, y, l, h ]
         #                  h = height
@@ -338,21 +465,22 @@ class pdf2img2txt():
         autodetect = True
         #_______________________________________________________________________________________________________________
         #
-        r = 3
+        r = 4
         for i in range(1, r+1):
             self.text_crops = def_text_crops
-            if   i == 1: layout = self.make_text_crops_page_zCartelinoPresenze(page_crops, autodetect)
-            elif i == 2: layout = self.make_text_crops_page_zLULCartellinoPresenze(page_crops, autodetect)
-            elif i == 3: layout = self.make_text_crops_page_zLULCedolinoPaga(page_crops, autodetect)
+            if   i == 1: self.make_text_crops_page_zCartellinoPresenze(set_page=page_crops, set_autodetect=autodetect)
+            elif i == 2: self.make_text_crops_page_zLULCartellinoPresenze(set_page=page_crops, set_autodetect=autodetect)
+            elif i == 3: self.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page_crops, set_autodetect=autodetect)
+            elif i == 4: self.make_text_crops_page_zLULCedolinoPaga_v2(set_page=page_crops, set_autodetect=autodetect)
         #_______________________________________________________________________________________________________________
         #
             try:
-                print("...autodetect (%d)%-30s => " % (i, layout), end='')
+                print("...autodetect page %05d (%d)%-30s => " % (page_crops, i, self.set_detect), end='')
                 text_read_init = self.text_crops[page_crops][self.type_check]['TextRead']
                 text_crops = self.read_text_coord(file_image=file_image, page_crops=page_crops, autodetect=autodetect)
                 text_read_done = self.text_crops[page_crops][self.type_check]['TextRead']
                 if text_read_init == text_read_done:
-                    (layout_i, layout_n) = (i, layout)
+                    (layout_i, layout_n) = (i, self.set_detect)
                     print("check!")
             except:
                 print("no")
@@ -363,23 +491,26 @@ class pdf2img2txt():
             print("Detect %s(%d) :-)" % (layout_n, layout_i))
             #
             self.text_crops = def_text_crops
-            if   layout_i == 1: self.make_text_crops_page_zCartelinoPresenze(page_crops)
-            elif layout_i == 2: self.make_text_crops_page_zLULCartellinoPresenze(page_crops)
-            elif layout_i == 3: self.make_text_crops_page_zLULCedolinoPaga(page_crops)
+            self.autodetect = layout_n
+            if   layout_i == 1: self.make_text_crops_page_zCartellinoPresenze(set_page=page_crops)
+            elif layout_i == 2: self.make_text_crops_page_zLULCartellinoPresenze(set_page=page_crops)
+            elif layout_i == 3: self.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page_crops)
+            elif layout_i == 4: self.make_text_crops_page_zLULCedolinoPaga_v2(set_page=page_crops)
             self.read_text_coord(file_image=file_image, page_crops=page_crops, mark_text_coord=mark_text_coord, mark_grid_image=mark_grid_image, save_image=save_image)
         else:
             print("Detect nothing! :-(")
 
     ####################################################################################################################
-    def make_text_crops_page_zCartelinoPresenze(self, set_page=0, autodetect=False):
-        tag = 'zCartelinoPresenze'
+    def make_text_crops_page_zCartellinoPresenze(self, tag_page='zCartelinoPresenze', set_page=0, set_autodetect=False):
+        tag = tag_page
         pag = set_page
         #_______________________________________________________________________________________________________________
         #
     #CZ#self.make_text_crops_page(pag, self.type_check , [470, 185,  920, 101], val=self.type_check)
         self.make_text_crops_page(pag, self.type_check , [470, 185,  920, 101], val='SEZIONE PRESENZE')
         #
-        if autodetect: return(tag)
+        self.set_detect = tag
+        if set_autodetect: return
         #_______________________________________________________________________________________________________________
         #
         d_h = 76
@@ -393,20 +524,21 @@ class pdf2img2txt():
         #···············································································································
         d_y = 690
         self.make_text_crops_page(pag, 'Nominativo'    , [ 280, d_y, 2400, d_h      ])  # = ALBERTINI VALERIO
-        self.make_text_crops_page(pag, 'DataAssunz'    , [2900, d_y,  600, d_h      ])  # = 11/12/2015
+        self.make_text_crops_page(pag, 'DipDataAssunz' , [2900, d_y,  600, d_h      ])  # = 11/12/2015
         #···············································································································
         d_y = 900
         self.make_text_crops_page(pag, 'K2.CodAzi'     , [ 280, d_y,  700, d_h      ])  # = 000067
         self.make_text_crops_page(pag, 'K3.CodDip'     , [1100, d_y,  700, d_h      ])  # = 0000071
-        self.make_text_crops_page(pag, 'Qualif'        , [1980, d_y,  700, d_h      ])  # = IMP Impiegato
-        self.make_text_crops_page(pag, 'Livello'       , [2850, d_y,  650, d_h      ])  # = 1 1 Livello
+        self.make_text_crops_page(pag, 'DipQualif'     , [1980, d_y,  700, d_h      ])  # = IMP Impiegato
+        self.make_text_crops_page(pag, 'DipLivello'    , [2850, d_y,  650, d_h      ])  # = 1 1 Livello
         #···············································································································
+        box ='GG'
         add = 7
-        row = 31 ; row = 1
+        row = 31 # row = 1
         d_y = 1710
         for gg in range(0, row, 1):
             a_y = gg * d_h + gg * add
-            tag = 'gg_%02d_' % (gg + 1)
+            tag = '%s_%02d_' % (box, (gg + 1))
             self.make_text_crops_page(pag, tag          , [ 200, d_y +a_y,  110, d_h])  # =
             self.make_text_crops_page(pag, tag + 'GSett', [ 320, d_y +a_y,  120, d_h])  # =
             self.make_text_crops_page(pag, tag + 'Timb1', [ 475, d_y +a_y,  275, d_h])  # =
@@ -425,13 +557,14 @@ class pdf2img2txt():
             self.make_text_crops_page(pag, tag + 'Voci7', [4135, d_y +a_y,  310, d_h])  # =
             self.make_text_crops_page(pag, tag + 'Voci8', [4460, d_y +a_y,  310, d_h])  # =
         #···············································································································
+        box ='Voci'
         d_h = 57
         add = 2
-        row = 10 ; row = 1
+        row = 10 # row = 1
         d_y = 5570
         for gg in range(0, row, 1):
             a_y = gg * d_h + gg * add
-            tag = 'voci_%02d_' % (gg + 1)
+            tag = '%s_%02d_' % (box, (gg + 1))
             self.make_text_crops_page(pag, tag + '1Cod' , [ 165, d_y +a_y,  180, d_h])  # =
             self.make_text_crops_page(pag, tag + '1Des' , [ 355, d_y +a_y,  730, d_h])  # =
             self.make_text_crops_page(pag, tag + '1Qnt' , [1100, d_y +a_y,  220, d_h])  # =
@@ -450,93 +583,52 @@ class pdf2img2txt():
         #CZ#self.make_text_crops_page(pag, tag + '4TOT' , [3640, d_y +a_y, 1130, d_h])  # = (not work well)
         #_______________________________________________________________________________________________________________
         #
-        return
 
     ####################################################################################################################
-    def make_text_crops_page_zLULCartellinoPresenze(self, set_page=0, autodetect=False):
-        tag = 'zLULCartellinoPresenze'
+    def make_text_crops_page_zLULCartellinoPresenze(self, tag_page='zLULCartellinoPresenze', set_page=0, set_autodetect=False):
+        tag = tag_page
+        pag = set_page
+        # _______________________________________________________________________________________________________________
+        #
+        self.make_text_crops_page_zCartellinoPresenze(tag_page=tag, set_page=pag, set_autodetect=set_autodetect)
+        #_______________________________________________________________________________________________________________
+        #
+    #CZ#self.make_text_crops_page(pag, self.type_check , [273, 2282, 566, 44], ta_conf=def_tesseract_conf_rwal, val=self.type_check)
+        self.make_text_crops_page(pag, self.type_check , [273, 2282, 566, 44], ta_conf=def_tesseract_conf_rwal, val='PERIODO DI RIFERIMENTO')
+        #
+        self.set_detect = tag
+        if set_autodetect: return
+        #_______________________________________________________________________________________________________________
+        #
+
+    ####################################################################################################################
+    def make_text_crops_page_zLULCedolinoPaga_v1(self, tag_page='zLULCedolinoPaga_v1', set_page=0, set_autodetect=False):
+        tag = tag_page
         pag = set_page
         #_______________________________________________________________________________________________________________
         #
-    #CZ#self.make_text_crops_page(pag, self.type_check , [273, 2282, 566, 44], ta_conf=def_tesseract_rwal, val=self.type_check)
-        self.make_text_crops_page(pag, self.type_check , [273, 2282, 566, 44], ta_conf=def_tesseract_rwal, val='PERIODO DI RIFERIMENTO')
+    #CZ#self.make_text_crops_page(pag, self.type_check , [3590,  860, 620, 42], ta_conf=def_tesseract_conf_rwal, val=self.type_check)
+        self.make_text_crops_page(pag, self.type_check , [3590,  860, 620, 42], ta_conf=def_tesseract_conf_rwal, val='PERIODO DI RETRIBUZIONE')
         #
-        if autodetect: return(tag)
+        self.set_detect = tag
+        if set_autodetect: return
         #_______________________________________________________________________________________________________________
         #
-        d_h = 76
-        d_y = 190
-        self.make_text_crops_page(pag, 'K1.Periodo'    , [1740, d_y, 1760, d_h +  20])  # =
-        #···············································································································
-        d_y = 480
-        self.make_text_crops_page(pag, 'AziCodFisc'    , [ 280, d_y,  450, d_h      ])  # =
-        self.make_text_crops_page(pag, 'AziRagSociale' , [ 740, d_y, 1600, d_h      ])  # =
-        self.make_text_crops_page(pag, 'DipCodFisc'    , [2490, d_y, 1010, d_h      ])  # =
-        #···············································································································
-        d_y = 690
-        self.make_text_crops_page(pag, 'Nominativo'    , [ 280, d_y, 2400, d_h      ])  # =
-        self.make_text_crops_page(pag, 'DataAssunz'    , [2900, d_y,  600, d_h      ])  # =
-        #···············································································································
-        d_y = 900
-        self.make_text_crops_page(pag, 'K2.CodAzi'     , [ 280, d_y,  700, d_h      ])  # =
-        self.make_text_crops_page(pag, 'K3.CodDip'     , [1100, d_y,  700, d_h      ])  # =
-        self.make_text_crops_page(pag, 'Qualif'        , [1980, d_y,  700, d_h      ])  # =
-        self.make_text_crops_page(pag, 'Livello'       , [2850, d_y,  650, d_h      ])  # =
-        #···············································································································
-        add = 7
-        row = 31 ; row = 1
-        d_y = 1710
-        for gg in range(0, row, 1):
-            a_y = gg * d_h + gg * add
-            tag = 'gg_%02d_' % (gg + 1)
-            self.make_text_crops_page(pag, tag          , [ 200, d_y +a_y,  110, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'GSett', [ 320, d_y +a_y,  120, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Timb1', [ 475, d_y +a_y,  275, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Timb2', [ 765, d_y +a_y,  285, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Timb3', [1070, d_y +a_y,  280, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Timb4', [1365, d_y +a_y,  280, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'HOrdi', [1665, d_y +a_y,  160, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'HFlex', [1840, d_y +a_y,  160, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'HStra', [2012, d_y +a_y,  160, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci1', [2187, d_y +a_y,  310, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci2', [2512, d_y +a_y,  310, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci3', [2838, d_y +a_y,  310, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci4', [3162, d_y +a_y,  310, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci5', [3487, d_y +a_y,  310, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci6', [3812, d_y +a_y,  310, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci7', [4135, d_y +a_y,  310, d_h])  # =
-            self.make_text_crops_page(pag, tag + 'Voci8', [4460, d_y +a_y,  310, d_h])  # =
-        #_______________________________________________________________________________________________________________
-        #
-        return
-
-    ####################################################################################################################
-    def make_text_crops_page_zLULCedolinoPaga(self, set_page=0, autodetect=False):
-        tag = 'zLULCedolinoPaga'
-        pag = set_page
-        #_______________________________________________________________________________________________________________
-        #
-    #CZ#self.make_text_crops_page(pag, self.type_check , [3590,  860, 620, 42], ta_conf=def_tesseract_rwal, val=self.type_check)
-        self.make_text_crops_page(pag, self.type_check , [3590,  860, 620, 42], ta_conf=def_tesseract_rwal, val='PERIODO DI RETRIBUZIONE')
-        #
-        if autodetect: return(tag)
-        #_______________________________________________________________________________________________________________
-        #
-        self.make_text_crops_page(pag, 'InfoDocumento'  , [3592, 477, 1183, 315      ])  # =
+        self.make_text_crops_page(pag, 'InfoDocumento'  , [3592, 477, 1183, 315 ])  # =
         #···············································································································
         d_h = 76
         d_y = 255
-        self.make_text_crops_page(pag, 'K2.CodAzi'     , [  200, d_y,  250, d_h      ])  # = 000150
-        self.make_text_crops_page(pag, 'AziRagSociale' , [  695, d_y, 2000, d_h      ])  # = H&S Qualità nel Software S.p.A.
+        self.make_text_crops_page(pag, 'K2.CodAzi'     , [  200, d_y,  250, d_h ])  # = 000150
+        self.make_text_crops_page(pag, 'AziRagSociale' , [  695, d_y, 2000, d_h ])  # = H&S Qualità nel Software S.p.A.
         #···············································································································
         d_y = 460
-        self.make_text_crops_page(pag, 'AziIndiriz.Via' , [ 200, d_y, 2140, d_h      ])  # =
-        self.make_text_crops_page(pag, 'AziIndiriz.Civ' , [2350, d_y, 1205, d_h      ])  # =
+        self.make_text_crops_page(pag, 'AziIndiriz.Via' , [ 200, d_y, 2140, d_h ])  # =
+        self.make_text_crops_page(pag, 'AziIndiriz.Civ' , [2350, d_y, 1205, d_h ])  # =
         #···············································································································
         d_y = 537
-        self.make_text_crops_page(pag, 'AziIndiriz.CAP' , [ 200, d_y,  350, d_h -  19])  # =
-        self.make_text_crops_page(pag, 'AziIndiriz.Com' , [ 560, d_y, 1390, d_h -  19], ta_conf=def_tesseract_set)  # =
-        self.make_text_crops_page(pag, 'AziIndiriz.Prv' , [1960, d_y,  150, d_h -  19])  # =
+        self.make_text_crops_page(pag, 'AziIndiriz.CAP' , [ 200, d_y,  350, d_h -19])  # =
+        self.make_text_crops_page(pag, 'AziIndiriz.Com' , [ 560, d_y, 1390, d_h -19], ta_conf=def_tesseract_conf_set)  # =
+        self.make_text_crops_page(pag, 'AziIndiriz.Prv' , [1960, d_y,  150, d_h -19])  # =
         #···············································································································
         d_y = 666
         self.make_text_crops_page(pag, 'AziCodFisc'     , [ 200, d_y     ,  755, d_h ])  # =
@@ -549,9 +641,9 @@ class pdf2img2txt():
         self.make_text_crops_page(pag, 'DocLineInfo_1'  , [ 220, d_y, 3330, d_h      ])  # =
         #···············································································································
         d_y = 900
-        self.make_text_crops_page(pag, 'DocLineInfo_2'  , [ 220, d_y     , 3330, d_h     ])  # =
-        self.make_text_crops_page(pag, 'K1.Periodo'     , [3575, d_y     ,  700, d_h - 28])  # =
-        self.make_text_crops_page(pag, 'PeriodoPresenze', [3575, d_y + 80,  700, d_h - 16])  # =
+        self.make_text_crops_page(pag, 'DocLineInfo_2'  , [ 220, d_y     , 3330, d_h    ])  # =
+        self.make_text_crops_page(pag, 'K1.Periodo'     , [3575, d_y     ,  700, d_h -28])  # =
+        self.make_text_crops_page(pag, 'PeriodoPresenze', [3575, d_y + 80,  700, d_h -16])  # =
         #···············································································································
         d_y = 1165
         self.make_text_crops_page(pag, 'K3.CodDip'      , [ 230, d_y,       560, d_h ])  # =
@@ -560,11 +652,13 @@ class pdf2img2txt():
         self.make_text_crops_page(pag, 'DipMatricola'   , [4450, d_y,       360, d_h ])  # =
         #···············································································································
         d_y = 1385
-        self.make_text_crops_page(pag, 'DataNascita'    , [ 230, d_y     ,  370, d_h ])  # =
-        self.make_text_crops_page(pag, 'DataAssunz'     , [ 630, d_y     ,  370, d_h ])  # =
-        self.make_text_crops_page(pag, 'DataCessaz'     , [1015, d_y     ,  370, d_h ])  # =
-        self.make_text_crops_page(pag, 'Qualif'         , [1390, d_y - 50,  790, d_h ])  # =
-        self.make_text_crops_page(pag, 'Livello'        , [2190, d_y - 50, 1000, d_h ])  # =
+        self.make_text_crops_page(pag, 'DipDataNascita' , [ 230, d_y     ,  370, d_h ])  # =
+        self.make_text_crops_page(pag, 'DipDataAssunz'  , [ 630, d_y     ,  370, d_h ])  # =
+        self.make_text_crops_page(pag, 'DipDataCessaz'  , [1015, d_y     ,  370, d_h ])  # =
+        self.make_text_crops_page(pag, 'DipQualif'      , [1390, d_y - 50,  790, d_h ])  # =
+        self.make_text_crops_page(pag, 'DipLivello'     , [2190, d_y - 50,  710, d_h ])  # =
+        self.make_text_crops_page(pag, 'DipInfo_1'      , [2915, d_y - 50,  775, d_h ])  # =
+        self.make_text_crops_page(pag, 'DipInfo_2'      , [3715, d_y - 50, 1060, d_h ])  # =
         #···············································································································
         d_y = 1520
         self.make_text_crops_page(pag, 'Contratto'      , [2415, d_y     , 2000, d_h ])  # =
@@ -580,12 +674,13 @@ class pdf2img2txt():
         self.make_text_crops_page(pag, 'Lavorato_OreStr', [1830, d_y     ,  360, d_h ])  # =
         self.make_text_crops_page(pag, 'GG_Detrazioni'  , [2220, d_y     ,  210, d_h ])  # =
         #···············································································································
+        box = 'ElementiPaga'
         adj = 10
         hgh = d_h + adj
         len = 670
         s_x = 25
-        s_y = 30
-        syy = 80
+        s_y = 0
+        syy = 110
         row = 3 # row = 3
         col = 6 # col = 3
         d_x = 600
@@ -595,14 +690,236 @@ class pdf2img2txt():
             for epc in range(0, col, 1):
                 a_x = len * (epc+0) + s_x * (epc+0)
                 a1y = hgh * (epr+0) + s_y * (epr+0) + syy * (epr+0)
-                a2y = hgh * (epr+1) + s_y * (epr+0) + syy * (epr+0)
+                a2y = hgh * (epr+1) + s_y * (epr+1) + syy * (epr+0)
                 epn = epn + 1
-                tag = 'ElemPaga_%02d_' % epn
-                self.make_text_crops_page(pag, tag+'Des', [ d_x +a_x, d_y +a1y, len, hgh ])  # =
-                self.make_text_crops_page(pag, tag+'Val', [ d_x +a_x, d_y +a2y, len, hgh ])  # =
+                tag = '%s_%02d_' % (box, epn)
+                self.make_text_crops_page(pag, tag + 'Des', [ d_x +a_x, d_y +a1y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag + 'Val', [ d_x +a_x, d_y +a2y, len, hgh ])  # =
         #···············································································································
         d_y = 2190
         self.make_text_crops_page(pag, 'DataProsScatto' , [ 320, d_y     ,  270, d_h ])  # =
+        #···············································································································
+        box = 'VoceVariabile'
+        add = 11
+        row = 30 # row = 1
+        d_y = 2406
+        for vv in range(0, row, 1):
+            a_y = vv * d_h + vv * add
+            tag = '%s_%02d_' % (box, (vv + 1))
+            self.make_text_crops_page(pag, tag + 'Sogg.IRPEF' , [ 216, d_y +a_y +10,   35, d_h -40 ], ta_conf="--psm 6 --oem 3")  # =
+            self.make_text_crops_page(pag, tag + 'Sogg.INPS'  , [ 265, d_y +a_y +10,   35, d_h -40 ], ta_conf="--psm 6 --oem 3")  # =
+            self.make_text_crops_page(pag, tag + 'Descrizione', [ 320, d_y +a_y    , 1600, d_h     ])  # =
+            self.make_text_crops_page(pag, tag + 'ImportoBase', [1945, d_y +a_y    ,  700, d_h     ])  # =
+            self.make_text_crops_page(pag, tag + 'Riferimento', [2670, d_y +a_y    ,  900, d_h     ])  # =
+            self.make_text_crops_page(pag, tag + 'Trattenute' , [3600, d_y +a_y    ,  540, d_h     ])  # =
+            self.make_text_crops_page(pag, tag + 'Competenze' , [4170, d_y +a_y    ,  610, d_h     ])  # =
+        #···············································································································
+        box = 'Conguaglio'
+        adj = 0
+        hgh = d_h + adj
+        lnd = 325
+        len = 535
+        s_x = 5
+        s_y = 15
+        syy = 90
+        row = 1 # row = 1
+        col = 8 # col = 3
+        d_x = 550
+        d_y = 5110 - adj
+        epn = 0
+        for xxr in range(0, row, 1):
+            for xxc in range(0, col, 1):
+                a_x = len * (xxc+0) + s_x * (xxc+0)
+                a1y = hgh * (xxr+0) + s_y * (xxr+0) + syy * (xxr+0)
+                a2y = hgh * (xxr+1) + s_y * (xxr+1) + syy * (xxr+0)
+                a3y = hgh * (xxr+2) + s_y * (xxr+2) + syy * (xxr+0)
+                len = lnd if (xxc+1)==col else len
+                epn = epn + 1
+                if xxc==0:
+                    tag = '%s_%s_desc' % (box, '%s')
+                #CZ#self.make_text_crops_page(pag, tag % 'Testa', [ 225, d_y +a1y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga1', [ 225, d_y +a2y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga2', [ 225, d_y +a3y, lnd, hgh ])  # =
+                tag = '%s_%s_col%d' % (box, '%s', (xxc+1))
+                self.make_text_crops_page(pag, tag % 'Testa', [ d_x +a_x, d_y +a1y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga1', [ d_x +a_x, d_y +a2y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga2', [ d_x +a_x, d_y +a3y, len, hgh ])  # =
+        #···············································································································
+        box = 'Progressivi'
+        adj = 0
+        hgh = d_h + adj
+        lnd = 325
+        len = 490
+        s_x = 140
+        s_y = 20
+        syy = 90
+        row = 1 # row = 1
+        col = 7 # col = 3
+        d_x = 615
+        d_y = 5405 - adj
+        epn = 0
+        for xxr in range(0, row, 1):
+            for xxc in range(0, col, 1):
+                a_x = len * (xxc+0) + s_x * (xxc+0)
+                a1y = hgh * (xxr+0) + s_y * (xxr+0) + syy * (xxr+0)
+                a2y = hgh * (xxr+1) + s_y * (xxr+1) + syy * (xxr+0)
+            #CZ#a3y = hgh * (xxr+2) + s_y * (xxr+2) + syy * (xxr+0)
+                len = lnd if (xxc+1)==col else len
+                epn = epn + 1
+                if xxc==0:
+                    tag = '%s_%s_desc' % (box, '%s')
+                #CZ#self.make_text_crops_page(pag, tag % 'Testa', [ 225, d_y +a1y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga1', [ 225, d_y +a2y, lnd, hgh ])  # =
+            #CZ#    self.make_text_crops_page(pag, tag % 'Riga2', [ 225, d_y +a3y, lnd, hgh ])  # =
+                tag = '%s_%s_col%d' % (box, '%s', (xxc+1))
+                self.make_text_crops_page(pag, tag % 'Testa', [ d_x +a_x, d_y +a1y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga1', [ d_x +a_x, d_y +a2y, len, hgh ])  # =
+            #CZ#self.make_text_crops_page(pag, tag % 'Riga2', [ d_x +a_x, d_y +a3y, len, hgh ])  # =
+        #···············································································································
+        box = 'TFR'
+        adj = 0
+        hgh = d_h + adj
+        lnd = 140
+        len = 630
+        s_x = 100
+        sxx = 20
+        s_y = 10
+        syy = 90
+        row = 1 # row = 1
+        col = 6 # col = 3
+        d_x = 415
+        d_y = 5615 - adj
+        epn = 0
+        for xxr in range(0, row, 1):
+            for xxc in range(0, col, 1):
+                a_x = len * (xxc+0) + s_x * (xxc+0)
+                a1y = hgh * (xxr+0) + s_y * (xxr+0) + syy * (xxr+0)
+                a2y = hgh * (xxr+1) + s_y * (xxr+1) + syy * (xxr+0)
+            #CZ#a3y = hgh * (xxr+2) + s_y * (xxr+2) + syy * (xxr+0)
+            #CZ#len = lnd if (xxc+1)==col else len
+                a_x = a_x + sxx * (xxc+1-(col-2)) if (xxc+1)>=(col-1) else a_x
+                epn = epn + 1
+                if xxc==0:
+                    tag = '%s_%s_desc' % (box, '%s')
+                #CZ#self.make_text_crops_page(pag, tag % 'Testa', [ 225, d_y +a1y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga1', [ 225, d_y +a2y, lnd, hgh ])  # =
+            #CZ#    self.make_text_crops_page(pag, tag % 'Riga2', [ 225, d_y +a3y, lnd, hgh ])  # =
+                tag = '%s_%s_col%d' % (box, '%s', (xxc+1))
+                self.make_text_crops_page(pag, tag % 'Testa', [ d_x +a_x, d_y +a1y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga1', [ d_x +a_x, d_y +a2y, len, hgh ])  # =
+            #CZ#self.make_text_crops_page(pag, tag % 'Riga2', [ d_x +a_x, d_y +a3y, len, hgh ])  # =
+        #···············································································································
+        box = 'Ratei'
+        adj = 0
+        hgh = d_h + adj
+        lnd = 720
+        lnu = 320
+        len = 530
+        s_x = 100 - 95
+    #CZ#sxx = 20
+        s_y = 10 - 2
+        syy = 90
+        row = 1 # row = 1
+        col = 5 # col = 3
+        d_x = 970
+        d_y = 5860 - adj
+        epn = 0
+        for xxr in range(0, row, 1):
+            for xxc in range(0, col, 1):
+                a_x = len * (xxc+0) + s_x * (xxc+0)
+                a1y = hgh * (xxr+0) + s_y * (xxr+0) + syy * (xxr+0)
+                a2y = hgh * (xxr+1) + s_y * (xxr+1) + syy * (xxr+0)
+                a3y = hgh * (xxr+2) + s_y * (xxr+2) + syy * (xxr+0)
+                a4y = hgh * (xxr+3) + s_y * (xxr+3) + syy * (xxr+0)
+                a5y = hgh * (xxr+4) + s_y * (xxr+4) + syy * (xxr+0)
+            #CZ#len = lnd if (xxc+1)==col else len
+                len = lnu if (xxc+1)==col else len
+            #CZ#a_x = a_x + sxx * (xxc+1-(col-2)) if (xxc+1)>=(col-1) else a_x
+                epn = epn + 1
+                if xxc==0:
+                    tag = '%s_%s_desc' % (box, '%s')
+                #CZ#self.make_text_crops_page(pag, tag % 'Testa', [ 225, d_y +a1y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga1', [ 225, d_y +a2y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga2', [ 225, d_y +a3y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga3', [ 225, d_y +a4y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga4', [ 225, d_y +a5y, lnd, hgh ])  # =
+                udm = 'Unità di Misura' if (xxc+1)==col else ''
+                tag = '%s_%s_col%d' % (box, '%s', (xxc+1))
+                self.make_text_crops_page(pag, tag % 'Testa', [ d_x +a_x, d_y +a1y, len, hgh ], val=udm)  # =
+                self.make_text_crops_page(pag, tag % 'Riga1', [ d_x +a_x, d_y +a2y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga2', [ d_x +a_x, d_y +a3y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga3', [ d_x +a_x, d_y +a4y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga4', [ d_x +a_x, d_y +a5y, len, hgh ])  # =
+        #···············································································································
+        self.make_text_crops_page(pag, 'AssegNuclFamig'  , [  890, 6300,  2525, d_h      ])  # =
+        self.make_text_crops_page(pag, 'Comunicazioni'   , [  615, 6400,  2800, d_h +234 ])  # =
+        self.make_text_crops_page(pag, 'TotaleCompetenze', [ 4080, 5825,   735, d_h      ])  # =
+        self.make_text_crops_page(pag, 'TotaleTrattenute', [ 4080, 5925,   735, d_h      ])  # =
+        self.make_text_crops_page(pag, 'Arrotondamento'  , [ 4080, 6020,   735, d_h      ])  # =
+        self.make_text_crops_page(pag, 'TotaleNettoMese' , [ 3530, 6165,  1100, d_h + 14 ])  # =
+        self.make_text_crops_page(pag, 'CoordinateBanca' , [ 3480, 6340,  1475, d_h +299 ])  # =
         #_______________________________________________________________________________________________________________
         #
-        return
+
+    ####################################################################################################################
+    def make_text_crops_page_zLULCedolinoPaga_v2(self, tag_page='zLULCedolinoPaga_v2', set_page=0, set_autodetect=False):
+        tag = tag_page
+        pag = set_page
+        # _______________________________________________________________________________________________________________
+        #
+        self.make_text_crops_page_zLULCedolinoPaga_v1(tag_page=tag, set_page=pag, set_autodetect=set_autodetect)
+        # _______________________________________________________________________________________________________________
+        #
+    #CZ#self.make_text_crops_page(pag, self.type_check , [3610, 812, 615, 45], ta_conf=def_tesseract_conf_rwal, val=self.type_check)
+        self.make_text_crops_page(pag, self.type_check , [3610, 812, 615, 45], ta_conf=def_tesseract_conf_rwal, val='PERIODO DI RETRIBUZIONE')
+        #
+        self.set_detect = tag
+        if set_autodetect: return
+        #_______________________________________________________________________________________________________________
+        #
+        d_h = 76
+        #···············································································································
+        box = 'TFR'
+        adj = 0
+        hgh = d_h + adj
+        lnd = 140
+        len = 630
+        s_x = 100
+        sxx = 20 + 30
+        s_y = 10
+        syy = 90
+        row = 1 # row = 1
+        col = 6 # col = 3
+        d_x = 415
+        d_y = 5615 - adj
+        epn = 0
+        for xxr in range(0, row, 1):
+            for xxc in range(0, col, 1):
+                a_x = len * (xxc+0) + s_x * (xxc+0)
+                a1y = hgh * (xxr+0) + s_y * (xxr+0) + syy * (xxr+0)
+                a2y = hgh * (xxr+1) + s_y * (xxr+1) + syy * (xxr+0)
+            #CZ#a3y = hgh * (xxr+2) + s_y * (xxr+2) + syy * (xxr+0)
+            #CZ#len = lnd if (xxc+1)==col else len
+            #CZ#a_x = a_x + sxx * (xxc+1-(col-2)) if (xxc+1)>=(col-1) else a_x
+                a_x = a_x - sxx * (xxc+1-(col-2)) if (xxc+1)==(col-1) else a_x
+                a_x = a_x + sxx * (xxc+1-(col-2)) if (xxc+1)==(col-0) else a_x
+                epn = epn + 1
+                if xxc==0:
+                    tag = '%s_%s_desc' % (box, '%s')
+                #CZ#self.make_text_crops_page(pag, tag % 'Testa', [ 225, d_y +a1y, lnd, hgh ])  # =
+                    self.make_text_crops_page(pag, tag % 'Riga1', [ 225, d_y +a2y, lnd, hgh ])  # =
+            #CZ#    self.make_text_crops_page(pag, tag % 'Riga2', [ 225, d_y +a3y, lnd, hgh ])  # =
+                tag = '%s_%s_col%d' % (box, '%s', (xxc+1))
+                self.make_text_crops_page(pag, tag % 'Testa', [ d_x +a_x, d_y +a1y, len, hgh ])  # =
+                self.make_text_crops_page(pag, tag % 'Riga1', [ d_x +a_x, d_y +a2y, len, hgh ])  # =
+            #CZ#self.make_text_crops_page(pag, tag % 'Riga2', [ d_x +a_x, d_y +a3y, len, hgh ])  # =
+        #···············································································································
+        self.make_text_crops_page(pag, 'AssegNuclFamig'  , [  890, 6290,  2525, d_h      ])  # =
+        self.make_text_crops_page(pag, 'Comunicazioni'   , [  615, 6390,  2800, d_h +234 ])  # =
+        self.make_text_crops_page(pag, 'TotaleCompetenze', [ 4080, 5825,   735, d_h      ])  # =
+        self.make_text_crops_page(pag, 'TotaleTrattenute', [ 4080, 5925,   735, d_h      ])  # =
+        self.make_text_crops_page(pag, 'Arrotondamento'  , [ 4080, 6000,   735, d_h      ])  # =
+        self.make_text_crops_page(pag, 'TotaleNettoMese' , [ 3530, 6165,  1100, d_h + 14 ])  # =
+        self.make_text_crops_page(pag, 'CoordinateBanca' , [ 3480, 6320,  1475, d_h +299 ])  # =
+        #_______________________________________________________________________________________________________________
+        #

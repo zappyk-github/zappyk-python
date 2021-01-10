@@ -67,6 +67,7 @@ chr_newline_OS_Linux   = chr_newline_LineFeed
 chr_file_stdout    = '-'
 chr_page_key       = '::'
 str_page_key_regex = '^K(\d+)\.'
+csv_init_stdout    = '#'
 csv_newline_CR     = '<CR>'
 csv_newline_LF     = '<LF>'
 csv_delimiter      = ';'
@@ -94,8 +95,9 @@ set_debug_markup_delaykey = 10000
 
 ########################################################################################################################
 ########################################################################################################################
-def _log(string, end=chr_newline_OS_Linux):
+def _log(string=fix_emptyvalue, end=chr_newline_OS_Linux):
     sys.stdout.write(string + end)
+    sys.stdout.flush()
 ########################################################################################################################
 ########################################################################################################################
 class pdf2img2txt():
@@ -216,7 +218,7 @@ class pdf2img2txt():
         # textbase64 = text_merge
         # text_numpy = numpy.frombuffer(textbase64, dtype=numpy.uint8)
         # text_image = cv2.imdecode(text_numpy, flags=1)
-        # return (text_image)
+        # return(text_image)
         #________________________________________________________________________________
         #
         from PIL import Image
@@ -335,24 +337,22 @@ class pdf2img2txt():
     def read_text_coord(self, file_image, text_crops={}, page_crops=0, mark_text_coord=False, mark_grid_image=False, save_image=False, autodetect=False):
         if not(text_crops):
             text_crops = self.text_crops
-        #
+        #_______________________________________________________________________________________________________________
         image_read = cv2.imread(file_image)
-        #
-        if self.datetime_init is None:
-            self.datetime_init = datetime.now()
+        #_______________________________________________________________________________________________________________
+        self.datetime_init = datetime.now() if self.datetime_init is None else self.datetime_init
         datetime_init = datetime.now()
-        #
+        #_______________________________________________________________________________________________________________
     #CZ#for page_number in text_crops:
         for page_number in range(page_crops, page_crops+1, 1):
             self.totcount_page = self.totcount_page +1
-            #
+            #___________________________________________________________________________________________________________
             if not(autodetect):
                 _log("Read elements in file image %s, page %05d... (%s)" % (def_IMG_extension, page_number, file_image))
-                datetime_init_pag = datetime.now()
-            #
+            #___________________________________________________________________________________________________________
         #CZ#page_keys = { 0: page_number }
             page_keys = {}
-            #
+            #___________________________________________________________________________________________________________
             count_element = 0
             count_elements = num_counterbox
             for text_key in text_crops[page_number]['Keys']:
@@ -361,20 +361,50 @@ class pdf2img2txt():
                 tesseract_conf = text_crops[page_number]['Keys'][text_key]['TesseractConf']
                 text_color     = text_crops[page_number]['Keys'][text_key]['ColorBox']
                 coordinate     = text_crops[page_number]['Keys'][text_key]['Coordinate']
-                x = coordinate[0]
-                y = coordinate[1]
-                l = coordinate[2]
-                h = coordinate[3]
-                (x0, y0, x1, y1) = self._coord_make(x, y, l, h)
                 #
+                (x, y, l, h)     = coordinate
+                (x0, y0, x1, y1) = self._coord_make(x, y, l, h)
+                #_______________________________________________________________________________________________________
                 # cropping image img = image[y0:y1, x0:x1]
                 image_crop = image_read[y0:y1, x0:x1]
-                #
+                #_______________________________________________________________________________________________________
                 text_read = self._read_markup(image_crop, tesseract_lang, tesseract_conf, text_key)
-                #
+                text_read = text_read.replace(chr_newline_CarriageReturn, csv_newline_CR) \
+                                     .replace(chr_newline_LineFeed, csv_newline_LF)
+                #_______________________________________________________________________________________________________
+                if not(autodetect):
+                    count_element = count_element + 1
+                    #
+                    if (count_element == 1) or (((count_element - 1) % count_elements) == 0):
+                        _log("%s " % chr_countersep, end='')
+                        if self.debug >= 1:
+                            _log()
+                    #
+                    if (text_key == self.type_check) or match_key_regex:
+                        _log(chr_counterkey, end='')
+                    else:
+                        if text_read == fix_emptyvalue:
+                            _log(chr_countempty, end='')
+                        else:
+                            _log(chr_counterdot, end='')
+                #_______________________________________________________________________________________________________
                 if self.debug >= 1:
-                        _log(" debug read => [%s][%s][%s]" % (page_number, text_key, text_read))
-                #
+                    if self.debug >= 2:
+                        if not(autodetect):
+                            _log(" layout[%-20s] page[%-5s] coord[%-30s] tesseract[%-3s %-26s] key[%-30s] => val[%s]" % (layout_read, page_number, coordinate, tesseract_lang, tesseract_conf, text_key, text_read), end='')
+                        else:
+                            _log(" debug read [page|key|value] => [%s|%s|%s]" % (page_number, text_key, text_read), end='')
+                    else:
+                        _log(" debug read [page|key|value] => [%s|%s|%s]" % (page_number, text_key, text_read), end='')
+                    if not(autodetect):
+                        _log()
+                    else:
+                        _log(' => ', end='')
+                #_______________________________________________________________________________________________________
+                if not(autodetect):
+                    if (count_element % count_elements) == 0:
+                        _log(" %s= %5s elements read" % (chr_countersep, count_element))
+                #_______________________________________________________________________________________________________
                 text_read_val = text_crops[page_number]['Keys'][text_key]['TextRead']
                 if text_key == self.type_check:
                     if (text_read_val != text_key) and (text_read_val != text_read):
@@ -391,34 +421,22 @@ class pdf2img2txt():
                 if (text_read_val == fix_emptyvalue) and (text_read != fix_emptyvalue):
                     text_crops[page_number]['Keys'][text_key]['TextRead'] = text_read
                 #
+                text_read = text_crops[page_number]['Keys'][text_key]['TextRead']
+            #CZ#page_key = chr_page_key.join(str(x) for x in sort_keys.values())
+                page_key = chr_page_key.join(str(page_keys[x]) for x in sorted(page_keys.keys()))
+                text_crops[page_number]['Keys'][text_key]['PageKey'] = page_key
+                if self.view >= 1:
+                    log_array = [fix_emptyvalue, (" %-40s " % page_key), (" %5d " % page_number), (" %-20s " % text_key), (" %30s " % text_read), fix_emptyvalue]
+                    _log(chr_countersep.join(log_array))
+                #_______________________________________________________________________________________________________
                 match_key_regex = re.search(str_page_key_regex, text_key)
                 if match_key_regex:
                     i = int(match_key_regex.group(1))
                     page_keys.update({ i: text_read })
-                #
+                #_______________________________________________________________________________________________________
                 if mark_text_coord:
                     image_draw = self._mark_text_coord(image_read, text_color, (x0, y0), (x1, y1))
-                #
-                if not(autodetect):
-                    if self.debug >= 1:
-                        _log("layout[%-20s] page[%-5s] coord[%-30s] tesseract[%-3s %-26s] key[%-30s] => val[%s]" % (layout_read, page_number, coordinate, tesseract_lang, tesseract_conf, text_key, text_read))
-                    else:
-                        count_element = count_element + 1
-                        #
-                        if (count_element == 1) or (((count_element - 1) % count_elements) == 0):
-                            _log("%s " % chr_countersep, end='')
-                        #
-                        if (text_key == self.type_check) or match_key_regex:
-                            _log(chr_counterkey, end='')
-                        else:
-                            if text_read == fix_emptyvalue:
-                                _log(chr_countempty, end='')
-                            else:
-                                _log(chr_counterdot, end='')
-                        #
-                        if (count_element % count_elements) == 0:
-                            _log(" %s= %5s elements read" % (chr_countersep, count_element))
-            #
+            #___________________________________________________________________________________________________________
             if not(autodetect):
                 if self.debug >= 1:
                     pass
@@ -432,24 +450,16 @@ class pdf2img2txt():
                 delta_HHMMSS_ = time.strftime('%H:%M:%S', time.gmtime(delta_seconds))
                 _log("Read elements %d in %d seconds (%s)%s" % (count_element, delta_seconds, delta_HHMMSS_, str_legend_log))
                 self.totcount_item = self.totcount_item + count_element
-            #
-            for text_key in text_crops[page_number]['Keys']:
-                text_read = text_crops[page_number]['Keys'][text_key]['TextRead']
-            #CZ#page_key = chr_page_key.join(str(x) for x in sort_keys.values())
-                page_key = chr_page_key.join(str(page_keys[x]) for x in sorted(page_keys.keys()))
-                text_crops[page_number]['Keys'][text_key]['PageKey'] = page_key
-                if self.view >= 1:
-                    _log('|'.join([fix_emptyvalue, (" %-40s " % page_key), (" %5d " % page_number), (" %-20s " % text_key), (" %30s " % text_read), fix_emptyvalue]))
-            #
+            #___________________________________________________________________________________________________________
             if mark_grid_image:
                 image_draw = self._mark_grid_image(image_read)
-            #
+            #___________________________________________________________________________________________________________
             if save_image and (mark_text_coord or mark_grid_image):
             #CZ#name_image_draw = file_image
                 file_image_draw = self._make_file_image(page_number, def_name_markup)
                 cv2.imwrite(file_image_draw, image_draw)
-            #
-        if not (autodetect):
+        #_______________________________________________________________________________________________________________
+        if not(autodetect):
             datetime_done = datetime.now()
             delta_seconds = (datetime_done - self.datetime_init).seconds
             delta_HHMMSS_ = time.strftime('%H:%M:%S', time.gmtime(delta_seconds))
@@ -479,10 +489,11 @@ class pdf2img2txt():
                             layout_read = text_crops[page_number]['Layout']
                             page_key    = text_crops[page_number]['Keys'][text_key]['PageKey']
                             text_read   = text_crops[page_number]['Keys'][text_key]['TextRead']
-                            text_write  = text_read.replace(chr_newline_CarriageReturn, csv_newline_CR)\
-                                                   .replace(chr_newline_LineFeed      , csv_newline_LF)
                             #
-                            line_csv.writerow([layout_read, page_number, page_key, text_key, text_write])
+                            if set_stdout:
+                                _log(csv_init_stdout, end='')
+                            #
+                            line_csv.writerow([layout_read, page_number, page_key, text_key, text_read])
         finally:
             if not(set_stdout):
                 _log("Write elements in file CSV (%s)" % file_name_csv)
@@ -509,7 +520,7 @@ class pdf2img2txt():
             #
             self.text_crops[pag]['Keys'][key] = { 'Coordinate': coord, 'ColorBox': color, 'TesseractLang': ta_lang, 'TesseractConf': ta_conf, 'TextRead': val, 'PageKey': pag_key }
             #
-            if self.debug >= 2:
+            if self.debug >= 3:
                 _log("text_crops[%s]" % self.text_crops)
 
     ####################################################################################################################
@@ -550,8 +561,9 @@ class pdf2img2txt():
             elif layout_i == 2: self.make_text_crops_page_zLULCartellinoPresenze(set_page=page_crops)
             elif layout_i == 3: self.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page_crops)
             elif layout_i == 4: self.make_text_crops_page_zLULCedolinoPaga_v2(set_page=page_crops)
-            self.read_text_coord(file_image=file_image, page_crops=page_crops, mark_text_coord=mark_text_coord, mark_grid_image=mark_grid_image, save_image=save_image)
             self.text_crops[page_crops]['Layout'] = layout_n
+            #
+            self.read_text_coord(file_image=file_image, page_crops=page_crops, mark_text_coord=mark_text_coord, mark_grid_image=mark_grid_image, save_image=save_image)
         else:
             _log(" => Detect nothing layout set! :-(")
 
@@ -1060,14 +1072,14 @@ if __name__ == "__main__":
         for p in file_pageonly.split(','):
             pageonly.append(int(p.strip()) - 1)
     #
-    p2t = pdf2img2txt(file_name=file_name_PDF, DPI_resolution=600, force=True, debug=0)
+    p2t = pdf2img2txt(file_name=file_name_PDF, DPI_resolution=600, view=False, force=True, debug=1)
     fni = p2t.make_image(page_save=True)
     #
     pages = range(len(fni)) if file_pageonly is None else pageonly
     for p in pages:
         page = p + 1
         #
-        if not (file_type_map is None):
+        if not(file_type_map is None) and (file_type_map != chr_file_stdout):
             if   file_type_map == "zCartellinoPresenze"   : p2t.make_text_crops_page_zCartellinoPresenze(set_page=page)
             elif file_type_map == "zLULCartellinoPresenze": p2t.make_text_crops_page_zLULCartellinoPresenze(set_page=page)
             elif file_type_map == "zLULCedolinoPaga_v1"   : p2t.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page)

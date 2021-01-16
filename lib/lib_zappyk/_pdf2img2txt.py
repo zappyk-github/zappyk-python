@@ -100,9 +100,9 @@ set_debug_markup_strregex = 'VoceVariabile_0(3|4)_Sogg.INPS'
 set_debug_markup_fontsize = 24
 set_debug_markup_fontname = '/usr/share/fonts/google-droid/DroidSansMono.ttf'
 set_debug_markup_fontname = '/usr/share/fonts/dejavu/DejaVuSansMono.ttf'
-set_debug_markup_imagestr = '/tmp/pdf2img2txt-debug-markup-image-string.jpg'
-set_debug_markup_imgetthr = '/tmp/pdf2img2txt-debug-markup-image-getval-thresh.jpg'
-set_debug_markup_imgetres = '/tmp/pdf2img2txt-debug-markup-image-getval-result.jpg'
+set_debug_markup_imagestr = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-string.jpg'
+set_debug_markup_imgetthr = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-thresh.jpg'
+set_debug_markup_imgetres = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-result.jpg'
 set_debug_markup_delaykey = 10000
 
 ########################################################################################################################
@@ -218,7 +218,7 @@ class pdf2img2txt():
         return(image_draw)
 
     ####################################################################################################################
-    def _image_markup_debug(self, text_merge):
+    def _image_markup_debug(self, text_merge, file_image_string):
         #
         # import numpy
         # text_nparr = numpy.fromstring(text_merge, numpy.uint8)
@@ -253,13 +253,13 @@ class pdf2img2txt():
         image_draw = ImageDraw.Draw(image)
         image_draw.text((2, height / 2), text_merge, fill=colorText, font=fontImg)
         image_draw.rectangle((0, 0, width, height), outline=colorOutline)
-        image.save(set_debug_markup_imagestr)
-        text_image = cv2.imread(set_debug_markup_imagestr, 0)
+        image.save(file_image_string)
+        text_image = cv2.imread(file_image_string, 0)
         #
         return(text_image)
 
     ####################################################################################################################
-    def _read_markup(self, image_crop, tesseract_lang, tesseract_conf, text_key):
+    def _read_markup(self, image_crop, tesseract_lang, tesseract_conf, text_key, count_page=0, count_element=0):
         #
         if set_debug_markup_Test:
             (text, thresh, result) = self._read_markup_Test(image_crop, tesseract_lang, tesseract_conf)
@@ -271,12 +271,16 @@ class pdf2img2txt():
         if set_debug_markup:
             if re.search(set_debug_markup_strregex, text_key):
                 try:
+                    file_image_string = set_debug_markup_imagestr % (count_page, count_element)
+                    file_image_thresh = set_debug_markup_imgetthr % (count_page, count_element)
+                    file_image_result = set_debug_markup_imgetres % (count_page, count_element)
+                    #
                     # Convert to images
                     text_merge = "[%s] %s" % (text_strip, text_key)
-                    text_image = self._image_markup_debug(text_merge)
+                    text_image = self._image_markup_debug(text_merge, file_image_string)
                     #
-                    cv2.imwrite(set_debug_markup_imgetthr, thresh)
-                    cv2.imwrite(set_debug_markup_imgetres, result)
+                    cv2.imwrite(file_image_thresh, thresh)
+                    cv2.imwrite(file_image_result, result)
                     #
                     cv2.imshow('markup:', text_image)
                     cv2.imshow('thresh:', thresh)
@@ -368,6 +372,8 @@ class pdf2img2txt():
             count_element = 0
             count_elements = num_counterbox
             for text_key in text_crops[page_number]['Keys']:
+                count_element = count_element + 1
+                #
                 layout_read    = text_crops[page_number]['Layout']
                 tesseract_lang = text_crops[page_number]['Keys'][text_key]['TesseractLang']
                 tesseract_conf = text_crops[page_number]['Keys'][text_key]['TesseractConf']
@@ -380,13 +386,11 @@ class pdf2img2txt():
                 # cropping image img = image[y0:y1, x0:x1]
                 image_crop = image_read[y0:y1, x0:x1]
                 #_______________________________________________________________________________________________________
-                text_read = self._read_markup(image_crop, tesseract_lang, tesseract_conf, text_key)
+                text_read = self._read_markup(image_crop, tesseract_lang, tesseract_conf, text_key, page_number, count_element)
                 text_read = text_read.replace(chr_newline_CarriageReturn, csv_newline_CR) \
                                      .replace(chr_newline_LineFeed, csv_newline_LF)
                 #_______________________________________________________________________________________________________
                 if not(autodetect):
-                    count_element = count_element + 1
-                    #
                     if (count_element == 1):
                         _log("[ %s ]" % str_legend_log)
                     if (count_element == 1) or (((count_element - 1) % count_elements) == 0):

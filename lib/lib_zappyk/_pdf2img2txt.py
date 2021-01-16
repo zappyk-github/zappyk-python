@@ -2,16 +2,26 @@
 __author__ = 'zappyk'
 
 import os, re, sys, csv, time
+import argparse #, configparser
 import cv2, pytesseract
 
 from datetime import datetime
 from pdf2image import convert_from_path
 
+_version = '0.0.1'
+_project = 'pdf2img2txt'
+_description = '''
+Capture text from PDF files by configuring square boxes.
+After the transformation of the PDF file into an image,
+the tesseract program is used as OCR to decrypt the text enclosed in the square boxes.
+'''
+_epilog = "Version: %s" % _version
+
 # https://towardsdatascience.com/extracting-text-from-scanned-pdf-using-pytesseract-open-cv-cd670ee38052
 
-def_debug = 0
-def_force = 0
-def_view  = 0
+def_debug   = 0
+def_force   = 0
+def_verbose = 0
 
 def_file_name      = None
 def_path_work      = None
@@ -35,6 +45,7 @@ def_IMG_extension = 'JPEG'
 def_name_image    = 'Page_%05i%s.%s'
 def_name_work     = '___pdf2img2txt'
 def_name_markup   = '___markup'
+def_type_layouts  = ['zCartellinoPresenze', 'zLULCartellinoPresenze', 'zLULCedolinoPaga_v1', 'zLULCedolinoPaga_v2']
 
 def_CMD_tesseract       = None
 def_tesseract_lang      = 'ita'
@@ -103,16 +114,16 @@ def _log(string=fix_emptyvalue, end=chr_newline_OS_Linux):
 class pdf2img2txt():
 
     ####################################################################################################################
-    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, view=def_view, force=def_force, debug=def_debug):
+    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, verbose=def_verbose, force=def_force, debug=def_debug):
         #
         if file_name is None:
             raise Exception("Specifica il file PDF da tradurre!")
         if not(os.path.isfile(file_name)):
             raise Exception("Attenzione, il file PDF '%s` non esiste!" % file_name)
         #
-        self.view = view
-        self.force = force
         self.debug = debug
+        self.force = force
+        self.verbose = verbose
         self.file_name = file_name
         self.path_work = path_work
         self.DPI_resolution = DPI_resolution
@@ -409,7 +420,7 @@ class pdf2img2txt():
                 if text_key == self.type_check:
                     if (text_read_val != text_key) and (text_read_val != text_read):
                         stradd_exception = fix_emptyvalue
-                        if self.view:
+                        if self.verbose:
                             stradd_exception = "; not references \"%s\" is found! ([%s]=>%s)" % (text_read_val, text_read, file_image)
                         string_exception = fix_string_warning % ("file image %s, page %05d, not appear to be specified type %s%s" % (def_IMG_extension, page_number, layout_read, stradd_exception))
                         if not(autodetect):
@@ -425,7 +436,7 @@ class pdf2img2txt():
             #CZ#page_key = chr_page_key.join(str(x) for x in sort_keys.values())
                 page_key = chr_page_key.join(str(page_keys[x]) for x in sorted(page_keys.keys()))
                 text_crops[page_number]['Keys'][text_key]['PageKey'] = page_key
-                if self.view >= 1:
+                if self.verbose >= 1:
                     log_array = [fix_emptyvalue, (" %-40s " % page_key), (" %5d " % page_number), (" %-20s " % text_key), (" %30s " % text_read), fix_emptyvalue]
                     _log(chr_countersep.join(log_array))
                 #_______________________________________________________________________________________________________
@@ -1060,37 +1071,86 @@ class pdf2img2txt():
 
 ########################################################################################################################
 ########################################################################################################################
+def _getargs():
+#CZ#parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=120)
+    formatter = lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=50, width=120)
+    formatter = lambda prog: argparse.RawDescriptionHelpFormatter(prog, max_help_position=50, width=120)
+    parser = argparse.ArgumentParser(description=_description, epilog=_epilog, formatter_class=formatter) #, argument_default=not argparse.SUPPRESS)
+    #
+#CZ#pgroup.add_argument('-p'  , '--power'         , help='display a power of a given number'     , type=int           , choices=[1,2,3,4,5])
+#CZ#pgroup.add_argument('-s'  , '--square'        , help='display a square of a given number'    , type=int)
+    parser.add_argument('-d'  , '--debug'         , help='increase output debug'                 , action='count'     , default=0)
+    parser.add_argument('-f'  , '--force'         , help='force operations'                      , action='store_true')
+    parser.add_argument('-v'  , '--verbose'       , help='output verbosity'                      , action='store_true')
+    parser.add_argument('-V'  , '--version'       , help='print version number'                  , action='version'   , version='%(prog)s '+_version)
+    parser.add_argument('-fr' , '--file_read'     , help='file PDF read text'                    , type=str           , required=True)
+    parser.add_argument('-fw' , '--file_write'    , help='file CSV write text'                   , type=str)
+    parser.add_argument('-ft' , '--file_type'     , help='file type PDF mapper '                 , type=str           , choices=def_type_layouts)
+    parser.add_argument('-op' , '--only_page'     , help='convert only page'                     , type=str)
+    parser.add_argument('-mt' , '--marker_text'   , help='marker text coordinates'               , action='store_true')
+    parser.add_argument('-mg' , '--marker_grid'   , help='marker grid image'                     , action='store_true')
+    parser.add_argument('-si' , '--save_image'    , help='save the file image converted'         , action='store_true')
+    parser.add_argument('-pw' , '--path_work'     , help='path to work convert PDF to images'    , type=str           , default=def_path_work)
+    parser.add_argument('-cta', '--cmd_tesseract' , help='CMD for tesseract program if not PATH' , type=str           , default=def_CMD_tesseract)
+    parser.add_argument('-dpi', '--dpi_resolution', help='DPI resolution usage to convert images', type=int           , default=ref_DPI_resolution)
+#CZ#parser.add_argument('name'                    , help='Name')
+#CZ#parser.add_argument('surname'                 , help='Surname')
+    #
+    args = parser.parse_args()
+    #
+    return(args)
+
+########################################################################################################################
+########################################################################################################################
 if __name__ == "__main__":
+    exit = 0
+    args = _getargs()
     #
-    file_name_PDF = str(sys.argv[1]) if len(sys.argv) > 1 else None
-    file_name_CSV = str(sys.argv[2]) if len(sys.argv) > 2 else None
-    file_type_map = str(sys.argv[3]) if len(sys.argv) > 3 else None
-    file_pageonly = str(sys.argv[4]) if len(sys.argv) > 4 else None
+    #file_name_PDF = str(sys.argv[1]) if len(sys.argv) > 1 else None
+    #file_name_CSV = str(sys.argv[2]) if len(sys.argv) > 2 else None
+    #file_type_map = str(sys.argv[3]) if len(sys.argv) > 3 else None
+    #file_pageonly = str(sys.argv[4]) if len(sys.argv) > 4 else None
     #
-    pageonly = []
-    if not (file_pageonly is None):
-        for p in file_pageonly.split(','):
-            pageonly.append(int(p.strip()) - 1)
+    only_pages = []
+    if not (args.only_page is None):
+        for op_comma in args.only_page.split(','):
+            is_dash = False
+            try:
+                (op_i, op_j) = str(op_comma).split('-')
+                for op_dash in range(int(op_i), int(op_j) + 1):
+                    is_dash = True
+                    only_pages.append(op_dash - 1)
+            except:
+                pass
+            finally:
+                if not(is_dash):
+                    only_pages.append(int(op_comma.strip()) - 1)
+        #
+        view_pages = []
+        for x in only_pages:
+            view_pages.append(x + 1)
+        _log("Analize ony pages: %s" % view_pages)
     #
-    p2t = pdf2img2txt(file_name=file_name_PDF, DPI_resolution=600, view=False, force=True, debug=1)
+    p2t = pdf2img2txt(file_name=args.file_read, DPI_resolution=args.dpi_resolution, verbose=args.verbose, force=args.force, debug=args.debug)
     fni = p2t.make_image(page_save=True)
     #
-    pages = range(len(fni)) if file_pageonly is None else pageonly
+    pages = range(len(fni)) if args.only_page is None else only_pages
     for p in pages:
         page = p + 1
         #
-        if not(file_type_map is None) and (file_type_map != chr_file_stdout):
-            if   file_type_map == "zCartellinoPresenze"   : p2t.make_text_crops_page_zCartellinoPresenze(set_page=page)
-            elif file_type_map == "zLULCartellinoPresenze": p2t.make_text_crops_page_zLULCartellinoPresenze(set_page=page)
-            elif file_type_map == "zLULCedolinoPaga_v1"   : p2t.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page)
-            elif file_type_map == "zLULCedolinoPaga_v2"   : p2t.make_text_crops_page_zLULCedolinoPaga_v2(set_page=page)
+        if not(args.file_type is None) and (args.file_type != chr_file_stdout):
+            if   args.file_type == "zCartellinoPresenze"   : p2t.make_text_crops_page_zCartellinoPresenze(set_page=page)
+            elif args.file_type == "zLULCartellinoPresenze": p2t.make_text_crops_page_zLULCartellinoPresenze(set_page=page)
+            elif args.file_type == "zLULCedolinoPaga_v1"   : p2t.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page)
+            elif args.file_type == "zLULCedolinoPaga_v2"   : p2t.make_text_crops_page_zLULCedolinoPaga_v2(set_page=page)
             else:
-                _log("File type %s not configure! :-|" % file_type_map)
+                _log("File type %s not configure! :-|" % args.file_type)
                 sys.exit(1)
-            text_crops = p2t.read_text_coord(file_image=fni[p], page_crops=page, mark_text_coord=True, mark_grid_image=False, save_image=True)
+            text_crops = p2t.read_text_coord(file_image=fni[p], page_crops=page, mark_text_coord=args.marker_text, mark_grid_image=args.marker_grid, save_image=args.save_image)
         else:
-            p2t.read_text_coord_autodetect(file_image=fni[p], page_crops=page, mark_text_coord=True, mark_grid_image=False, save_image=True)
+            p2t.read_text_coord_autodetect(file_image=fni[p], page_crops=page, mark_text_coord=args.marker_text, mark_grid_image=args.marker_grid, save_image=args.save_image)
     #
-    p2t.save_text_crops_page(file_name_csv=file_name_CSV)
+    p2t.save_text_crops_page(file_name_csv=args.file_write)
     #
-    sys.exit(0)
+    sys.exit(exit)

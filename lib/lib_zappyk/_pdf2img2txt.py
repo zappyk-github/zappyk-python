@@ -87,16 +87,16 @@ csv_quotechar      = '"'
 csv_quoting        = csv.QUOTE_MINIMAL
 csv_lineterminator = os.linesep
 
-fix_string_warning ='''\
+fix_string_warning ='''
 +-----------+
 | ATTENTION : %s
 +-----------+\
 '''
 
-set_debug_markup_Test     = False
 set_debug_markup          = False
 set_debug_markup_strregex = 'VoceVariabile_01_Sogg.(IRPEF|INPS)'
 set_debug_markup_strregex = 'VoceVariabile_0(3|4)_Sogg.INPS'
+set_debug_markup_strregex = '\*'
 set_debug_markup_fontsize = 24
 set_debug_markup_fontname = '/usr/share/fonts/google-droid/DroidSansMono.ttf'
 set_debug_markup_fontname = '/usr/share/fonts/dejavu/DejaVuSansMono.ttf'
@@ -104,6 +104,7 @@ set_debug_markup_imagestr = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-str
 set_debug_markup_imgetthr = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-thresh.jpg'
 set_debug_markup_imgetres = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-result.jpg'
 set_debug_markup_delaykey = 10000
+set_debug_markup_Test     = False
 
 ########################################################################################################################
 ########################################################################################################################
@@ -129,6 +130,8 @@ class pdf2img2txt():
         self.path_work = path_work
         self.DPI_resolution = DPI_resolution
         self.CMD_tesseract = CMD_tesseract
+        #
+        self.debug_markup = set_debug_markup
         #
         self.set_layout = file_type
         self.text_crops = def_text_crops
@@ -268,7 +271,8 @@ class pdf2img2txt():
         #
         text_strip = text.strip()
         #
-        if set_debug_markup:
+    #CZ#if set_debug_markup:
+        if self.debug_markup:
             if re.search(set_debug_markup_strregex, text_key):
                 try:
                     file_image_string = set_debug_markup_imagestr % (count_page, count_element)
@@ -1090,13 +1094,14 @@ def _getargs():
     parser.add_argument('-d'  , '--debug'         , help='increase output debug'                 , action='count'     , default=0)
     parser.add_argument('-f'  , '--force'         , help='force operations'                      , action='store_true')
     parser.add_argument('-v'  , '--verbose'       , help='output verbosity'                      , action='store_true')
+    parser.add_argument('-dm' , '--debug_markup'  , help='debug markup'                          , action='store_true')
     parser.add_argument('-V'  , '--version'       , help='print version number'                  , action='version'   , version='%(prog)s '+_version)
     parser.add_argument('-fr' , '--file_read'     , help='file PDF read text'                    , type=str           , required=True)
     parser.add_argument('-fw' , '--file_write'    , help='file CSV write text'                   , type=str)
     parser.add_argument('-ft' , '--file_type'     , help='file type PDF mapper '                 , type=str           , choices=def_type_layouts)
     parser.add_argument('-op' , '--only_page'     , help='convert only page'                     , type=str)
-    parser.add_argument('-mt' , '--marker_text'   , help='marker text coordinates'               , action='store_true')
-    parser.add_argument('-mg' , '--marker_grid'   , help='marker grid image'                     , action='store_true')
+    parser.add_argument('-mt' , '--markup_text'   , help='markup text coordinates'               , action='store_true')
+    parser.add_argument('-mg' , '--markup_grid'   , help='markup grid image'                     , action='store_true')
     parser.add_argument('-si' , '--save_image'    , help='save the file image converted'         , action='store_true')
     parser.add_argument('-pw' , '--path_work'     , help='path to work convert PDF to images'    , type=str           , default=def_path_work)
     parser.add_argument('-cta', '--cmd_tesseract' , help='CMD for tesseract program if not PATH' , type=str           , default=def_CMD_tesseract)
@@ -1113,11 +1118,6 @@ def _getargs():
 if __name__ == "__main__":
     exit = 0
     args = _getargs()
-    #
-    #file_name_PDF = str(sys.argv[1]) if len(sys.argv) > 1 else None
-    #file_name_CSV = str(sys.argv[2]) if len(sys.argv) > 2 else None
-    #file_type_map = str(sys.argv[3]) if len(sys.argv) > 3 else None
-    #file_pageonly = str(sys.argv[4]) if len(sys.argv) > 4 else None
     #
     only_pages = []
     if not (args.only_page is None):
@@ -1142,6 +1142,8 @@ if __name__ == "__main__":
     p2t = pdf2img2txt(file_name=args.file_read, DPI_resolution=args.dpi_resolution, file_type=args.file_type, verbose=args.verbose, force=args.force, debug=args.debug)
     fni = p2t.make_image(page_save=True)
     #
+    p2t.debug_markup = args.debug_markup
+    #
     pages = range(len(fni)) if args.only_page is None else only_pages
     for p in pages:
         page = p + 1
@@ -1155,9 +1157,9 @@ if __name__ == "__main__":
             else:
                 _log("File type %s not configure! :-|" % args.file_type)
                 sys.exit(1)
-            text_crops = p2t.read_text_coord(file_image=fni[p], page_crops=page, mark_text_coord=args.marker_text, mark_grid_image=args.marker_grid, save_image=args.save_image)
+            text_crops = p2t.read_text_coord(file_image=fni[p], page_crops=page, mark_text_coord=args.markup_text, mark_grid_image=args.markup_grid, save_image=args.save_image)
         else:
-            p2t.read_text_coord_autodetect(file_image=fni[p], page_crops=page, mark_text_coord=args.marker_text, mark_grid_image=args.marker_grid, save_image=args.save_image)
+            p2t.read_text_coord_autodetect(file_image=fni[p], page_crops=page, mark_text_coord=args.markup_text, mark_grid_image=args.markup_grid, save_image=args.save_image)
     #
     p2t.save_text_crops_page(file_name_csv=args.file_write)
     #

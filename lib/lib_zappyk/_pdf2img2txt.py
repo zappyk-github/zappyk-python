@@ -24,6 +24,7 @@ def_force   = 0
 def_verbose = 0
 
 def_file_name      = None
+def_file_type      = None
 def_path_work      = None
 ref_DPI_resolution = 600  # DPI>=300 for best quality
 def_DPI_resolution = ref_DPI_resolution
@@ -35,7 +36,7 @@ chr_counterkey = '*'
 chr_counterdot = '·'
 chr_countempty = '_'
 chr_countspace = ' '
-str_legend_log = ";  legend:  %s key,  %s value,  %s empty" % (chr_counterkey, chr_counterdot, chr_countempty)
+str_legend_log = "legend:  %s key,  %s value,  %s empty" % (chr_counterkey, chr_counterdot, chr_countempty)
 def_type_color = (0, 255, 0)
 def_text_color = (0, 0, 255)
 def_text_crops = {}
@@ -114,7 +115,7 @@ def _log(string=fix_emptyvalue, end=chr_newline_OS_Linux):
 class pdf2img2txt():
 
     ####################################################################################################################
-    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, verbose=def_verbose, force=def_force, debug=def_debug):
+    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, file_type=def_file_type, verbose=def_verbose, force=def_force, debug=def_debug):
         #
         if file_name is None:
             raise Exception("Specifica il file PDF da tradurre!")
@@ -129,9 +130,9 @@ class pdf2img2txt():
         self.DPI_resolution = DPI_resolution
         self.CMD_tesseract = CMD_tesseract
         #
+        self.set_layout = file_type
         self.text_crops = def_text_crops
         self.type_check = chr_counterkey
-        self.set_layout = None
         #
         self.totcount_page = 0
         self.totcount_item = 0
@@ -386,6 +387,8 @@ class pdf2img2txt():
                 if not(autodetect):
                     count_element = count_element + 1
                     #
+                    if (count_element == 1):
+                        _log("[ %s ]" % str_legend_log)
                     if (count_element == 1) or (((count_element - 1) % count_elements) == 0):
                         _log("%s " % chr_countersep, end='')
                         if self.debug >= 1:
@@ -422,7 +425,7 @@ class pdf2img2txt():
                         stradd_exception = fix_emptyvalue
                         if self.verbose:
                             stradd_exception = "; not references \"%s\" is found! ([%s]=>%s)" % (text_read_val, text_read, file_image)
-                        string_exception = fix_string_warning % ("file image %s, page %05d, not appear to be specified type %s%s" % (def_IMG_extension, page_number, layout_read, stradd_exception))
+                        string_exception = fix_string_warning % ("file image %s, page %05d, not appear to be specified type \"%s\"%s" % (def_IMG_extension, page_number, layout_read, stradd_exception))
                         if not(autodetect):
                             _log(string_exception)
                             if not(self.force):
@@ -459,7 +462,7 @@ class pdf2img2txt():
                 datetime_done = datetime.now()
                 delta_seconds = (datetime_done - datetime_init).seconds
                 delta_HHMMSS_ = time.strftime('%H:%M:%S', time.gmtime(delta_seconds))
-                _log("Read elements %d in %d seconds (%s)%s" % (count_element, delta_seconds, delta_HHMMSS_, str_legend_log))
+                _log("Read elements %d in %d seconds (%s)" % (count_element, delta_seconds, delta_HHMMSS_))
                 self.totcount_item = self.totcount_item + count_element
             #___________________________________________________________________________________________________________
             if mark_grid_image:
@@ -1132,18 +1135,19 @@ if __name__ == "__main__":
             view_pages.append(x + 1)
         _log("Analize ony pages: %s" % view_pages)
     #
-    p2t = pdf2img2txt(file_name=args.file_read, DPI_resolution=args.dpi_resolution, verbose=args.verbose, force=args.force, debug=args.debug)
+    p2t = pdf2img2txt(file_name=args.file_read, DPI_resolution=args.dpi_resolution, file_type=args.file_type, verbose=args.verbose, force=args.force, debug=args.debug)
     fni = p2t.make_image(page_save=True)
     #
     pages = range(len(fni)) if args.only_page is None else only_pages
     for p in pages:
         page = p + 1
         #
-        if not(args.file_type is None) and (args.file_type != chr_file_stdout):
-            if   args.file_type == "zCartellinoPresenze"   : p2t.make_text_crops_page_zCartellinoPresenze(set_page=page)
-            elif args.file_type == "zLULCartellinoPresenze": p2t.make_text_crops_page_zLULCartellinoPresenze(set_page=page)
-            elif args.file_type == "zLULCedolinoPaga_v1"   : p2t.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page)
-            elif args.file_type == "zLULCedolinoPaga_v2"   : p2t.make_text_crops_page_zLULCedolinoPaga_v2(set_page=page)
+    #CZ#if not(args.file_type is None) and (args.file_type != chr_file_stdout):
+        if not(args.file_type is None):
+            if   args.file_type == def_type_layouts[0]: p2t.make_text_crops_page_zCartellinoPresenze(set_page=page)
+            elif args.file_type == def_type_layouts[1]: p2t.make_text_crops_page_zLULCartellinoPresenze(set_page=page)
+            elif args.file_type == def_type_layouts[2]: p2t.make_text_crops_page_zLULCedolinoPaga_v1(set_page=page)
+            elif args.file_type == def_type_layouts[3]: p2t.make_text_crops_page_zLULCedolinoPaga_v2(set_page=page)
             else:
                 _log("File type %s not configure! :-|" % args.file_type)
                 sys.exit(1)

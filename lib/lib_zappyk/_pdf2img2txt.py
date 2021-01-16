@@ -36,7 +36,7 @@ chr_counterkey = '*'
 chr_counterdot = '·'
 chr_countempty = '_'
 chr_countspace = ' '
-str_legend_log = "legend:  %s key,  %s value,  %s empty" % (chr_counterkey, chr_counterdot, chr_countempty)
+str_legend_log = "legend:     %s key     %s value     %s empty" % (chr_counterkey, chr_counterdot, chr_countempty)
 def_type_color = (0, 255, 0)
 def_text_color = (0, 0, 255)
 def_text_crops = {}
@@ -49,8 +49,8 @@ def_name_markup   = '___markup'
 def_type_layouts  = ['zCartellinoPresenze', 'zLULCartellinoPresenze', 'zLULCedolinoPaga_v1', 'zLULCedolinoPaga_v2']
 
 def_CMD_tesseract       = None
-def_tesseract_lang      = 'ita'
 def_tesseract_lang      = 'ita+eng'
+def_tesseract_lang      = 'ita'
 def_tesseract_conf_set  = '--psm 3'
 def_tesseract_conf_base = '--psm 6'
 def_tesseract_conf_rwal = '--psm 13'
@@ -100,9 +100,9 @@ set_debug_markup_strregex = '\*'
 set_debug_markup_fontsize = 24
 set_debug_markup_fontname = '/usr/share/fonts/google-droid/DroidSansMono.ttf'
 set_debug_markup_fontname = '/usr/share/fonts/dejavu/DejaVuSansMono.ttf'
-set_debug_markup_imagestr = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-string.jpg'
-set_debug_markup_imgetthr = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-thresh.jpg'
-set_debug_markup_imgetres = '/tmp/pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-result.jpg'
+set_debug_markup_imagestr = 'pdf2img2txt-debug-markup-image-P%05d_E%05d-string.jpg'
+set_debug_markup_imgetthr = 'pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-thresh.jpg'
+set_debug_markup_imgetres = 'pdf2img2txt-debug-markup-image-P%05d_E%05d-getval-result.jpg'
 set_debug_markup_delaykey = 10000
 set_debug_markup_Test     = False
 
@@ -275,9 +275,9 @@ class pdf2img2txt():
         if self.debug_markup:
             if re.search(set_debug_markup_strregex, text_key):
                 try:
-                    file_image_string = set_debug_markup_imagestr % (count_page, count_element)
-                    file_image_thresh = set_debug_markup_imgetthr % (count_page, count_element)
-                    file_image_result = set_debug_markup_imgetres % (count_page, count_element)
+                    file_image_string = os.path.sep.join(self.path_work, set_debug_markup_imagestr % (count_page, count_element))
+                    file_image_thresh = os.path.sep.join(self.path_work, set_debug_markup_imgetthr % (count_page, count_element))
+                    file_image_result = os.path.sep.join(self.path_work, set_debug_markup_imgetres % (count_page, count_element))
                     #
                     # Convert to images
                     text_merge = "[%s] %s" % (text_strip, text_key)
@@ -286,10 +286,13 @@ class pdf2img2txt():
                     cv2.imwrite(file_image_thresh, thresh)
                     cv2.imwrite(file_image_result, result)
                     #
-                    cv2.imshow('markup:', text_image)
-                    cv2.imshow('thresh:', thresh)
-                    cv2.imshow('result:', result)
-                    cv2.waitKey(delay=set_debug_markup_delaykey)
+                    try:
+                        cv2.imshow('markup:', text_image)
+                        cv2.imshow('thresh:', thresh)
+                        cv2.imshow('result:', result)
+                        cv2.waitKey(delay=set_debug_markup_delaykey)
+                    except:
+                        _log("Error on debug markup activate when show images!")
                 except:
                     _log("Error on debug markup activate!")
         #

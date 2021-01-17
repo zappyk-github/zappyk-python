@@ -400,6 +400,7 @@ class pdf2img2txt():
                 if not(autodetect):
                     if (count_element == 1):
                         _log("[ %s ]" % str_legend_log)
+                    #
                     if (count_element == 1) or (((count_element - 1) % count_elements) == 0):
                         _log("%s " % chr_countersep, end='')
                         if self.debug >= 1:
@@ -436,6 +437,7 @@ class pdf2img2txt():
                         stradd_exception = fix_emptyvalue
                         if self.verbose:
                             stradd_exception = "; not references \"%s\" is found! ([%s]=>%s)" % (text_read_val, text_read, file_image)
+                        #
                         string_exception = fix_string_warning % ("file image %s, page %05d, not appear to be specified type \"%s\"%s" % (def_IMG_extension, page_number, layout_read, stradd_exception))
                         if not(autodetect):
                             _log(string_exception)
@@ -443,6 +445,7 @@ class pdf2img2txt():
                                 return
                         else:
                             raise Exception(string_exception)
+                #
                 if (text_read_val == fix_emptyvalue) and (text_read != fix_emptyvalue):
                     text_crops[page_number]['Keys'][text_key]['TextRead'] = text_read
                 #

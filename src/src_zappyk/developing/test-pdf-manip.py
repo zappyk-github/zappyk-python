@@ -16,8 +16,8 @@ def str2num(string):
 #=======================================================================================================================
 print('Init:')
 #=======================================================================================================================
-file_pdf_input  = 'resources/pdf-simple.pdf'
-file_pdf_output = 'resources/pdf-simple-out.pdf'
+file_pdf_input  = 'resources/201912_000192_LUL.pdf'
+file_pdf_output = 'resources/201912_000192_LUL_CROP.pdf'
 #
 debug = True
 debug = False

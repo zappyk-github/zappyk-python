@@ -87,7 +87,8 @@ csv_quotechar      = '"'
 csv_quoting        = csv.QUOTE_MINIMAL
 csv_lineterminator = os.linesep
 
-fix_string_warning ='''
+fix_string_warning = \
+'''\
 +-----------+
 | ATTENTION : %s
 +-----------+\
@@ -222,42 +223,49 @@ class pdf2img2txt():
 
     ####################################################################################################################
     def _image_markup_debug(self, text_merge, file_image_string):
+        text_image = None
         #
-        # import numpy
-        # text_nparr = numpy.fromstring(text_merge, numpy.uint8)
-        # text_image = numpy.fromstring(text_merge, numpy.uint8)  # .reshape(h, w, nb_planes)
-        # text_image = cv2.imdecode(text_nparr, cv2.IMREAD_COLOR)
-        # text_image = numpy.fromstring(text_merge, numpy.uint8).reshape()
-        # text_image = numpy.fromstring('1 2', dtype=int, sep=' ')
-        # textbase64 = base64.b64decode(text_merge)
-        # textbase64 = text_merge
-        # text_numpy = numpy.frombuffer(textbase64, dtype=numpy.uint8)
-        # text_image = cv2.imdecode(text_numpy, flags=1)
-        # return(text_image)
-        #________________________________________________________________________________
-        #
-        from PIL import Image
-        from PIL import ImageDraw
-        from PIL import ImageFont
-        fontsize = set_debug_markup_fontsize
-        fontname = set_debug_markup_fontname
-        colorText = 'black'
-        colorOutline = 'red'
-        colorBackground = 'white'
-        #
-        fontImg = ImageFont.truetype(fontname, fontsize)
-    #CZ#testImg = Image.new('RGB', (1, 1))
-    #CZ#testDraw = ImageDraw.Draw(testImg)
-    #CZ#(width, height) = testDraw.textsize(text_merge, fontImg)
-        #
-        width = 1000
-        height = 100
-        image = Image.new('RGB', (width + 1, height + 1), colorBackground)
-        image_draw = ImageDraw.Draw(image)
-        image_draw.text((2, height / 2), text_merge, fill=colorText, font=fontImg)
-        image_draw.rectangle((0, 0, width, height), outline=colorOutline)
-        image.save(file_image_string)
-        text_image = cv2.imread(file_image_string, 0)
+        try:
+            #
+            # import numpy
+            # text_nparr = numpy.fromstring(text_merge, numpy.uint8)
+            # text_image = numpy.fromstring(text_merge, numpy.uint8)  # .reshape(h, w, nb_planes)
+            # text_image = cv2.imdecode(text_nparr, cv2.IMREAD_COLOR)
+            # text_image = numpy.fromstring(text_merge, numpy.uint8).reshape()
+            # text_image = numpy.fromstring('1 2', dtype=int, sep=' ')
+            # textbase64 = base64.b64decode(text_merge)
+            # textbase64 = text_merge
+            # text_numpy = numpy.frombuffer(textbase64, dtype=numpy.uint8)
+            # text_image = cv2.imdecode(text_numpy, flags=1)
+            # return(text_image)
+            #________________________________________________________________________________
+            #
+            from PIL import Image
+            from PIL import ImageDraw
+            from PIL import ImageFont
+            #
+            fontsize = set_debug_markup_fontsize
+            fontname = set_debug_markup_fontname
+            colorText = 'black'
+            colorOutline = 'red'
+            colorBackground = 'white'
+            #
+            fontImg = ImageFont.truetype(fontname, fontsize)
+        #CZ#testImg = Image.new('RGB', (1, 1))
+        #CZ#testDraw = ImageDraw.Draw(testImg)
+        #CZ#(width, height) = testDraw.textsize(text_merge, fontImg)
+            #
+            width = 1000
+            height = 100
+            image = Image.new('RGB', (width + 1, height + 1), colorBackground)
+            image_draw = ImageDraw.Draw(image)
+            image_draw.text((2, height / 2), text_merge, fill=colorText, font=fontImg)
+            image_draw.rectangle((0, 0, width, height), outline=colorOutline)
+            image.save(file_image_string)
+            #
+            text_image = cv2.imread(file_image_string, 0)
+        except:
+            _log("* Error on debug markup activate when create images!")
         #
         return(text_image)
 
@@ -274,27 +282,24 @@ class pdf2img2txt():
     #CZ#if set_debug_markup:
         if self.debug_markup:
             if re.search(set_debug_markup_strregex, text_key):
+                file_image_string = os.path.sep.join((self.path_work, set_debug_markup_imagestr % (count_page, count_element)))
+                file_image_thresh = os.path.sep.join((self.path_work, set_debug_markup_imgetthr % (count_page, count_element)))
+                file_image_result = os.path.sep.join((self.path_work, set_debug_markup_imgetres % (count_page, count_element)))
+                #
+                # Convert to images
+                text_merge = "[%s] %s" % (text_strip, text_key)
+                text_image = self._image_markup_debug(text_merge, file_image_string)
+                #
+                cv2.imwrite(file_image_thresh, thresh)
+                cv2.imwrite(file_image_result, result)
+                #
                 try:
-                    file_image_string = os.path.sep.join(self.path_work, set_debug_markup_imagestr % (count_page, count_element))
-                    file_image_thresh = os.path.sep.join(self.path_work, set_debug_markup_imgetthr % (count_page, count_element))
-                    file_image_result = os.path.sep.join(self.path_work, set_debug_markup_imgetres % (count_page, count_element))
-                    #
-                    # Convert to images
-                    text_merge = "[%s] %s" % (text_strip, text_key)
-                    text_image = self._image_markup_debug(text_merge, file_image_string)
-                    #
-                    cv2.imwrite(file_image_thresh, thresh)
-                    cv2.imwrite(file_image_result, result)
-                    #
-                    try:
-                        cv2.imshow('markup:', text_image)
-                        cv2.imshow('thresh:', thresh)
-                        cv2.imshow('result:', result)
-                        cv2.waitKey(delay=set_debug_markup_delaykey)
-                    except:
-                        _log("Error on debug markup activate when show images!")
+                    cv2.imshow('markup:', text_image)
+                    cv2.imshow('thresh:', thresh)
+                    cv2.imshow('result:', result)
+                    cv2.waitKey(delay=set_debug_markup_delaykey)
                 except:
-                    _log("Error on debug markup activate!")
+                    _log("* Error on debug markup activate when show images!")
         #
         return(text_strip)
 
@@ -397,6 +402,27 @@ class pdf2img2txt():
                 text_read = text_read.replace(chr_newline_CarriageReturn, csv_newline_CR) \
                                      .replace(chr_newline_LineFeed, csv_newline_LF)
                 #_______________________________________________________________________________________________________
+                exception_flag_raise  = False
+                exception_flag_return = False
+                string_exception = None
+                text_read_val = text_crops[page_number]['Keys'][text_key]['TextRead']
+                if text_key == self.type_check:
+                    if (text_read_val != text_key) and (text_read_val != text_read):
+                        stradd_exception = fix_emptyvalue
+                        if self.verbose:
+                            stradd_exception = "; not references \"%s\" is found! ([%s]=>%s)" % (
+                            text_read_val, text_read, file_image)
+                        #
+                        string_exception = fix_string_warning % ("file image %s, page %05d, not appear to be specified type \"%s\"%s" % (def_IMG_extension, page_number, layout_read, stradd_exception))
+                        if not (autodetect):
+                            _log(string_exception)
+                            if not (self.force):
+                                exception_flag_return = True
+                            #CZ#return
+                        else:
+                            exception_flag_raise = True
+                        #CZ#raise Exception(string_exception)
+                #_______________________________________________________________________________________________________
                 if not(autodetect):
                     if (count_element == 1):
                         _log("[ %s ]" % str_legend_log)
@@ -431,6 +457,7 @@ class pdf2img2txt():
                     if (count_element % count_elements) == 0:
                         _log(" %s= %5s elements read" % (chr_countersep, count_element))
                 #_______________________________________________________________________________________________________
+                '''
                 text_read_val = text_crops[page_number]['Keys'][text_key]['TextRead']
                 if text_key == self.type_check:
                     if (text_read_val != text_key) and (text_read_val != text_read):
@@ -445,6 +472,11 @@ class pdf2img2txt():
                                 return
                         else:
                             raise Exception(string_exception)
+                '''
+                if exception_flag_return:
+                    return
+                if exception_flag_raise:
+                    raise Exception(string_exception)
                 #
                 if (text_read_val == fix_emptyvalue) and (text_read != fix_emptyvalue):
                     text_crops[page_number]['Keys'][text_key]['TextRead'] = text_read

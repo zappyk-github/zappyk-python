@@ -48,9 +48,11 @@ def_name_work     = '___pdf2img2txt'
 def_name_markup   = '___markup'
 def_type_layouts  = ['zCartellinoPresenze', 'zLULCartellinoPresenze', 'zLULCedolinoPaga_v1', 'zLULCedolinoPaga_v2']
 
+def_DIR_poppler         = None
+
 def_CMD_tesseract       = None
-def_tesseract_lang      = 'ita+eng'
 def_tesseract_lang      = 'ita'
+def_tesseract_lang      = 'ita+eng'
 def_tesseract_conf_set  = '--psm 3'
 def_tesseract_conf_base = '--psm 6'
 def_tesseract_conf_rwal = '--psm 13'
@@ -109,15 +111,19 @@ set_debug_markup_Test     = False
 
 ########################################################################################################################
 ########################################################################################################################
-def _log(string=fix_emptyvalue, end=chr_newline_OS_Linux):
-    sys.stdout.write(string + end)
+def _log(string=fix_emptyvalue, end=None):
+    if end is None:
+        end = chr_newline_OS_Linux
+        if os.name == 'nt':
+            end = chr_newline_OS_Windows
+    sys.stdout.write(str(string) + end)
     sys.stdout.flush()
 ########################################################################################################################
 ########################################################################################################################
 class pdf2img2txt():
 
     ####################################################################################################################
-    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, file_type=def_file_type, verbose=def_verbose, force=def_force, debug=def_debug):
+    def __init__(self, file_name=def_file_name, path_work=def_path_work, DPI_resolution=def_DPI_resolution, CMD_tesseract=def_CMD_tesseract, DIR_poppler=def_DIR_poppler, file_type=def_file_type, verbose=def_verbose, force=def_force, debug=def_debug):
         #
         if file_name is None:
             raise Exception("Specifica il file PDF da tradurre!")
@@ -131,6 +137,7 @@ class pdf2img2txt():
         self.path_work = path_work
         self.DPI_resolution = DPI_resolution
         self.CMD_tesseract = CMD_tesseract
+        self.DIR_poppler = DIR_poppler
         #
         self.debug_markup = set_debug_markup
         #
@@ -332,7 +339,7 @@ class pdf2img2txt():
         text = str(pytesseract.image_to_string(thresh, lang=tesseract_lang, config=tesseract_conf, nice=0, timeout=0))
     #CZ#text = str(pytesseract.image_to_pdf_or_hocr(thresh, lang=tesseract_lang, config=tesseract_conf, nice=0, timeout=0))
         #
-        return (text, thresh, result)
+        return(text, thresh, result)
 
     ####################################################################################################################
     def _make_file_image(self, page_number=0, more_detail=fix_emptyvalue):
@@ -341,12 +348,33 @@ class pdf2img2txt():
         return(file_image)
 
     ####################################################################################################################
-    def make_image(self, page_save=True):
+    def _convert_from_path(self, only_pages=[]):
+        file_name = self.file_name
+        dpi = self.DPI_resolution
+        poppler_path = self.DIR_poppler
+        first_page = None
+        last_page = None
+        #
+        # TODO 1: convert to images only pages selected
+        # TODO 2: create flag for not convert to images
+        '''
+        if only_pages != []:
+            only_pages_sort = list(set(only_pages))
+            only_pages_fist = 0
+            only_pages_last = len(only_pages_sort) - 1
+            first_page = only_pages_sort[only_pages_fist] + 1
+            last_page  = only_pages_sort[only_pages_last] + 1
+        '''
+        pages = convert_from_path(file_name, dpi=dpi, poppler_path=poppler_path, first_page=first_page, last_page=last_page)
+        return(pages)
+
+    ####################################################################################################################
+    def make_image(self, page_save=True, only_pages=None):
         #
         file_name_image = []
         #
         _log("Convert file PDF into image, using %s DPI... (%s)" % (self.DPI_resolution, self.file_name))
-        pages = convert_from_path(self.file_name, self.DPI_resolution)
+        pages = self._convert_from_path(only_pages=only_pages)
         #
         page_number = 1
         for page in pages:
@@ -414,31 +442,32 @@ class pdf2img2txt():
                             text_read_val, text_read, file_image)
                         #
                         string_exception = fix_string_warning % ("file image %s, page %05d, not appear to be specified type \"%s\"%s" % (def_IMG_extension, page_number, layout_read, stradd_exception))
-                        if not (autodetect):
+                        if not(autodetect):
                             _log(string_exception)
-                            if not (self.force):
+                            if not(self.force):
+                                #return
                                 exception_flag_return = True
-                            #CZ#return
                         else:
+                            #raise Exception(string_exception)
                             exception_flag_raise = True
-                        #CZ#raise Exception(string_exception)
                 #_______________________________________________________________________________________________________
-                if not(autodetect):
-                    if (count_element == 1):
-                        _log("[ %s ]" % str_legend_log)
-                    #
-                    if (count_element == 1) or (((count_element - 1) % count_elements) == 0):
-                        _log("%s " % chr_countersep, end='')
-                        if self.debug >= 1:
-                            _log()
-                    #
-                    if (text_key == self.type_check) or match_key_regex:
-                        _log(chr_counterkey, end='')
-                    else:
-                        if text_read == fix_emptyvalue:
-                            _log(chr_countempty, end='')
+                if not(exception_flag_return or exception_flag_raise):
+                    if not(autodetect):
+                        if (count_element == 1):
+                            _log("[ %s ]" % str_legend_log)
+                        #
+                        if (count_element == 1) or (((count_element - 1) % count_elements) == 0):
+                            _log("%s " % chr_countersep, end='')
+                            if self.debug >= 1:
+                                _log()
+                        #
+                        if (text_key == self.type_check) or match_key_regex:
+                            _log(chr_counterkey, end='')
                         else:
-                            _log(chr_counterdot, end='')
+                            if text_read == fix_emptyvalue:
+                                _log(chr_countempty, end='')
+                            else:
+                                _log(chr_counterdot, end='')
                 #_______________________________________________________________________________________________________
                 if self.debug >= 1:
                     if self.debug >= 2:
@@ -474,9 +503,11 @@ class pdf2img2txt():
                             raise Exception(string_exception)
                 '''
                 if exception_flag_return:
-                    return
+                    if not(self.force):
+                        return
                 if exception_flag_raise:
                     raise Exception(string_exception)
+                #'''
                 #
                 if (text_read_val == fix_emptyvalue) and (text_read != fix_emptyvalue):
                     text_crops[page_number]['Keys'][text_key]['TextRead'] = text_read
@@ -1178,7 +1209,8 @@ if __name__ == "__main__":
         _log("Analize ony pages: %s" % view_pages)
     #
     p2t = pdf2img2txt(file_name=args.file_read, DPI_resolution=args.dpi_resolution, file_type=args.file_type, verbose=args.verbose, force=args.force, debug=args.debug)
-    fni = p2t.make_image(page_save=True)
+    fni = p2t.make_image(page_save=True, only_pages=only_pages)
+    print("fni: %s" % fni)
     #
     p2t.debug_markup = args.debug_markup
     #

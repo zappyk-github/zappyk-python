@@ -14,21 +14,39 @@ requestHeaders = None
 tokenExpiry = None
 queryResults = None
 graphURI = 'https://graph.microsoft.com'
+authorityURI = 'https://login.microsoftonline.com'
 
 def msgraph_auth():
     global accessToken
     global requestHeaders
     global tokenExpiry
     tenantID = '8880a91d-ce48-4314-9921-359b8a3d83a3' # P&S - Payroll Services
-    authority = 'https://login.microsoftonline.com/' + tenantID
     clientID = 'f2313123-255b-4d30-bd85-77529b9d887d' # PeS connector, expired 17/04/2023
     clientSecret = 'ZAtz1zzhK-0-nGSr.CDD5qBOy1-82OcU43'
-    scope = ['https://graph.microsoft.com/.default']
+    authority = authorityURI + '/' + tenantID
+    scope = [graphURI +'/.default']
 
-    app = msal.ConfidentialClientApplication(clientID, authority=authority, client_credential = clientSecret)
+    app = msal.ConfidentialClientApplication(clientID, authority=authority, client_credential=clientSecret)
+    #app = msal.ClientApplication(clientID, authority=authority, client_credential=clientSecret)
 
+    result = None
+    # Firstly, check the cache to see if this end user has signed in before
+    accounts = app.get_accounts(username="pes0zap@payroll.it")
+    if accounts:
+        result = app.acquire_token_silent(scope, account=accounts[0])
+    print(result)
+    if not result:
+        print("Read input:")
+        code = input()
+        result = app.acquire_token_by_auth_code_flow(code, scopes=scope)
+    print(result)
+    print("-----------------------------------")
     try:
-        accessToken = app.acquire_token_silent(scope, account=None)
+        account = app.get_accounts(username='pes0zap@payroll.it')
+        #account = app.get_accounts()
+        print(account)
+        #accessToken = app.acquire_token_silent(scope, account=None)
+        accessToken = app.acquire_token_silent(scopes=scope, account=account)
         if not accessToken:
             try:
                 accessToken = app.acquire_token_for_client(scopes=scope)
@@ -52,6 +70,7 @@ def msgraph_auth():
         print('Token Expires at: ' + str(tokenExpiry))
         return
     except Exception as err:
+        print("Error:")
         print(err)
 
 def msgraph_request(resource,requestHeaders):

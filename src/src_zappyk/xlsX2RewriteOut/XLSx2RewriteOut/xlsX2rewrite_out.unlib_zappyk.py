@@ -231,7 +231,9 @@ def split_cell_story(string):
 
     coordinate_XY = None
     if len(coordinate) == 1:
-        from openpyxl.utils import coordinate_from_string, column_index_from_string
+    #CZ#from openpyxl.utils import coordinate_from_string, column_index_from_string
+        from openpyxl.utils.cell import coordinate_from_string
+        from openpyxl.utils      import column_index_from_string
         x_y = coordinate_from_string(coordinate[0])      # returns ('A',4)
         col = column_index_from_string(x_y[0])  # returns 1
         row = x_y[1]

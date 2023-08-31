@@ -55,9 +55,11 @@ def main():
             fileZipOutR = os.path.join(thisPath, thisFileOut)
         
     try:
-        pathZipWork = sys.argv[3]
-    except:
         pathZipName = os.path.basename(os.path.splitext(fileZipName)[0])
+        pathZipBase = sys.argv[3]
+        pathZipBase = os.path.join(pathZipBase, os.path.basename(os.path.splitext(pathlib.Path(__file__))[0]))
+        pathZipWork = os.path.join(pathZipBase, os.path.basename(os.path.splitext(fileZipName)[0]))
+    except:
         pathZipBase = os.path.join(pathlib.Path.home().drive, os.sep, tempPath, os.path.basename(os.path.splitext(pathlib.Path(__file__))[0]))
         pathZipWork = os.path.join(pathZipBase, os.path.basename(os.path.splitext(fileZipName)[0]))
 

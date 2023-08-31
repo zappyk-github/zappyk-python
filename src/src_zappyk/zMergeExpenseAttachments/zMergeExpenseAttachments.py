@@ -11,7 +11,7 @@ from xml.dom import minidom
 from PIL     import Image
 from pypdf   import PdfMerger
 
-_debug = 0
+_debug = 4
 _devel = True
 
 fileOutRepo = "Attachments"
@@ -46,7 +46,7 @@ def main():
             fileZipName = os.path.join(thisPath, thisFileIn)
     
     try:
-        fileZipOutR = sys.argv[1]
+        fileZipOutR = sys.argv[2]
     except:
         if not(_devel):
             print("Specifica il nome ZIP in output")
@@ -55,7 +55,7 @@ def main():
             fileZipOutR = os.path.join(thisPath, thisFileOut)
         
     try:
-        pathZipWork = sys.argv[2]
+        pathZipWork = sys.argv[3]
     except:
         pathZipName = os.path.basename(os.path.splitext(fileZipName)[0])
         pathZipBase = os.path.join(pathlib.Path.home().drive, os.sep, tempPath, os.path.basename(os.path.splitext(pathlib.Path(__file__))[0]))

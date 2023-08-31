@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+__author__ = 'pes0zap'
 
 # Importing modules:
 import os
@@ -6,25 +8,31 @@ import pathlib
 import shutil
 from zipfile import ZipFile
 from xml.dom import minidom
-from PIL import Image
-from pypdf import PdfMerger
+from PIL     import Image
+from pypdf   import PdfMerger
 
+_debug = 0
 _devel = True
-_debug = 2
+
+fileOutRepo = "Attachments"
 
 fileZipName = None
+fileZipOutR = None
+pathZipName = None
 pathZipBase = None
 pathZipWork = None
+listFileOut = {}
 
 """
 defined function main
 """
 def main():
-    global fileZipName, pathZipBase, pathZipWork
+    global fileZipName, fileZipOutR, pathZipName, pathZipBase, pathZipWork
     
-    thisFile = 'Note spese . expertise da 34 a 39.zip'
-    thisPath = pathlib.Path(__file__).parent.resolve()
-    tempPath = 'tmp'
+    thisFileIn  = os.path.join("Note spese . expertise da 34 a 39.zip")
+    thisFileOut = os.path.join(fileOutRepo+".zip")
+    thisPath    = os.path.join(pathlib.Path(__file__).parent.resolve(), "resources")
+    tempPath    = "tmp"
     
     print("Init:")
     
@@ -32,27 +40,45 @@ def main():
         fileZipName = sys.argv[1]
     except:
         if not(_devel):
-            print("Specifica un file ZIP")
+            print("Specifica un file ZIP in input")
             exit(1)
         else:
-            fileZipName = os.path.join(thisPath, thisFile)
+            fileZipName = os.path.join(thisPath, thisFileIn)
+    
+    try:
+        fileZipOutR = sys.argv[1]
+    except:
+        if not(_devel):
+            print("Specifica il nome ZIP in output")
+            exit(1)
+        else:
+            fileZipOutR = os.path.join(thisPath, thisFileOut)
         
     try:
         pathZipWork = sys.argv[2]
     except:
+        pathZipName = os.path.basename(os.path.splitext(fileZipName)[0])
         pathZipBase = os.path.join(pathlib.Path.home().drive, os.sep, tempPath, os.path.basename(os.path.splitext(pathlib.Path(__file__))[0]))
         pathZipWork = os.path.join(pathZipBase, os.path.basename(os.path.splitext(fileZipName)[0]))
 
     if _debug >= 1:
-        print("· this direc.: %s" % str(thisPath))
+        print("· d.resources: %s" % str(thisPath))
         print("· fileZipName: %s" % fileZipName)
+        print("· fileZipOutR: %s" % fileZipOutR)
+        print("· pathZipName: %s" % pathZipName)
         print("· pathZipBase: %s" % pathZipBase)
         print("· pathZipWork: %s" % pathZipWork)
+        
+    # Check to see if the ZIP file is created
+    if not(os.path.exists(pathZipBase)):
+        print("ATTENZIONE: directory temporanea %s non esiste!" % pathZipBase)
+        exit(1)
     #exit(0)
     
     print("Process...")
     extractZip()
     readFileXml()
+    createZipOut()
 
     print("Done.")
     
@@ -82,6 +108,8 @@ def extractZip():
 defined function read file extract
 """
 def readFileXml():
+    global listFileOut
+    
     # Iterate directory
     print("Read files into: %s" % pathZipWork)
     for fileItem in os.listdir(pathZipWork):
@@ -143,16 +171,26 @@ def readFileXml():
                 if fileXmlTagName == "NRNOTASPESE" : _NRNOTASPESE = fileXmlTagValue
             if _debug >= 3:
                 print()
-                
-            # Create name for file attachements
-            keysNameAttached = '_'.join([_ANNONS+_MESE.rjust(2, '0'), _IDCOMPANY, _IDEMPLOY, _CFISC, _NRNOTASPESE, _NOMINATIVO])
-            keysFileAttached = os.path.join(pathZipWork, keysNameAttached) + '.pdf'
-            baseNameAttached = '_'.join([_BaseName, keysNameAttached])
-            baseFileAttached = os.path.join(pathZipWork, baseNameAttached) + '.pdf'
-            print(" · base %s" % baseFileAttached)
-            print(" · keys %s" % keysFileAttached)
-            
-            convertImage2PDF2Merge(fileNameLnk, baseFileAttached, keysFileAttached)
+
+            try:
+                # Create name for file attachements
+                keysNameAttached = '_'.join([fileOutRepo, _ANNONS+_MESE.rjust(2, '0'), _IDCOMPANY, _IDEMPLOY, _CFISC, _NRNOTASPESE, _NOMINATIVO])
+                keysFileAttached = os.path.join(pathZipWork, keysNameAttached)+'.pdf'
+                baseNameAttached = '_'.join([_BaseName, keysNameAttached])
+                baseFileAttached = os.path.join(pathZipWork, baseNameAttached)+'.pdf'
+                if _debug >= 4:
+                    print(" · base %s" % baseFileAttached)
+                    print(" · keys %s" % keysFileAttached)
+                    
+                try:
+                    convertImage2PDF2Merge(fileNameLnk, baseFileAttached, keysFileAttached)
+                    listFileOut[keysFileAttached] = 1
+                except:
+                    print("ATTENZIONE: non è stato possibile convertire gli allegati in file PDF!")
+                    print("ATTENZIONE: l'allegato è ignortato: %s" % _BaseName)
+            except:
+                print("ATTENZIONE: non è stato possibile ricavare tutti i valori di raggruppamento!")
+                print("ATTENZIONE: l'allegato è ignortato: %s" % _BaseName)
 
         else:
             if _debug >= 3:
@@ -172,7 +210,7 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
         
     else:
         # Open file image
-        print("Open file image: %s" % fileImage)
+        print("Convert attach: %s" % fileImage)
         fileImage = Image.open(fileImage)
         
         # Write file PDF
@@ -181,7 +219,7 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
         image.save(filePDF)
 
     if os.path.isfile(mergePDF):
-        print("Merge file PDF...")
+        print("Merge file PDF (+ add)")
         pdfFiles = [mergePDF, filePDF]
         pdfMerger = PdfMerger()
         for pdf in pdfFiles:
@@ -191,6 +229,26 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
     else:
         print("Merge file PDF (first)")
         shutil.copy(filePDF, mergePDF)
+
+"""
+defined function read file extract
+"""
+def createZipOut():
+    try:
+        # Create ZIP output file
+        print("Create file ZIP output: %s" % fileZipOutR)
+        with ZipFile(fileZipOutR, 'w') as zf:
+            for file in listFileOut:
+                print(" · add PDF file: %s" % file)
+                zf.write(file, arcname=os.path.join(pathZipName, os.path.basename(file)))
+            zf.close
+
+        # Show content ZIP output file
+        print("ZIP out file contents:")
+        with ZipFile(fileZipOutR, mode="r") as zf:
+            zf.printdir()
+    except:
+        print("ZIP out file not created!")
 
 # Entry point
 if __name__ == '__main__':

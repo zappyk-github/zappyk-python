@@ -72,8 +72,9 @@ def main():
         print("· pathZipWork: %s" % pathZipWork)
         
     # Check to see if the ZIP file is created
-    if not(os.path.exists(pathZipBase)):
-        print("ATTENZIONE: directory temporanea %s non esiste!" % pathZipBase)
+    pathTmpBase = os.path.dirname(pathZipBase)
+    if not(os.path.exists(pathTmpBase)):
+        print("ATTENZIONE: directory temporanea %s non esiste!" % pathTmpBase)
         exit(1)
     #exit(0)
     

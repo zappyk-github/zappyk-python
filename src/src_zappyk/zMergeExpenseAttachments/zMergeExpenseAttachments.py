@@ -204,31 +204,44 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
     fileImageExt = os.path.splitext(fileImage)[1]
     
     if fileImageExt.lower() == '.pdf':
-        # Copy file PDF
-        print("Copy file PDF: %s" % filePDF)
-        shutil.copy(fileImage, filePDF)
+        try:
+            # Copy file PDF
+            print("Copy file PDF: %s" % filePDF)
+            shutil.copy(fileImage, filePDF)
+        except:
+            raise ValueError("ATTENZIONE: copia file PDF non riuscita!")
         
     else:
-        # Open file image
-        print("Convert attach: %s" % fileImage)
-        fileImage = Image.open(fileImage)
-        
-        # Write file PDF
-        print("Write file PDF: %s" % filePDF)
-        image = fileImage.convert('RGB')
-        image.save(filePDF)
+        try:
+            # Open file image
+            print("Convert attach: %s" % fileImage)
+            fileImage = Image.open(fileImage)
+            
+            # Write file PDF
+            print("Write file PDF: %s" % filePDF)
+            image = fileImage.convert('RGB')
+            image.save(filePDF)
+        except:
+            raise ValueError("ATTENZIONE: converzione alleago in PDF non riuscita!")
 
     if os.path.isfile(mergePDF):
-        print("Merge file PDF (+ add)")
-        pdfFiles = [mergePDF, filePDF]
-        pdfMerger = PdfMerger()
-        for pdf in pdfFiles:
-            pdfMerger.append(pdf)
-        pdfMerger.write(mergePDF)
-        pdfMerger.close()
+        try:
+            print("Merge file PDF (+ add)... ", end="")
+            pdfFiles = [mergePDF, filePDF]
+            pdfMerger = PdfMerger()
+            for pdf in pdfFiles:
+                pdfMerger.append(pdf)
+            pdfMerger.write(mergePDF)
+            pdfMerger.close()
+            print("ok")
+        except:
+            raise ValueError("ATTENZIONE: unione file PDF (+ add) non riuscita!")
     else:
-        print("Merge file PDF (first)")
-        shutil.copy(filePDF, mergePDF)
+        try:
+            print("Merge file PDF (first)")
+            shutil.copy(filePDF, mergePDF)
+        except:
+            raise ValueError("ATTENZIONE: copia file PDF (first) non riuscita!")
 
 """
 defined function read file extract

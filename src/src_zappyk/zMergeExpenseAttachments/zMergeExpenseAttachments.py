@@ -14,27 +14,25 @@ from pypdf   import PdfMerger
 _debug = 4
 _devel = True
 
-fileOutRepo = "Attachments"
-
-fileZipName = None
-fileZipOutR = None
-pathZipName = None
-pathZipBase = None
-pathZipWork = None
-listFileOut = {}
+fixOut = "Attachments"
+fixTmp = "tmp"
 
 """
-defined function main
+class initialize
 """
-def main():
-    global fileZipName, fileZipOutR, pathZipName, pathZipBase, pathZipWork
+class Initialize(object):
+    fileZipName = None
+    fileZipOutR = None
+    pathZipName = None
+    pathZipBase = None
+    pathZipWork = None
+    listFileOut = {}
     
+    fileOutRepo = fixOut
     thisFileIn  = os.path.join("Note spese . expertise da 34 a 39.zip")
     thisFileOut = os.path.join(fileOutRepo+".zip")
     thisPath    = os.path.join(pathlib.Path(__file__).parent.resolve(), "resources")
-    tempPath    = "tmp"
-    
-    print("Init:")
+    tempPath    = fixTmp
     
     try:
         fileZipName = sys.argv[1]
@@ -65,41 +63,67 @@ def main():
 
     if _debug >= 1:
         print("· d.resources: %s" % str(thisPath))
-        print("· fileZipName: %s" % fileZipName)
-        print("· fileZipOutR: %s" % fileZipOutR)
-        print("· pathZipName: %s" % pathZipName)
-        print("· pathZipBase: %s" % pathZipBase)
-        print("· pathZipWork: %s" % pathZipWork)
+        print("· d.temporary: %s" % str(tempPath))
+    #CZ#print("· fileZipName: %s" % fileZipName)
+    #CZ#print("· fileZipOutR: %s" % fileZipOutR)
+    #CZ#print("· pathZipName: %s" % pathZipName)
+    #CZ#print("· pathZipBase: %s" % pathZipBase)
+    #CZ#print("· pathZipWork: %s" % pathZipWork)
         
     # Check to see if the ZIP file is created
     pathTmpBase = os.path.dirname(pathZipBase)
     if not(os.path.exists(pathTmpBase)):
         print("ATTENZIONE: directory temporanea %s non esiste!" % pathTmpBase)
         exit(1)
-    #exit(0)
+    
+        # The class constructor actually an initializer
+        def __init__(self, fileZipName, fileZipOutR, pathZipName, pathZipBase, pathZipWork, listFileOut):
+            self.fileZipName = fileZipName
+            self.fileZipOutR = fileZipOutR
+            self.pathZipName = pathZipName
+            self.pathZipBase = pathZipBase
+            self.pathZipWork = pathZipWork
+            self.listFileOut = listFileOut
+            
+    #CZ#exit(0)
+
+"""
+defined function main
+"""
+def main():
+    print("Init:")
+    
+    ini = Initialize()
+
+    if _debug >= 1:
+        print("· fileZipName: %s" % ini.fileZipName)
+        print("· fileZipOutR: %s" % ini.fileZipOutR)
+        print("· pathZipName: %s" % ini.pathZipName)
+        print("· pathZipBase: %s" % ini.pathZipBase)
+        print("· pathZipWork: %s" % ini.pathZipWork)
+    #CZ#exit(0)
     
     print("Process...")
-    extractZip()
-    readFileXml()
-    createZipOut()
+    extractZip(ini)
+    readFileXml(ini)
+    createZipOut(ini)
 
     print("Done.")
-    
     exit(0)
 
 """
 defined function extract items in ZIP file
 """
-def extractZip():
+def extractZip(ini):
     try:
         # Loading ZIP file...
-        print("Read file ZIP: %s" % fileZipName)
-        with ZipFile(fileZipName, 'r') as fz:
+        print("Read file ZIP: %s" % ini.fileZipName)
+        with ZipFile(ini.fileZipName, 'r') as fz:
         
             try:
                 # ...extracting all the items into a path
-                print("Extract items into: %s" % pathZipWork)
-                fz.extractall(path=pathZipWork)
+                print("Extract items into: %s" % ini.pathZipWork)
+                fz.extractall(path=ini.pathZipWork)
             except:
                 print("...error extract zip!")
                 exit(1)
@@ -110,14 +134,14 @@ def extractZip():
 """
 defined function read file extract
 """
-def readFileXml():
+def readFileXml(ini):
     global listFileOut
     
     # Iterate directory
-    print("Read files into: %s" % pathZipWork)
-    for fileItem in os.listdir(pathZipWork):
+    print("Read files into: %s" % ini.pathZipWork)
+    for fileItem in os.listdir(ini.pathZipWork):
         
-        fileName = os.path.join(pathZipWork, fileItem)
+        fileName = os.path.join(ini.pathZipWork, fileItem)
         fileNameLnk = os.path.splitext(fileName)[0]
         fileNameExt = os.path.basename(os.path.splitext(fileName)[1])
         
@@ -177,10 +201,10 @@ def readFileXml():
 
             try:
                 # Create name for file attachements
-                keysNameAttached = '_'.join([fileOutRepo, _ANNONS+_MESE.rjust(2, '0'), _IDCOMPANY, _IDEMPLOY, _CFISC, _NRNOTASPESE, _NOMINATIVO])
-                keysFileAttached = os.path.join(pathZipWork, keysNameAttached)+'.pdf'
+                keysNameAttached = '_'.join([ini.fileOutRepo, _ANNONS+_MESE.rjust(2, '0'), _IDCOMPANY, _IDEMPLOY, _CFISC, _NRNOTASPESE, _NOMINATIVO])
+                keysFileAttached = os.path.join(ini.pathZipWork, keysNameAttached)+'.pdf'
                 baseNameAttached = '_'.join([_BaseName, keysNameAttached])
-                baseFileAttached = os.path.join(pathZipWork, baseNameAttached)+'.pdf'
+                baseFileAttached = os.path.join(ini.pathZipWork, baseNameAttached)+'.pdf'
                 if _debug >= 4:
                     print(" · base %s" % baseFileAttached)
                     print(" · keys %s" % keysFileAttached)
@@ -249,19 +273,19 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
 """
 defined function read file extract
 """
-def createZipOut():
+def createZipOut(ini):
     try:
         # Create ZIP output file
-        print("Create file ZIP output: %s" % fileZipOutR)
-        with ZipFile(fileZipOutR, 'w') as zf:
+        print("Create file ZIP output: %s" % ini.fileZipOutR)
+        with ZipFile(ini.fileZipOutR, 'w') as zf:
             for file in listFileOut:
                 print(" · add PDF file: %s" % file)
-                zf.write(file, arcname=os.path.join(pathZipName, os.path.basename(file)))
+                zf.write(file, arcname=os.path.join(ini.pathZipName, os.path.basename(file)))
             zf.close
 
         # Show content ZIP output file
         print("ZIP out file contents:")
-        with ZipFile(fileZipOutR, mode="r") as zf:
+        with ZipFile(ini.fileZipOutR, mode="r") as zf:
             zf.printdir()
     except:
         print("ZIP out file not created!")

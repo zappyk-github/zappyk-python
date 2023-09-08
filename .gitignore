@@ -24,6 +24,7 @@ var/
 etc/set-env-linux.load-source
 src/src_zappyk/developing/resources
 src/src_zappyk/*/resources
+*~
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

@@ -214,10 +214,10 @@ def readFileXml(ini):
                     listFileOut[keysFileAttached] = 1
                 except:
                     print("ATTENZIONE: non è stato possibile convertire gli allegati in file PDF!")
-                    print("ATTENZIONE: l'allegato è ignortato: %s" % _BaseName)
+                    print("ATTENZIONE: l'allegato è ignorato: %s" % _BaseName)
             except:
                 print("ATTENZIONE: non è stato possibile ricavare tutti i valori di raggruppamento!")
-                print("ATTENZIONE: l'allegato è ignortato: %s" % _BaseName)
+                print("ATTENZIONE: l'allegato è ignorato: %s" % _BaseName)
 
         else:
             if _debug >= 3:

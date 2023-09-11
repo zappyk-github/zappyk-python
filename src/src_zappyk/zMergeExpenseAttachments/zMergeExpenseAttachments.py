@@ -31,7 +31,7 @@ class Initialize(object):
     fileOutRepo = fixOut
     thisFileIn  = os.path.join("Note spese . expertise da 34 a 39.zip")
     thisFileOut = os.path.join(fileOutRepo+".zip")
-    thisPath    = os.path.join(pathlib.Path(__file__).parent.resolve(), "resources")
+    thisPath    = os.path.join(pathlib.Path(__file__).parent.resolve(), "var")
     tempPath    = fixTmp
     
     try:
@@ -212,7 +212,7 @@ def readFileXml(ini):
                 try:
                     convertImage2PDF2Merge(fileNameLnk, baseFileAttached, keysFileAttached)
                     listFileOut[keysFileAttached] = 1
-                except:
+                except ValueError:
                     print("ATTENZIONE: non è stato possibile convertire gli allegati in file PDF!")
                     print("ATTENZIONE: l'allegato è ignorato: %s" % _BaseName)
             except:
@@ -233,7 +233,7 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
     if fileImageExt.lower() == '.pdf':
         try:
             # Copy file PDF
-            print("Copy file PDF: %s" % filePDF)
+            print("Copy file PDF: %s" % filePDF, flush=True)
             shutil.copy(fileImage, filePDF)
         except:
             raise ValueError("ATTENZIONE: copia file PDF non riuscita!")
@@ -241,11 +241,11 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
     else:
         try:
             # Open file image
-            print("Convert attach: %s" % fileImage)
+            print("Convert attach: %s" % fileImage, flush=True)
             fileImage = Image.open(fileImage)
             
             # Write file PDF
-            print("Write file PDF: %s" % filePDF)
+            print("Write file PDF: %s" % filePDF, flush=True)
             image = fileImage.convert('RGB')
             image.save(filePDF)
         except:
@@ -253,19 +253,19 @@ def convertImage2PDF2Merge(fileImage, filePDF, mergePDF):
 
     if os.path.isfile(mergePDF):
         try:
-            print("Merge file PDF (+ add)... ", end="")
+            print("Merge file PDF (+ add)... ", end="", flush=True)
             pdfFiles = [mergePDF, filePDF]
             pdfMerger = PdfMerger()
             for pdf in pdfFiles:
                 pdfMerger.append(pdf)
             pdfMerger.write(mergePDF)
             pdfMerger.close()
-            print("ok")
+            print("ok", flush=True)
         except:
             raise ValueError("ATTENZIONE: unione file PDF (+ add) non riuscita!")
     else:
         try:
-            print("Merge file PDF (first)")
+            print("Merge file PDF (first)", flush=True)
             shutil.copy(filePDF, mergePDF)
         except:
             raise ValueError("ATTENZIONE: copia file PDF (first) non riuscita!")

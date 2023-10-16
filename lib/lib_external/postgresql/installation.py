@@ -153,7 +153,7 @@ class Installation(pg_api.Installation):
 		'pg_dump',
 		'pg_dumpall',
 		'postgres',
-		'postmaster',
+		'postmain',
 		'reindexdb',
 		'vacuumdb',
 		'ipcclean',

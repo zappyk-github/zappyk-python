@@ -63,7 +63,7 @@ class ClusterWarning(pg_exc.Warning):
 DEFAULT_CLUSTER_ENCODING = 'utf-8'
 DEFAULT_CONFIG_FILENAME = 'postgresql.conf'
 DEFAULT_HBA_FILENAME = 'pg_hba.conf'
-DEFAULT_PID_FILENAME = 'postmaster.pid'
+DEFAULT_PID_FILENAME = 'postmain.pid'
 
 initdb_option_map = {
 	'encoding' : '-E',
@@ -112,11 +112,11 @@ class Cluster(pg_api.Cluster):
 		"""
 		Path to the executable to use to startup the cluster.
 		"""
-		return self.installation.postmaster or self.installation.postgres
+		return self.installation.postmain or self.installation.postgres
 
 	def get_pid_from_file(self):
 		"""
-		The current pid from the postmaster.pid file.
+		The current pid from the postmain.pid file.
 		"""
 		try:
 			path = os.path.join(self.data_directory, self.DEFAULT_PID_FILENAME)
@@ -446,7 +446,7 @@ class Cluster(pg_api.Cluster):
 
 	def running(self):
 		"""
-		Whether or not the postmaster is running.
+		Whether or not the postmain is running.
 
 		This does *not* mean the cluster is accepting connections.
 		"""

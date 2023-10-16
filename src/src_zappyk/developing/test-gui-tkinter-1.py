@@ -11,9 +11,9 @@ root_geometry = "200x180"
 ###############################################################################
 class App:
     ###########################################################################
-    def __init__(self, master):
+    def __init__(self, main):
 
-        frame = Frame(master)
+        frame = Frame(main)
         frame.pack()
 
         self.lbl = Label(frame, text="Hello World!\n")
